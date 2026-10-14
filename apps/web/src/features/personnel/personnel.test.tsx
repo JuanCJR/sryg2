@@ -113,14 +113,12 @@ describe('Expediente on the API', () => {
     expect(within(panel).getByText('02 abr 1990')).toBeTruthy()
   })
 
-  it('shows unbuilt actions disabled as "Próximamente", per role and area (D24)', async () => {
+  it('enables "Editar datos" and shows unbuilt actions disabled as "Próximamente", per role and area (D24)', async () => {
     signIn(userWith('supervisor', 'medicina'), personnelApi)
     const user = userEvent.setup()
     renderApp(`/personal/${PERSON.id}`)
 
-    const edit = await screen.findByRole('button', { name: /Editar datos/ })
-    expect(edit.hasAttribute('disabled')).toBe(true)
-    expect(edit.textContent).toContain('Próximamente')
+    expect((await screen.findByRole('button', { name: 'Editar datos' })).hasAttribute('disabled')).toBe(false)
     expect(screen.queryByRole('button', { name: /Emitir o renovar/ })).toBeNull()
 
     await user.click(screen.getByRole('tab', { name: 'Médico' }))

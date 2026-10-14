@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { RegistroPersonalContainer } from '../containers/PersonnelFormContainer'
 
-/** Placeholder pre-registered by F0-B; W1-4 feat/personnel-form replaces it. */
+/** Thin route entry — Registro de personal (PER-06). */
 export function RegistroPersonalPage() {
-  return <PendingScreen title="Registro de personal" plannedChange="W1-4 feat/personnel-form" />
+  return <RegistroPersonalContainer />
 }
