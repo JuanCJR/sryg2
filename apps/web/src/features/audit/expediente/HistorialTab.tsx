@@ -1,6 +1,7 @@
-import { ComingSoonPanel } from '../../../app/expediente/ComingSoon'
+import type { ExpedienteSlotProps } from '../../../app/expediente/types'
+import { HistorialContainer } from '../containers/HistorialContainer'
 
-/** Historial page key: the person's audit trail (BR-11). W1-7 implements it. */
-export function HistorialTab() {
-  return <ComingSoonPanel description="El historial de cambios de la persona." plannedChange="W1-7 feat/audit-viewer" />
+/** Historial page key: the person's audit trail (BR-11). Shown only with `audit:read` (registry). */
+export function HistorialTab({ person }: ExpedienteSlotProps) {
+  return <HistorialContainer personId={person.id} />
 }

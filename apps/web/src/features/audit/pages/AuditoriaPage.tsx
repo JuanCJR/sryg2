@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { AuditoriaContainer } from '../containers/AuditoriaContainer'
 
-/** Placeholder pre-registered by F0-B; W1-7 feat/audit-viewer replaces it. */
+/** /auditoria — the audit trail viewer (W1-7, REP-04/REP-05). */
 export function AuditoriaPage() {
-  return <PendingScreen title="Auditoría" plannedChange="W1-7 feat/audit-viewer" />
+  return <AuditoriaContainer />
 }
