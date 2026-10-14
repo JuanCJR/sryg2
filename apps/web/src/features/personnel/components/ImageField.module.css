@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 240px;
+  max-width: 180px;
   aspect-ratio: 3 / 4;
   border: var(--hair) solid var(--rule);
   background: var(--surface);
@@ -40,6 +40,26 @@
   font-size: var(--fs-sm);
   color: var(--fg);
   min-height: 44px;
+}
+
+/* The browser's own picker button, dressed as a secondary Button. */
+.input::file-selector-button {
+  height: var(--control-h);
+  margin-right: var(--s-3);
+  padding: 0 var(--s-5);
+  border: var(--hair) solid var(--control-border);
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.input::file-selector-button:hover {
+  background: var(--surface-raised);
+  border-color: var(--control-border-strong);
 }
 
 .input:focus-visible {
