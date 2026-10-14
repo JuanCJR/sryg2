@@ -29,6 +29,7 @@ catalog:
   react-dom: ^19.2.8
   reflect-metadata: ^0.2.2
   rxjs: ^7.8.2
+  sharp: ^0.35.5
   supertest: ^7.1.0
   typescript: ~6.0.2
   typescript-eslint: ^8.69.0

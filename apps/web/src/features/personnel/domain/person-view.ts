@@ -13,7 +13,7 @@ export const CATEGORY_LABEL: Record<Rav60Category, string> = {
   controlador_transito_aereo: 'Controlador de tránsito aéreo',
 }
 
-const BLOOD_TYPE_LABEL: Record<BloodType, string> = {
+export const BLOOD_TYPE_LABEL: Record<BloodType, string> = {
   a_pos: 'A+',
   a_neg: 'A−',
   b_pos: 'B+',
@@ -24,7 +24,7 @@ const BLOOD_TYPE_LABEL: Record<BloodType, string> = {
   o_neg: 'O−',
 }
 
-const STATUS_LABEL: Record<PersonnelStatus, string> = { activo: 'Activo', inactivo: 'Inactivo' }
+export const STATUS_LABEL: Record<PersonnelStatus, string> = { activo: 'Activo', inactivo: 'Inactivo' }
 
 const orMissing = (value: string | null) => (value && value.trim() ? value : MISSING)
 

@@ -1,0 +1,86 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 180px;
+  aspect-ratio: 3 / 4;
+  border: var(--hair) solid var(--rule);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+/* The signature frame is wide, like its field on the card. */
+.wide {
+  aspect-ratio: 3 / 1;
+  max-width: 320px;
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.empty {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.input {
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  min-height: 44px;
+}
+
+/* The browser's own picker button, dressed as a secondary Button. */
+.input::file-selector-button {
+  height: var(--control-h);
+  margin-right: var(--s-3);
+  padding: 0 var(--s-5);
+  border: var(--hair) solid var(--control-border);
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.input::file-selector-button:hover {
+  background: var(--surface-raised);
+  border-color: var(--control-border-strong);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.hint {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.errorIcon {
+  color: var(--lamp-red);
+  flex-shrink: 0;
+}

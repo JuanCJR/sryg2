@@ -1,7 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto'
 import type { INestApplication } from '@nestjs/common'
-import { auditoria, createDb, personalAeronautico, usuario } from '@sryg/db'
-import { and, eq } from 'drizzle-orm'
+import { auditoria, catalogDocumentType, catalogNationality, createDb, personalAeronautico, usuario } from '@sryg/db'
+import { and, eq, inArray } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { Argon2PasswordHasher } from '../auth/infrastructure/argon2-password-hasher'
@@ -16,6 +16,7 @@ const LAST = `Prueba${DIGITS}`
 const NAME = { firstNames: 'Ana María', lastNames: LAST }
 
 const { db, pool } = createDb(DATABASE_URL)
+const catalogIds: { documentType?: string; nationality?: string; inactiveNationality?: string } = {}
 
 describe('personnel http', () => {
   let app: INestApplication
@@ -44,6 +45,19 @@ describe('personnel http', () => {
     await db
       .insert(usuario)
       .values({ email: EMAIL, fullName: 'Personnel Tester', role: 'supervisor', area: 'licencias', passwordHash })
+    const [documentType] = await db
+      .insert(catalogDocumentType)
+      .values({ nameEs: `Cédula ${DIGITS}` })
+      .returning({ id: catalogDocumentType.id })
+    const [nationality, inactive] = await db
+      .insert(catalogNationality)
+      .values([{ nameEs: `Venezolana ${DIGITS}` }, { nameEs: `Antigua ${DIGITS}`, active: false }])
+      .returning({ id: catalogNationality.id })
+    Object.assign(catalogIds, {
+      documentType: documentType!.id,
+      nationality: nationality!.id,
+      inactiveNationality: inactive!.id,
+    })
     app = await createTestApp()
     const login = await http().post('/api/auth/login').send({ email: EMAIL, password: PASSWORD }).expect(200)
     token = login.body.accessToken
@@ -52,6 +66,10 @@ describe('personnel http', () => {
   afterAll(async () => {
     await app.close()
     await db.delete(personalAeronautico).where(eq(personalAeronautico.cedula, DIGITS))
+    await db.delete(catalogDocumentType).where(eq(catalogDocumentType.id, catalogIds.documentType!))
+    await db
+      .delete(catalogNationality)
+      .where(inArray(catalogNationality.id, [catalogIds.nationality!, catalogIds.inactiveNationality!]))
     await db
       .delete(usuario)
       .where(eq(usuario.email, EMAIL))
@@ -164,5 +182,41 @@ describe('personnel http', () => {
     await http().patch(`/api/personnel/${id}`).set(auth()).send({ cedula: otherDigits }).expect(409)
     expect(await auditCount()).toBe(afterOther)
     await db.delete(personalAeronautico).where(eq(personalAeronautico.id, other.body.id))
+  })
+
+  it('accepts active catalog items for document type and nationality and rejects unknown or inactive ones (D21)', async () => {
+    const { body } = await http().get('/api/personnel').query({ q: LAST }).set(auth()).expect(200)
+    const id: string = body.items[0].id
+    const before = await auditCount(id)
+
+    const unknown = await http()
+      .patch(`/api/personnel/${id}`)
+      .set(auth())
+      .send({ documentTypeId: randomUUID() })
+      .expect(400)
+    expect(unknown.body.details).toEqual([{ path: 'documentTypeId', message: expect.any(String) }])
+    const inactive = await http()
+      .patch(`/api/personnel/${id}`)
+      .set(auth())
+      .send({ nationalityId: catalogIds.inactiveNationality })
+      .expect(400)
+    expect(inactive.body.details).toEqual([{ path: 'nationalityId', message: expect.any(String) }])
+    await http()
+      .post('/api/personnel')
+      .set(auth())
+      .send({ cedula: String(Number(DIGITS) + 2), ...NAME, nationalityId: randomUUID() })
+      .expect(400)
+    expect(await auditCount(id)).toBe(before)
+
+    const updated = await http()
+      .patch(`/api/personnel/${id}`)
+      .set(auth())
+      .send({ documentTypeId: catalogIds.documentType, nationalityId: catalogIds.nationality })
+      .expect(200)
+    expect(updated.body).toMatchObject({
+      documentTypeId: catalogIds.documentType,
+      nationalityId: catalogIds.nationality,
+    })
+    await http().patch(`/api/personnel/${id}`).set(auth()).send({ nationalityId: null }).expect(200)
   })
 })
