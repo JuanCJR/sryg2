@@ -52,8 +52,9 @@ export function MedicoPanel({ state, canWriteMedical, onRegisterOrRenew }: Medic
         </p>
       ) : null}
       {state.status === 'error' ? (
+        // Caution, not warning: a failed tab load must not compete with the Expediente's block alert.
         <Notice
-          tone="warning"
+          tone="caution"
           title="No se pudieron cargar los certificados médicos"
           action={
             <Button variant="secondary" size="sm" onClick={state.onRetry}>
