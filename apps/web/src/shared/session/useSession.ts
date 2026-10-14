@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { sessionStore } from '../domain/session'
+import { sessionStore } from './session'
 
 /** Reactive view of the stored access token: components re-render on sign-in and sign-out. */
 export function useSession(): { token: string | null; isAuthenticated: boolean } {

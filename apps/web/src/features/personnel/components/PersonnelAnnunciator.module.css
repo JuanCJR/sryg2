@@ -76,3 +76,9 @@
     min-height: 44px;
   }
 }
+
+.note {
+  margin-top: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}

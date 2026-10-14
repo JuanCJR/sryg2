@@ -1,5 +1,5 @@
-import { ConditionTable, type ConditionRow } from './ConditionTable'
-import styles from './ConditionTable.module.css'
+import { ConditionTable, type ConditionRow } from '../../../app/expediente/ConditionTable'
+import styles from '../../../app/expediente/ConditionTable.module.css'
 
 export interface HabilitacionesPanelProps {
   groupLabel: string

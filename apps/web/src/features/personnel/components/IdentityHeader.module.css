@@ -122,6 +122,7 @@
 
   .actions {
     align-items: flex-start;
+    max-width: none;
   }
 
   .actionRow,
@@ -154,4 +155,22 @@
   .actionRow > * {
     width: 100%;
   }
+}
+
+.unknownStatus {
+  display: inline-flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--fg-muted);
+}
+
+/* Long action labels ("· Próximamente") wrap within half the row instead of squeezing the identity. */
+.actions {
+  max-width: 50%;
+}
+
+/* Every feature's actions slot can render nothing (role or area without write access). */
+.actions:has(> .actionRow:empty) {
+  display: none;
 }

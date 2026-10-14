@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { StatusBadge } from '../../../design-system'
+import { Lamp, StatusBadge } from '../../../design-system'
 import { personnelDetail } from '../../../app/routes'
 import { formatRemaining } from '../domain/format'
 import type { PersonnelListRow } from '../domain/types'
@@ -27,13 +27,22 @@ export function PersonnelTable({ rows }: PersonnelTableProps) {
           <li key={row.id}>
             <Link to={personnelDetail(row.id)} className={styles.row}>
               <span className={styles.estado}>
-                <StatusBadge status={row.estado} />
+                {row.estado ? (
+                  <StatusBadge status={row.estado} />
+                ) : (
+                  <span className={styles.sinDatos}>
+                    <Lamp status="sin-datos" />
+                    Sin datos
+                  </span>
+                )}
               </span>
               <span className={clsx(styles.cedula, styles.colCedula)}>{row.cedula}</span>
               <span className={styles.nombre}>{row.nombre}</span>
               <span className={clsx(styles.categoria, styles.colCategoria)}>{row.categoria}</span>
-              <span className={clsx(styles.credencial, styles.colCredencial)}>{row.credencialCritica}</span>
-              <span className={clsx(styles.restante, styles.colRestante)}>{formatRemaining(row.diasRestantes)}</span>
+              <span className={clsx(styles.credencial, styles.colCredencial)}>{row.credencialCritica ?? '—'}</span>
+              <span className={clsx(styles.restante, styles.colRestante)}>
+                {row.diasRestantes === null ? '—' : formatRemaining(row.diasRestantes)}
+              </span>
             </Link>
           </li>
         ))}

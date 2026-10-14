@@ -20,14 +20,17 @@ export function DatosPanel({ person }: DatosPanelProps) {
   return (
     <div className={styles.grid}>
       <Item label="Cédula" value={person.cedula} tabular />
-      <Item label="Nombre completo" value={person.nombre} />
-      <Item label="Categoría" value={`${person.categoria} · ${person.ratingLabel}`} />
+      <Item label="Nombres" value={person.nombres} />
+      <Item label="Apellidos" value={person.apellidos} />
+      <Item label="Fecha de nacimiento" value={person.fechaNacimiento} tabular />
+      <Item label="Categoría" value={person.categoria} />
       <Item label="Cargo" value={person.cargo} />
       <Item label="Dependencia" value={person.dependencia} />
       <Item label="Estatus institucional" value={person.estatusInstitucional} />
       <Item label="Tipo de sangre" value={person.tipoSangre} />
       <Item label="Correo electrónico" value={person.email} tabular />
       <Item label="Teléfono" value={person.telefono} tabular />
+      <Item label="Dirección" value={person.direccion} />
     </div>
   )
 }

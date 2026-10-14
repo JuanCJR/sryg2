@@ -1,43 +1,23 @@
-import { NavLink, useNavigate } from 'react-router'
-import { Radio } from '../../design-system'
-import { ROLES, ROLE_LABEL } from '../role/permissions'
-import { sessionStore } from '../../features/auth/domain/session'
+import { NavLink } from 'react-router'
+import { sessionStore } from '../../shared/session/session'
 import { PATHS } from '../routes'
-import { useRole } from '../role/useRole'
 import styles from './RoleMenuContent.module.css'
 
 export interface RoleMenuContentProps {
-  idPrefix: string
   onNavigate?: () => void
 }
 
-/** "Rol (demostración)" switch + Perfil link + Cerrar sesión — shared by UserMenu and the phone drawer. */
-export function RoleMenuContent({ idPrefix, onNavigate }: RoleMenuContentProps) {
-  const { role, setRole } = useRole()
-  const navigate = useNavigate()
-
+/** Perfil link + Cerrar sesión — shared by UserMenu and the phone drawer. */
+export function RoleMenuContent({ onNavigate }: RoleMenuContentProps) {
+  // The route gate then shows the login, without a `next`: there is no page to come back to.
   const signOut = () => {
-    sessionStore.clear()
     onNavigate?.()
-    navigate(PATHS.login, { replace: true })
+    sessionStore.signOut()
   }
 
   return (
     <div className={styles.block}>
-      <div role="radiogroup" aria-label="Rol (demostración)">
-        <p className={styles.groupLabel}>Rol (demostración)</p>
-        {ROLES.map((option) => {
-          const id = `${idPrefix}-role-${option}`
-          return (
-            <label key={option} htmlFor={id} className={styles.roleOption}>
-              <Radio id={id} name={`${idPrefix}-role`} checked={role === option} onChange={() => setRole(option)} />
-              <span className={styles.roleOptionLabel}>{ROLE_LABEL[option]}</span>
-            </label>
-          )
-        })}
-      </div>
-      <hr className={styles.rule} />
-      <NavLink to="/perfil" className={styles.link} onClick={onNavigate}>
+      <NavLink to={PATHS.profile} className={styles.link} onClick={onNavigate}>
         Perfil
       </NavLink>
       {import.meta.env.DEV ? (

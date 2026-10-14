@@ -1,24 +1,16 @@
 import type { ReactNode } from 'react'
-import { ErrorTemplate } from '../templates/ErrorTemplate'
-import type { Permission } from './permissions'
+import type { PermissionAction, PermissionModule } from '@sryg/types'
+import { ForbiddenPage } from '../errors/ForbiddenPage'
 import { useRole } from './useRole'
 
 export interface RequirePermissionProps {
-  permission: Permission
+  module: PermissionModule
+  action: PermissionAction
   children: ReactNode
 }
 
-/** Renders `children` when the current demo role has `permission`, a 403 template otherwise. */
-export function RequirePermission({ permission, children }: RequirePermissionProps) {
+/** Renders `children` when `can(role, area, module, action)` allows it (D1, D24), the 403 page otherwise. */
+export function RequirePermission({ module, action, children }: RequirePermissionProps) {
   const { can } = useRole()
-  if (!can(permission)) {
-    return (
-      <ErrorTemplate
-        code="403"
-        title="Acceso restringido"
-        explanation="Su rol de demostración no tiene permiso para ver esta pantalla."
-      />
-    )
-  }
-  return <>{children}</>
+  return can(module, action) ? <>{children}</> : <ForbiddenPage />
 }

@@ -1,6 +1,6 @@
 import { Lock } from 'lucide-react'
-import { Icon, StatusBadge, type CredentialStatus } from '../../../design-system'
-import clsx from '../../../lib/clsx'
+import { Icon, StatusBadge, type CredentialStatus } from '../../design-system'
+import clsx from '../../lib/clsx'
 import styles from './ConditionTable.module.css'
 
 export interface ConditionRow {

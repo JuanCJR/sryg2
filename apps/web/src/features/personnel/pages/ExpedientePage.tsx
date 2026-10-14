@@ -1,6 +1,6 @@
-import { ExpedienteContainer } from '../containers/ExpedienteContainer'
+import { ExpedienteContainer, type ExpedienteContainerProps } from '../containers/ExpedienteContainer'
 
-/** Thin route entry — all state and derivation live in the container. */
-export function ExpedientePage() {
-  return <ExpedienteContainer />
+/** Thin route entry — the app passes the tabs and actions each feature contributes. */
+export function ExpedientePage(props: ExpedienteContainerProps) {
+  return <ExpedienteContainer {...props} />
 }

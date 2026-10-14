@@ -5,7 +5,12 @@ type TokenStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 export interface SessionStore {
   get(): string | null
   set(token: string): void
+  /** Drops the token because it expired or was rejected (the user is sent back to where they were). */
   clear(): void
+  /** Drops the token because the user signed out (no page to come back to). */
+  signOut(): void
+  /** Whether the session ended by `signOut` (until the next `set`). */
+  signedOut(): boolean
   /** Subscribe to changes (useSyncExternalStore-compatible); returns the unsubscribe function. */
   subscribe(listener: () => void): () => void
 }
@@ -18,6 +23,7 @@ export function createSessionStore(storage: TokenStorage | undefined): SessionSt
   const listeners = new Set<() => void>()
   let memory: string | null = null
   let useMemory = false
+  let endedBySignOut = false
 
   const read = (): string | null => {
     if (useMemory || !storage) return memory
@@ -44,8 +50,16 @@ export function createSessionStore(storage: TokenStorage | undefined): SessionSt
 
   return {
     get: read,
-    set: (token) => write(token),
+    set: (token) => {
+      endedBySignOut = false
+      write(token)
+    },
     clear: () => write(null),
+    signOut: () => {
+      endedBySignOut = true
+      write(null)
+    },
+    signedOut: () => endedBySignOut,
     subscribe(listener) {
       listeners.add(listener)
       return () => void listeners.delete(listener)

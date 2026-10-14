@@ -14,13 +14,16 @@ const FEATURE_NAMES = [
   'personnel',
   'licenses',
   'medical-certificates',
-  'validation-blocking',
+  'blocking',
   'reports',
   'audit',
   'users',
   'settings',
+  'catalogs',
+  'credentials',
 ]
-const FEATURE_SIBLING_PATTERNS = FEATURE_NAMES.map((name) => `../../${name}/**`)
+// The one cross-feature export (F0-B): the catalog selector the wave-1 forms share.
+const FEATURE_SIBLING_PATTERNS = [...FEATURE_NAMES.map((name) => `../../${name}/**`), '!../../catalogs/CatalogSelect']
 
 export default defineConfig([
   ...baseConfig,
@@ -33,7 +36,7 @@ export default defineConfig([
   },
   {
     // Templates and the design system are permission-blind and backend-blind: they
-    // receive data through props/slots and never read features or the demo kernel.
+    // receive data through props/slots and never read features.
     files: ['src/app/templates/**/*.{ts,tsx}', 'src/design-system/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
@@ -41,15 +44,14 @@ export default defineConfig([
         {
           patterns: [
             { group: ['**/features/**'], message: 'Templates and the design system must not import src/features/**.' },
-            { group: ['**/demo/**'], message: 'Templates and the design system must not import src/demo/**.' },
           ],
         },
       ],
     },
   },
   {
-    // Only a feature's containers may import its data module or the demo kernel;
-    // components/pages/domain receive data as props instead.
+    // Only a feature's containers (and Expediente slots) may import its data module;
+    // components, pages and domain receive data as props instead.
     files: ['src/features/*/{components,pages,domain}/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
@@ -58,11 +60,7 @@ export default defineConfig([
           patterns: [
             {
               group: ['**/data/**'],
-              message: 'Only containers/ may import data/demoData.ts. Receive data as props instead.',
-            },
-            {
-              group: ['**/demo/**'],
-              message: 'Only containers/ may import src/demo/**. Receive data as props instead.',
+              message: 'Only containers/ may import data/**. Receive data as props instead.',
             },
             {
               group: FEATURE_SIBLING_PATTERNS,
@@ -75,9 +73,9 @@ export default defineConfig([
     },
   },
   {
-    // containers/ and data/ may import the demo kernel and their own data module,
-    // but still must not reach into a sibling feature directly.
-    files: ['src/features/*/{containers,data}/**/*.{ts,tsx}'],
+    // containers/, data/ and the Expediente slots (expediente/, containers of one tab or one
+    // header action) may import their own data module, but must not reach into a sibling feature.
+    files: ['src/features/*/{containers,data,expediente}/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -92,5 +90,10 @@ export default defineConfig([
         },
       ],
     },
+  },
+  {
+    // Test helpers render providers and probes; Fast Refresh does not apply to them.
+    files: ['src/test/**/*.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
+    rules: { 'react-refresh/only-export-components': 'off' },
   },
 ])

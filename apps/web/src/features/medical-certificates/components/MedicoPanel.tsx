@@ -1,8 +1,8 @@
 import { Stethoscope } from 'lucide-react'
 import { Button, Notice } from '../../../design-system'
-import { ConditionTable, type ConditionRow } from './ConditionTable'
+import { ConditionTable, type ConditionRow } from '../../../app/expediente/ConditionTable'
 import styles from './MedicoPanel.module.css'
-import tableStyles from './ConditionTable.module.css'
+import tableStyles from '../../../app/expediente/ConditionTable.module.css'
 
 export interface MedicoPanelProps {
   rows: ConditionRow[]

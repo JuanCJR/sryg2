@@ -39,6 +39,19 @@ describe('createSessionStore', () => {
     expect(listener).toHaveBeenCalledTimes(2)
   })
 
+  it('tells an explicit sign-out apart from an expired session until the next sign-in', () => {
+    const store = createSessionStore(fakeStorage())
+    store.set('t')
+    store.clear()
+    expect(store.signedOut()).toBe(false)
+    store.set('t')
+    store.signOut()
+    expect(store.get()).toBeNull()
+    expect(store.signedOut()).toBe(true)
+    store.set('u')
+    expect(store.signedOut()).toBe(false)
+  })
+
   it('falls back to memory when storage throws', () => {
     const broken = {
       getItem: () => {
