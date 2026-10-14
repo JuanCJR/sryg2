@@ -1,14 +1,18 @@
-import { UserPlus } from 'lucide-react'
-import { ComingSoonButton } from '../../../app/expediente/ComingSoon'
+import { FilePlus2 } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { Button } from '../../../design-system'
+import type { ExpedienteSlotProps } from '../../../app/expediente/types'
 import { useRole } from '../../../app/role/useRole'
+import { licenseForm } from '../../../app/routes'
 
-/** Header actions of the licenses feature (D24: Admin or Supervisor de Licencias). Arrives with W1-5. */
-export function LicensesActions() {
+/** Header action of the licenses feature (D24: Admin or Supervisor de Licencias): opens the trámite. */
+export function LicensesActions({ person }: ExpedienteSlotProps) {
   const { can } = useRole()
+  const navigate = useNavigate()
   if (!can('licenses', 'write')) return null
   return (
-    <ComingSoonButton variant="primary" icon={UserPlus}>
+    <Button variant="primary" icon={FilePlus2} onClick={() => navigate(licenseForm(person.id))}>
       Emitir o renovar
-    </ComingSoonButton>
+    </Button>
   )
 }

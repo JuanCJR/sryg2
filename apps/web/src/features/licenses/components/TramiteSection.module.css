@@ -1,0 +1,31 @@
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 44px;
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.option:last-child {
+  border-bottom: none;
+}
+
+.label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-3);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.detail {
+  font-weight: 400;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+}
