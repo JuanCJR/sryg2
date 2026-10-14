@@ -23,8 +23,7 @@ export function deriveCredentialStatus(
   thresholdDays: number,
   hasActiveBlock: boolean,
 ): DerivedCredentialStatus {
-  if (!Number.isInteger(thresholdDays) || thresholdDays < 0)
-    throw new RangeError(`Invalid threshold: ${thresholdDays}`)
+  if (!Number.isInteger(thresholdDays) || thresholdDays < 0) throw new RangeError(`Invalid threshold: ${thresholdDays}`)
   const todayDay = toDay(today)
   if (hasActiveBlock) return 'bloqueada'
   if (expiryDate === null) return 'vigente'
