@@ -37,6 +37,9 @@ describe('configureApp CORS', () => {
       .set('Access-Control-Request-Headers', 'Authorization')
     expect(ok.status).toBe(204)
     expect(ok.headers['access-control-allow-headers']).toContain('Authorization')
+    expect(ok.headers['access-control-allow-methods']?.split(',')).toEqual(
+      expect.arrayContaining(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
+    )
     const denied = await request(app.getHttpServer())
       .options('/health')
       .set('Origin', 'http://evil.test')
