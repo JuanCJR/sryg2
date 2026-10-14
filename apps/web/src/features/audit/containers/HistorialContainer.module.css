@@ -1,0 +1,10 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
