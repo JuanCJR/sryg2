@@ -138,6 +138,8 @@ export const issueLicenseSchema = z.object({
   addClassRatings: z.array(newClassRatingSchema).max(50).default([]),
 })
 export type IssueLicenseInput = z.input<typeof issueLicenseSchema>
+/** The body after validation: defaults applied and ids deduplicated. */
+export type IssueLicenseData = z.output<typeof issueLicenseSchema>
 
 /**
  * Renew a license: new issue date (the expiry is recomputed), the full list of observations, and
@@ -155,6 +157,7 @@ export const renewLicenseSchema = z.object({
   removeClassRatingIds: ids(50),
 })
 export type RenewLicenseInput = z.input<typeof renewLicenseSchema>
+export type RenewLicenseData = z.output<typeof renewLicenseSchema>
 
 /** Pre-check of a trámite (LIC-05): what would stop it and the expiry it would get. */
 export const licenseCheckQuerySchema = z
