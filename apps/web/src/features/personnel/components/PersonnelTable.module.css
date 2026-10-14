@@ -83,11 +83,17 @@
   color: var(--fg-muted);
 }
 
-/* Tablet and phone: drop Categoría and Credencial más crítica, keeping Días restantes — the
-   triage figure the lamp queue sorts on (per the direction contract's tablet rule). */
+/* Tablet and phone: drop Credencial más crítica, keeping Días restantes — the triage figure the
+   lamp queue sorts on (per the direction contract's tablet rule). */
 @media (max-width: 1024px) {
-  .colCategoria,
   .colCredencial {
+    display: none;
+  }
+}
+
+/* Tablet only: Categoría goes too. The phone card keeps it (tasks.md 3.11b). */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .colCategoria {
     display: none;
   }
 }
@@ -125,6 +131,12 @@
 
   .colCedula {
     display: inline;
+  }
+
+  /* Shares the last line with Días restantes. */
+  .categoria {
+    flex: 1;
+    font-size: var(--fs-sm);
   }
 
   .restante {

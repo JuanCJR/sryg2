@@ -42,8 +42,11 @@
   border-color: var(--inverse-bg);
 }
 
-.selected:hover {
+/* Same specificity as `.key:hover:not(:disabled)` and later in the file, so the pressed key
+   keeps its inverted fill on hover (tasks.md 3.11a). */
+.selected:hover:not(:disabled) {
   background: var(--inverse-bg);
+  color: var(--inverse-fg);
 }
 
 .label {
