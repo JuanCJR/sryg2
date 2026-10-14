@@ -35,7 +35,7 @@ export function LicensesTable({ rows }: LicensesTableProps) {
         {rows.map((row) => (
           <li key={row.id}>
             <Link to={row.href} className={styles.row}>
-              <span>
+              <span className={styles.estado}>
                 <StatusBadge status={row.estado} />
               </span>
               <span className={styles.solicitante}>
@@ -43,9 +43,9 @@ export function LicensesTable({ rows }: LicensesTableProps) {
                 <span className={styles.cedula}>{row.cedula}</span>
               </span>
               <span className={clsx(styles.tipo, styles.colTipo)}>{row.tipo}</span>
-              <span className={styles.figure}>{row.numero}</span>
+              <span className={clsx(styles.figure, styles.numero)}>{row.numero}</span>
               <span className={clsx(styles.figure, styles.colEmitida)}>{row.emitidaLabel}</span>
-              <span className={styles.figure}>{row.venceLabel}</span>
+              <span className={clsx(styles.figure, styles.vence)}>{row.venceLabel}</span>
             </Link>
           </li>
         ))}

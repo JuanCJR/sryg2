@@ -93,6 +93,33 @@
 
   .row {
     grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'estado vence'
+      'solicitante solicitante'
+      'numero numero';
     row-gap: var(--s-2);
+  }
+
+  .estado {
+    grid-area: estado;
+  }
+
+  .vence {
+    grid-area: vence;
+    text-align: right;
+  }
+
+  .solicitante {
+    grid-area: solicitante;
+  }
+
+  .numero {
+    grid-area: numero;
+    color: var(--fg-muted);
+  }
+
+  /* The number usually repeats the cédula (D22): name it on the stacked row. */
+  .numero::before {
+    content: 'N° ';
   }
 }
