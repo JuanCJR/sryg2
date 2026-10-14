@@ -80,3 +80,8 @@
   padding: var(--s-5);
   color: var(--fg-muted);
 }
+
+.meta {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}

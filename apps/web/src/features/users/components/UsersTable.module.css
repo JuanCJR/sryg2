@@ -1,0 +1,97 @@
+.table {
+  width: 100%;
+  border: var(--hair) solid var(--rule);
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: var(--hair) solid var(--rule);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.table td {
+  padding: var(--s-3) var(--s-4);
+  vertical-align: middle;
+}
+
+.table tbody tr:not(:last-child) td {
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.inactive td {
+  color: var(--fg-muted);
+}
+
+.name {
+  font-weight: 700;
+}
+
+.email {
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.pending {
+  display: block;
+  margin-top: var(--s-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Tablet: the actions wrap under each other instead of widening the table. */
+@media (max-width: 1024px) {
+  .actions {
+    white-space: normal;
+  }
+}
+
+/* Phone: each row becomes a stacked card (same markup). */
+@media (max-width: 480px) {
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table tr {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    padding: var(--s-3) var(--s-4);
+  }
+
+  .table tbody tr:not(:last-child) {
+    border-bottom: var(--hair) solid var(--rule);
+  }
+
+  .table td,
+  .table tbody tr:not(:last-child) td {
+    padding: 0;
+    border: 0;
+  }
+
+  .actions {
+    margin-top: var(--s-2);
+    text-align: left;
+  }
+}

@@ -10,3 +10,14 @@ export interface AccessAttempt {
 export interface AccessLog {
   record(attempt: AccessAttempt): Promise<void>
 }
+
+export interface AccessLogRecord {
+  at: Date
+  ip: string | null
+}
+
+/** Reads a user's own attempts back for /panel and /perfil (D23). */
+export interface AccessLogReader {
+  /** The latest `limit` attempts of the user with the given outcome, newest first. */
+  latest(usuarioId: string, success: boolean, limit: number): Promise<AccessLogRecord[]>
+}

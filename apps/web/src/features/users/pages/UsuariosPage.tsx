@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { UsuariosContainer } from '../containers/UsuariosContainer'
 
-/** Placeholder pre-registered by F0-B; W1-1 feat/users-auth replaces it. */
+/** Thin route entry — all state and derivation live in the container. */
 export function UsuariosPage() {
-  return <PendingScreen title="Usuarios" plannedChange="W1-1 feat/users-auth" />
+  return <UsuariosContainer />
 }
