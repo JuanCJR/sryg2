@@ -12,6 +12,7 @@ import { UpdatePersonnelUseCase } from './application/update-personnel.use-case'
 import type { PersonnelRepository } from './domain/personnel-repository'
 import type { PersonnelUnitOfWork } from './domain/personnel-unit-of-work'
 import { PersonnelController } from './http/personnel.controller'
+import { DrizzleCatalogReferences } from './infrastructure/drizzle-catalog-references'
 import { DrizzlePersonnelRepository } from './infrastructure/drizzle-personnel.repository'
 
 const PERSONNEL_READER = Symbol('PERSONNEL_READER')
@@ -29,6 +30,7 @@ const PERSONNEL_UOW = Symbol('PERSONNEL_UOW')
         new DrizzleUnitOfWork(db, (tx) => ({
           personnel: new DrizzlePersonnelRepository(tx),
           audit: new DrizzleAuditLog(tx),
+          catalogs: new DrizzleCatalogReferences(tx),
         })),
     },
     {

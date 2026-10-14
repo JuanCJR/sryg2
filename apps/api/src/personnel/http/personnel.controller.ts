@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Req, UseFilters } from '@nestjs/common'
 import {
   type CreatePersonnelInput,
   createPersonnelSchema,
@@ -16,11 +16,13 @@ import { DeletePersonnelUseCase } from '../application/delete-personnel.use-case
 import { GetPersonnelUseCase } from '../application/get-personnel.use-case'
 import { ListPersonnelUseCase } from '../application/list-personnel.use-case'
 import { UpdatePersonnelUseCase } from '../application/update-personnel.use-case'
+import { PersonnelExceptionFilter } from './personnel-exception.filter'
 
 const idPipe = new ZodValidationPipe(z.uuid())
 
 /** Every role reads; Admin and Supervisors of any area write (D1, D24). */
 @Controller('personnel')
+@UseFilters(PersonnelExceptionFilter)
 export class PersonnelController {
   constructor(
     private readonly createPersonnel: CreatePersonnelUseCase,

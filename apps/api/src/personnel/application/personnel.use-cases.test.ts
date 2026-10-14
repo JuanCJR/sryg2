@@ -75,6 +75,7 @@ class FakeAudit implements AuditLog {
 
 /** In-memory unit of work with snapshot/restore to mimic transaction rollback. */
 class FakeUow implements UnitOfWork<PersonnelUowRepos> {
+  catalogs = { isActive: () => Promise.resolve(true) }
   constructor(
     private readonly personnel: FakePersonnel,
     private readonly audit: FakeAudit,
@@ -83,7 +84,7 @@ class FakeUow implements UnitOfWork<PersonnelUowRepos> {
     const rows = new Map(this.personnel.rows)
     const entries = [...this.audit.entries]
     try {
-      return await work({ personnel: this.personnel, audit: this.audit })
+      return await work({ personnel: this.personnel, audit: this.audit, catalogs: this.catalogs })
     } catch (error) {
       this.personnel.rows = rows
       this.audit.entries = entries
