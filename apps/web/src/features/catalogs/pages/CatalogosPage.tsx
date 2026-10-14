@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { CatalogIndexContainer } from '../containers/CatalogIndexContainer'
 
-/** Placeholder pre-registered by F0-B; W1-11 feat/catalogs replaces it. */
+/** Thin route entry for `/catalogos`. */
 export function CatalogosPage() {
-  return <PendingScreen title="Catálogos" plannedChange="W1-11 feat/catalogs" />
+  return <CatalogIndexContainer />
 }

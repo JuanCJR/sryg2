@@ -1,8 +1,12 @@
 import { useParams } from 'react-router'
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { NotFoundPage } from '../../../app/errors/NotFoundPage'
+import { CatalogContainer } from '../containers/CatalogContainer'
+import { isCatalogSlug } from '../domain/catalog-meta'
 
-/** Placeholder pre-registered by F0-B; W1-11 feat/catalogs replaces it. */
+/** Thin route entry for `/catalogos/:catalogo`; an unknown catalog is a 404. */
 export function CatalogoPage() {
   const { catalogo } = useParams()
-  return <PendingScreen title={`Catálogo ${catalogo ?? ''}`.trim()} plannedChange="W1-11 feat/catalogs" />
+  if (!isCatalogSlug(catalogo)) return <NotFoundPage />
+  // Keyed by catalog: moving between catalogs starts with a clean search and page.
+  return <CatalogContainer key={catalogo} catalog={catalogo} />
 }
