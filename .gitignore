@@ -30,3 +30,8 @@ coverage/
 # temporary: remove after sryg-frontend/ is retired
 sryg-frontend/
 sryg-frontend-worktrees/
+
+# database backups (scripts/backup.sh): never commit, even encrypted
+*.dump
+*.dump.age
+*.dump.age.partial
