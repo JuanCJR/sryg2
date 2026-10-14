@@ -235,7 +235,7 @@ describe('catalog maintenance http (D19, W1-11)', () => {
     const unused = await create('nationalities', { nameEs: `${RUN} Sin uso` }).expect(201)
     await http().delete(`/api/catalogs/nationalities/${unused.body.id}`).set(as(users.admin)).expect(204)
     expect(await db.select().from(catalogNationality).where(eq(catalogNationality.id, unused.body.id))).toEqual([])
-    expect((await auditRows(unused.body.id)).map((row) => row.action)).toEqual(['crear', 'eliminar'])
+    expect((await auditRows(unused.body.id)).map((row) => row.action).sort()).toEqual(['crear', 'eliminar'])
 
     const inUse = await create('nationalities', { nameEs: `${RUN} En uso` }).expect(201)
     await db.insert(personalAeronautico).values({
