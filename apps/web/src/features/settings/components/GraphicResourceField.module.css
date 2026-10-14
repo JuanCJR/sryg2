@@ -1,0 +1,76 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.label {
+  font-weight: 700;
+}
+
+.previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-5);
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+}
+
+/* Checkerboard-free neutral well: transparent PNGs stay legible in both themes. */
+.image,
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  height: 96px;
+  border: var(--hair) solid var(--rule);
+  background: var(--surface);
+  object-fit: contain;
+}
+
+.empty {
+  border-style: dashed;
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+
+.caption {
+  max-width: 160px;
+  overflow: hidden;
+  color: var(--fg-muted);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file {
+  max-width: 100%;
+  font: inherit;
+  font-size: var(--fs-sm);
+}
+
+.error {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+}
+
+.errorIcon {
+  flex-shrink: 0;
+  color: var(--lamp-red);
+}
