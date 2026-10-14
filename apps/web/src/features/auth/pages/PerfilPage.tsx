@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { PerfilContainer } from '../containers/PerfilContainer'
 
-/** Placeholder pre-registered by F0-B; W1-1 feat/users-auth replaces it. */
+/** Thin route entry — all state and derivation live in the container. */
 export function PerfilPage() {
-  return <PendingScreen title="Perfil" plannedChange="W1-1 feat/users-auth" />
+  return <PerfilContainer />
 }
