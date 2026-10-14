@@ -15,6 +15,13 @@
       "when": 1791146190288,
       "tag": "0001_audit_immutable",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791937445006,
+      "tag": "0002_foundation",
+      "breakpoints": true
     }
   ]
 }
