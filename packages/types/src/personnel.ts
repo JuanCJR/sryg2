@@ -52,3 +52,55 @@ export const updatePersonnelSchema = createPersonnelSchema
   .partial()
   .refine((body) => Object.keys(body).length > 0, 'At least one field is required')
 export type UpdatePersonnelInput = z.infer<typeof updatePersonnelSchema>
+
+/** Why a file cannot be stored: wrong type, over the size limit, or empty. */
+export type FileCheckProblem = 'type' | 'size' | 'empty'
+
+function checkFile(
+  { mime, size }: { mime: string; size: number },
+  mimes: readonly string[],
+  maxBytes: number,
+): FileCheckProblem | null {
+  if (!mimes.includes(mime)) return 'type'
+  if (size <= 0) return 'empty'
+  if (size > maxBytes) return 'size'
+  return null
+}
+
+// Photo and signature of the holder (D5): stored compressed to 200 KB at most, as JPEG or PNG
+// (the formats the credential PDF embeds). Uploads may be larger; the API compresses them.
+export const PERSONNEL_IMAGE_KINDS = ['photo', 'signature'] as const
+export type PersonnelImageKind = (typeof PERSONNEL_IMAGE_KINDS)[number]
+export const PERSONNEL_IMAGE_MAX_BYTES = 200 * 1024
+export const PERSONNEL_IMAGE_UPLOAD_MAX_BYTES = 5 * 1024 * 1024
+export const PERSONNEL_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+
+export function checkPersonnelImageFile(file: { mime: string; size: number }): FileCheckProblem | null {
+  return checkFile(file, PERSONNEL_IMAGE_MIME_TYPES, PERSONNEL_IMAGE_UPLOAD_MAX_BYTES)
+}
+
+// Documents attached to the person's file (D21): PDF or image up to 5 MB, typed from the catalog.
+export const ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024
+export const ATTACHMENT_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'] as const
+
+export function checkAttachmentFile(file: { mime: string; size: number }): FileCheckProblem | null {
+  return checkFile(file, ATTACHMENT_MIME_TYPES, ATTACHMENT_MAX_BYTES)
+}
+
+/** Multipart fields that go with the `file` part of `POST /api/personnel/:id/attachments`. */
+export const attachmentUploadSchema = z.object({ attachmentTypeId: z.uuid() })
+export type AttachmentUploadInput = z.infer<typeof attachmentUploadSchema>
+
+/** An attachment as listed; the bytes are downloaded from its own endpoint. */
+export const personnelAttachmentSchema = z.object({
+  id: z.uuid(),
+  personalId: z.uuid(),
+  attachmentTypeId: z.uuid(),
+  /** Spanish name of the catalog attachment type. */
+  attachmentTypeName: z.string(),
+  filename: z.string(),
+  mime: z.string(),
+  size: z.number().int(),
+  createdAt: z.iso.datetime(),
+})
+export type PersonnelAttachmentDto = z.infer<typeof personnelAttachmentSchema>
