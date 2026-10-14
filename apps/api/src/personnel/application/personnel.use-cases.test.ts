@@ -61,6 +61,12 @@ class FakePersonnel implements PersonnelRepository {
     this.rows.delete(id)
     return Promise.resolve()
   }
+  getImage() {
+    return Promise.resolve(null)
+  }
+  setImage(id: string) {
+    return Promise.resolve(this.rows.get(id)!)
+  }
 }
 
 class FakeAudit implements AuditLog {

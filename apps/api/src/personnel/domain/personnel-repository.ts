@@ -1,5 +1,6 @@
-import type { ListQuery, Paginated } from '@sryg/types'
+import type { ListQuery, Paginated, PersonnelImageKind } from '@sryg/types'
 import type { NewPersonnel, Personnel, PersonnelChanges } from './personnel'
+import type { StoredFile } from './personnel-file'
 
 export interface PersonnelRepository {
   findById(id: string): Promise<Personnel | null>
@@ -12,4 +13,7 @@ export interface PersonnelRepository {
   hasCredentials(id: string): Promise<boolean>
   /** Throws ConflictError when another record still references the person (e.g. a block). */
   delete(id: string): Promise<void>
+  /** The photo or signature bytes (D5); null when the person has none. */
+  getImage(id: string, kind: PersonnelImageKind): Promise<StoredFile | null>
+  setImage(id: string, kind: PersonnelImageKind, image: StoredFile, actorId: string): Promise<Personnel>
 }

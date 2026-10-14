@@ -1,8 +1,9 @@
 import { certificadoMedico, type DbExecutor, licencia, personalAeronautico } from '@sryg/db'
-import type { ListQuery, Paginated } from '@sryg/types'
+import type { ListQuery, Paginated, PersonnelImageKind } from '@sryg/types'
 import { asc, count, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
 import { ConflictError, NotFoundError } from '../../shared/domain/errors'
 import type { NewPersonnel, Personnel, PersonnelChanges } from '../domain/personnel'
+import type { StoredFile } from '../domain/personnel-file'
 import type { PersonnelRepository } from '../domain/personnel-repository'
 
 const UNIQUE_VIOLATION = '23505'
@@ -40,6 +41,11 @@ const personnelFields = {
   createdAt: p.createdAt,
   updatedAt: p.updatedAt,
 }
+
+const IMAGE_COLUMNS = {
+  photo: { data: p.photo, mime: p.photoMime },
+  signature: { data: p.signature, mime: p.signatureMime },
+} as const
 
 /** Works against the pool or a transaction handle; the unit of work builds one per transaction. */
 export class DrizzlePersonnelRepository implements PersonnelRepository {
@@ -125,5 +131,29 @@ export class DrizzlePersonnelRepository implements PersonnelRepository {
       if (hasPgCode(error, FOREIGN_KEY_VIOLATION)) throw new ConflictError('Other records reference this person')
       throw error
     }
+  }
+
+  async getImage(id: string, kind: PersonnelImageKind): Promise<StoredFile | null> {
+    const columns = IMAGE_COLUMNS[kind]
+    const [row] = await this.executor
+      .select({ data: columns.data, mime: columns.mime })
+      .from(personalAeronautico)
+      .where(eq(personalAeronautico.id, id))
+      .limit(1)
+    return row?.data && row.mime ? { data: row.data, mime: row.mime } : null
+  }
+
+  async setImage(id: string, kind: PersonnelImageKind, image: StoredFile, actorId: string): Promise<Personnel> {
+    const values =
+      kind === 'photo'
+        ? { photo: image.data, photoMime: image.mime }
+        : { signature: image.data, signatureMime: image.mime }
+    const [row] = await this.executor
+      .update(personalAeronautico)
+      .set({ ...values, updatedBy: actorId })
+      .where(eq(personalAeronautico.id, id))
+      .returning({ id: personalAeronautico.id })
+    if (!row) throw new NotFoundError('Personnel not found')
+    return (await this.findById(id))!
   }
 }

@@ -8,12 +8,14 @@ import { CreatePersonnelUseCase } from './application/create-personnel.use-case'
 import { DeletePersonnelUseCase } from './application/delete-personnel.use-case'
 import { GetPersonnelUseCase } from './application/get-personnel.use-case'
 import { ListPersonnelUseCase } from './application/list-personnel.use-case'
+import { GetPersonnelImageUseCase, SetPersonnelImageUseCase } from './application/personnel-images.use-cases'
 import { UpdatePersonnelUseCase } from './application/update-personnel.use-case'
 import type { PersonnelRepository } from './domain/personnel-repository'
 import type { PersonnelUnitOfWork } from './domain/personnel-unit-of-work'
 import { PersonnelController } from './http/personnel.controller'
 import { DrizzleCatalogReferences } from './infrastructure/drizzle-catalog-references'
 import { DrizzlePersonnelRepository } from './infrastructure/drizzle-personnel.repository'
+import { SharpImageCompressor } from './infrastructure/sharp-image-compressor'
 
 const PERSONNEL_READER = Symbol('PERSONNEL_READER')
 const PERSONNEL_UOW = Symbol('PERSONNEL_UOW')
@@ -47,6 +49,16 @@ const PERSONNEL_UOW = Symbol('PERSONNEL_UOW')
       provide: DeletePersonnelUseCase,
       inject: [PERSONNEL_UOW],
       useFactory: (uow: PersonnelUnitOfWork) => new DeletePersonnelUseCase(uow),
+    },
+    {
+      provide: SetPersonnelImageUseCase,
+      inject: [PERSONNEL_UOW],
+      useFactory: (uow: PersonnelUnitOfWork) => new SetPersonnelImageUseCase(uow, new SharpImageCompressor()),
+    },
+    {
+      provide: GetPersonnelImageUseCase,
+      inject: [PERSONNEL_READER],
+      useFactory: (repo: PersonnelRepository) => new GetPersonnelImageUseCase(repo),
     },
     {
       provide: GetPersonnelUseCase,
