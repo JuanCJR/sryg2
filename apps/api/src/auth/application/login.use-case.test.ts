@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { InvalidCredentialsError } from '../../shared/domain/errors'
 import type { AuditEntry, AuditLog } from '../../audit/domain/audit-log'
+import type { AccessAttempt, AccessLog } from '../domain/access-log'
 import type { PasswordHasher } from '../domain/password-hasher'
 import type { TokenClaims, TokenIssuer } from '../domain/token-issuer'
 import type { StoredUser, UserRepository } from '../domain/user-repository'
@@ -35,6 +36,14 @@ class FakeAudit implements AuditLog {
   }
 }
 
+class FakeAccessLog implements AccessLog {
+  attempts: AccessAttempt[] = []
+  record(attempt: AccessAttempt) {
+    this.attempts.push(attempt)
+    return Promise.resolve()
+  }
+}
+
 class FakeUsers implements UserRepository {
   constructor(private readonly users: StoredUser[]) {}
   findByEmail(email: string) {
@@ -50,16 +59,22 @@ const admin: StoredUser = {
   email: 'admin@sryg.test',
   fullName: 'Admin',
   role: 'administrador',
+  area: 'ambas',
   passwordHash: 'hash:correct-password',
   isActive: true,
+  mustChangePassword: false,
 }
+
+const CONTEXT = { ip: '203.0.113.7' }
 
 function setup(users: StoredUser[] = [admin]) {
   const hasher = new FakeHasher()
   const issuer = new FakeIssuer()
   const audit = new FakeAudit()
-  const useCase = new LoginUseCase(new FakeUsers(users), hasher, issuer, DUMMY, audit)
-  return { hasher, issuer, audit, useCase }
+  const access = new FakeAccessLog()
+  const login = new LoginUseCase(new FakeUsers(users), hasher, issuer, DUMMY, audit, access)
+  const useCase = { execute: (input: { email: string; password: string }) => login.execute(input, CONTEXT) }
+  return { hasher, issuer, audit, access, useCase }
 }
 
 describe('LoginUseCase', () => {
@@ -69,9 +84,16 @@ describe('LoginUseCase', () => {
     expect(result).toEqual({
       accessToken: `token-for-${admin.id}`,
       expiresIn: 3600,
-      user: { id: admin.id, email: admin.email, fullName: 'Admin', role: 'administrador' },
+      user: {
+        id: admin.id,
+        email: admin.email,
+        fullName: 'Admin',
+        role: 'administrador',
+        area: 'ambas',
+        mustChangePassword: false,
+      },
     })
-    expect(issuer.issued).toEqual([{ sub: admin.id, email: admin.email, role: 'administrador' }])
+    expect(issuer.issued).toEqual([{ sub: admin.id, email: admin.email, role: 'administrador', area: 'ambas' }])
     expect(JSON.stringify(result)).not.toContain('hash:')
   })
 
@@ -131,5 +153,23 @@ describe('LoginUseCase', () => {
     }
     expect(audit.entries).toEqual([failure, failure])
     expect(JSON.stringify(audit.entries)).not.toContain('ghost')
+  })
+
+  it('records every attempt in the access log with the IP (D23)', async () => {
+    const { useCase, access } = setup()
+    await useCase.execute({ email: 'ADMIN@sryg.test ', password: 'correct-password' })
+    await useCase.execute({ email: admin.email, password: 'wrong' }).catch(() => undefined)
+    await useCase.execute({ email: 'Ghost@sryg.test', password: 'x' }).catch(() => undefined)
+    expect(access.attempts).toEqual([
+      { usuarioId: admin.id, identifier: 'admin@sryg.test', ip: CONTEXT.ip, success: true },
+      { usuarioId: admin.id, identifier: 'admin@sryg.test', ip: CONTEXT.ip, success: false },
+      { usuarioId: null, identifier: 'ghost@sryg.test', ip: CONTEXT.ip, success: false },
+    ])
+  })
+
+  it('logs a failed attempt against an inactive user under that user', async () => {
+    const { useCase, access } = setup([{ ...admin, isActive: false }])
+    await useCase.execute({ email: admin.email, password: 'correct-password' }).catch(() => undefined)
+    expect(access.attempts).toEqual([{ usuarioId: admin.id, identifier: admin.email, ip: CONTEXT.ip, success: false }])
   })
 })

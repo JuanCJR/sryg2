@@ -1,12 +1,14 @@
-import type { Role } from '@sryg/types'
+import type { Role, UserArea } from '@sryg/types'
 
 export interface StoredUser {
   id: string
   email: string
   fullName: string
   role: Role
+  area: UserArea
   passwordHash: string
   isActive: boolean
+  mustChangePassword: boolean
 }
 
 export interface UserRepository {

@@ -19,7 +19,9 @@ interface Repos {
 const uow = new DrizzleUnitOfWork<Repos>(db, (tx: DbExecutor) => ({
   audit: new DrizzleAuditLog(tx),
   insertSubject: async () => {
-    await tx.insert(usuario).values({ email: EMAIL, fullName: 'Subject', role: 'consulta', passwordHash: 'x' })
+    await tx
+      .insert(usuario)
+      .values({ email: EMAIL, fullName: 'Subject', role: 'consulta', area: 'ambas', passwordHash: 'x' })
   },
 }))
 

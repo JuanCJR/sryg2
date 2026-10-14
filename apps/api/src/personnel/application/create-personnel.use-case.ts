@@ -1,22 +1,22 @@
 import { type CreatePersonnelInput, normalizeCedula } from '@sryg/types'
-import { PERSONNEL_ENTITY, type Personnel } from '../domain/personnel'
+import { type Actor, PERSONNEL_ENTITY, type Personnel } from '../domain/personnel'
 import type { PersonnelUnitOfWork } from '../domain/personnel-unit-of-work'
-import type { Actor, PersonnelWritePolicy } from '../domain/write-policy'
 
 export class CreatePersonnelUseCase {
-  constructor(
-    private readonly uow: PersonnelUnitOfWork,
-    private readonly policy: PersonnelWritePolicy,
-  ) {}
+  constructor(private readonly uow: PersonnelUnitOfWork) {}
 
   async execute(actor: Actor, input: CreatePersonnelInput): Promise<Personnel> {
-    await this.policy.assertCanWrite(actor)
     return this.uow.run(async ({ personnel, audit }) => {
       // The entity is written first: a duplicate cedula throws before any audit row exists.
       const created = await personnel.create(
         {
           cedula: normalizeCedula(input.cedula),
-          fullName: input.fullName,
+          firstNames: input.firstNames,
+          lastNames: input.lastNames,
+          documentTypeId: input.documentTypeId ?? null,
+          nationalityId: input.nationalityId ?? null,
+          birthDate: input.birthDate ?? null,
+          address: input.address ?? null,
           email: input.email ?? null,
           phone: input.phone ?? null,
           bloodType: input.bloodType ?? null,

@@ -1,4 +1,4 @@
-import type { INestApplication } from '@nestjs/common'
+import type { INestApplication, Type } from '@nestjs/common'
 import { vi } from 'vitest'
 
 const BASE_ENV = {
@@ -12,15 +12,19 @@ const BASE_ENV = {
 
 /**
  * Boots the real AppModule through configureApp. The env is read when the config module is
- * imported, so modules are re-imported after applying `env` overrides.
+ * imported, so modules are re-imported after applying `env` overrides. `controllers` adds
+ * test-only routes, which go through the same global guards as the real ones.
  */
-export async function createTestApp(env: Record<string, string> = {}): Promise<INestApplication> {
+export async function createTestApp(
+  env: Record<string, string> = {},
+  controllers: Type[] = [],
+): Promise<INestApplication> {
   Object.assign(process.env, BASE_ENV, env)
   vi.resetModules()
   const { Test } = await import('@nestjs/testing')
   const { AppModule } = await import('../app.module.js')
   const { configureApp } = await import('../configure-app.js')
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile()
+  const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers }).compile()
   const app = configureApp(moduleRef.createNestApplication())
   await app.init()
   return app

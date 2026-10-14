@@ -1,21 +1,15 @@
 # Personnel module
 
-Create, list, get and update `personal_aeronautico` records (no delete in this change). Every successful
+Create, list, get and update `personal_aeronautico` records (no delete yet: W1-4). Every successful
 create/update writes its `auditoria` row in the same transaction (BR-11, NFR-09) through the `UnitOfWork`;
 a duplicate cedula returns 409 and leaves no entity and no audit row.
 
-## Known gap: write access is not role-restricted
+Fields follow D21: first and last names, document type and nationality (catalog ids), birth date, address,
+contact data, blood type, cargo, dependencia, category and status. The photo and the signature (D5) live in
+`bytea` columns that are never loaded with the record: responses only say `hasPhoto` / `hasSignature`, and
+their endpoints belong to W1-4.
 
-Deliberate, user-approved decision (see the `sryg-monorepo-setup` change): personnel writes
-(`POST /api/personnel`, `PATCH /api/personnel/:id`) are allowed for **any authenticated user**, including
-role `consulta`. There is no `@Roles()` guard here; the global `JwtAuthGuard` is the only access control.
+## Access
 
-This is provisional until the `sryg-auth-rbac` change (requirement AUTH-04, role matrix) lands.
-
-### Extension point
-
-`PersonnelWritePolicy` (`domain/write-policy.ts`) is called by the create and update use cases before
-anything is written. The default provider, `AllowAllWritePolicy`, is a no-op bound to the
-`PERSONNEL_WRITE_POLICY` token in `personnel.module.ts`. To enforce RBAC, provide a policy that throws
-`ForbiddenError` (mapped to 403) for roles that may not write and rebind the token; use cases, controller
-and audit logic do not change.
+Enforced by the global `PermissionGuard` through `@RequirePermission('personnel', ...)` (AUTH-04, D1, D24):
+every role reads; the Admin and Supervisors of any area write; Consulta gets 403 on writes.

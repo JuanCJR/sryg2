@@ -1,6 +1,7 @@
 import type { AuthUser } from '@sryg/types'
 import { InvalidCredentialsError } from '../../shared/domain/errors'
 import type { UserRepository } from '../domain/user-repository'
+import { toAuthUser } from './login.use-case'
 
 export class GetCurrentUserUseCase {
   constructor(private readonly users: UserRepository) {}
@@ -9,6 +10,6 @@ export class GetCurrentUserUseCase {
   async execute(userId: string): Promise<AuthUser> {
     const user = await this.users.findById(userId)
     if (!user || !user.isActive) throw new InvalidCredentialsError('Invalid credentials')
-    return { id: user.id, email: user.email, fullName: user.fullName, role: user.role }
+    return toAuthUser(user)
   }
 }

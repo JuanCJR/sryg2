@@ -43,8 +43,10 @@ export class SeedAdminUseCase {
       email: input.email,
       fullName: input.fullName,
       role: 'administrador',
+      area: 'ambas',
       passwordHash: await this.hasher.hash(input.password),
       isActive: true,
+      mustChangePassword: false,
     })
     return 'created'
   }
