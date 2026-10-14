@@ -11,6 +11,8 @@ const okBody = {
     email: 'ana@inac.gob.ve',
     fullName: 'Ana',
     role: 'administrador',
+    area: 'ambas',
+    mustChangePassword: false,
   },
 }
 
