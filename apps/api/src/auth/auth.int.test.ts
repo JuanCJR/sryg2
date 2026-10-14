@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common'
-import { auditoria, createDb, usuario } from '@sryg/db'
-import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { accesoUsuario, auditoria, createDb, usuario } from '@sryg/db'
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { JwtService } from '@nestjs/jwt'
 import { randomUUID } from 'node:crypto'
 import request from 'supertest'
@@ -20,8 +20,22 @@ async function seedUsers() {
   const passwordHash = await new Argon2PasswordHasher().hash(PASSWORD)
   await db.delete(usuario).where(inArray(usuario.email, Object.values(EMAILS)))
   await db.insert(usuario).values([
-    { email: EMAILS.active, fullName: 'Active User', role: 'supervisor', passwordHash, isActive: true },
-    { email: EMAILS.inactive, fullName: 'Inactive User', role: 'consulta', passwordHash, isActive: false },
+    {
+      email: EMAILS.active,
+      fullName: 'Active User',
+      role: 'supervisor',
+      area: 'medicina',
+      passwordHash,
+      isActive: true,
+    },
+    {
+      email: EMAILS.inactive,
+      fullName: 'Inactive User',
+      role: 'consulta',
+      area: 'ambas',
+      passwordHash,
+      isActive: false,
+    },
   ])
 }
 
@@ -46,10 +60,13 @@ describe('auth http', () => {
 
   it('logs in with valid credentials and returns a token carrying the role claim', async () => {
     const res = await login(EMAILS.active, PASSWORD).expect(200)
-    expect(res.body).toMatchObject({ expiresIn: 3600, user: { email: EMAILS.active, role: 'supervisor' } })
-    expect(JSON.stringify(res.body)).not.toMatch(/argon2|password/i)
+    expect(res.body).toMatchObject({
+      expiresIn: 3600,
+      user: { email: EMAILS.active, role: 'supervisor', area: 'medicina', mustChangePassword: false },
+    })
+    expect(JSON.stringify(res.body)).not.toMatch(/argon2|"password/i)
     const claims = new JwtService().decode<{ sub: string; role: string }>(res.body.accessToken)
-    expect(claims).toMatchObject({ sub: res.body.user.id, role: 'supervisor' })
+    expect(claims).toMatchObject({ sub: res.body.user.id, role: 'supervisor', area: 'medicina' })
   })
 
   it('returns an identical 401 for wrong password, unknown email and inactive user', async () => {
@@ -79,6 +96,21 @@ describe('auth http', () => {
     await login(EMAILS.active, 'wrong-password').expect(401)
     expect((await success()).length).toBe(okBefore + 1)
     expect((await failure()).length).toBeGreaterThanOrEqual(failBefore + 1)
+  })
+
+  it('records each attempt in acceso_usuario with the client IP (D23)', async () => {
+    const { body } = await login(EMAILS.active, PASSWORD).set('X-Forwarded-For', '198.51.100.20').expect(200)
+    await login(EMAILS.active, 'wrong-password').set('X-Forwarded-For', '198.51.100.21').expect(401)
+    const rows = await db
+      .select()
+      .from(accesoUsuario)
+      .where(eq(accesoUsuario.usuarioId, body.user.id))
+      .orderBy(desc(accesoUsuario.id))
+      .limit(2)
+    expect(rows.map((r) => [r.identifier, r.ip, r.success])).toEqual([
+      [EMAILS.active, '198.51.100.21', false],
+      [EMAILS.active, '198.51.100.20', true],
+    ])
   })
 
   it('returns 400 for missing or malformed login fields', async () => {

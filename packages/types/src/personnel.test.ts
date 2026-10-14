@@ -1,25 +1,39 @@
 import { describe, expect, it } from 'vitest'
 import { createPersonnelSchema, updatePersonnelSchema } from './personnel'
 
+const base = { cedula: 'V-12.345.678', firstNames: 'Ana María', lastNames: 'Pérez Gómez' }
+
 describe('createPersonnelSchema', () => {
-  it('normalizes the cedula to digits only and defaults optional fields', () => {
-    const parsed = createPersonnelSchema.parse({ cedula: 'V-12.345.678', fullName: 'Ana Perez' })
-    expect(parsed).toMatchObject({ cedula: '12345678', fullName: 'Ana Perez' })
+  it('normalizes the cedula to digits only and keeps names, birth date and address', () => {
+    const parsed = createPersonnelSchema.parse({ ...base, birthDate: '1990-05-01', address: 'Calle 1, Maracay' })
+    expect(parsed).toMatchObject({
+      cedula: '12345678',
+      firstNames: 'Ana María',
+      lastNames: 'Pérez Gómez',
+      birthDate: '1990-05-01',
+      address: 'Calle 1, Maracay',
+    })
   })
 
-  it('requires cedula and full name, rejects invalid cedulas and enum values', () => {
-    expect(createPersonnelSchema.safeParse({ fullName: 'Ana' }).success).toBe(false)
-    expect(createPersonnelSchema.safeParse({ cedula: '123', fullName: 'Ana' }).success).toBe(false)
-    expect(createPersonnelSchema.safeParse({ cedula: '12345678', fullName: '  ' }).success).toBe(false)
-    expect(
-      createPersonnelSchema.safeParse({ cedula: '12345678', fullName: 'Ana', category: 'astronauta' }).success,
-    ).toBe(false)
+  it('requires cedula, first names and last names', () => {
+    expect(createPersonnelSchema.safeParse({ ...base, cedula: undefined }).success).toBe(false)
+    expect(createPersonnelSchema.safeParse({ ...base, cedula: '123' }).success).toBe(false)
+    expect(createPersonnelSchema.safeParse({ ...base, firstNames: '  ' }).success).toBe(false)
+    expect(createPersonnelSchema.safeParse({ ...base, lastNames: undefined }).success).toBe(false)
   })
 
-  it('ignores server-managed fields', () => {
-    const parsed = createPersonnelSchema.parse({ cedula: '12345678', fullName: 'Ana', id: 'x', photoRef: 'y' })
-    expect(parsed).not.toHaveProperty('id')
-    expect(parsed).not.toHaveProperty('photoRef')
+  it('validates catalog ids, birth date and enums', () => {
+    expect(createPersonnelSchema.safeParse({ ...base, documentTypeId: 'x' }).success).toBe(false)
+    expect(createPersonnelSchema.safeParse({ ...base, nationalityId: 'x' }).success).toBe(false)
+    expect(createPersonnelSchema.safeParse({ ...base, birthDate: '01/05/1990' }).success).toBe(false)
+    expect(createPersonnelSchema.safeParse({ ...base, category: 'astronauta' }).success).toBe(false)
+    const ids = { documentTypeId: '6f1d6c0e-2b8a-4a41-9c3e-0d4a3a8f6b11', nationalityId: null }
+    expect(createPersonnelSchema.parse({ ...base, ...ids })).toMatchObject(ids)
+  })
+
+  it('ignores server-managed fields such as the photo and the signature', () => {
+    const parsed = createPersonnelSchema.parse({ ...base, id: 'x', fullName: 'y', photo: 'z', signatureMime: 'w' })
+    for (const key of ['id', 'fullName', 'photo', 'signatureMime']) expect(parsed).not.toHaveProperty(key)
   })
 })
 

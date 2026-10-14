@@ -12,7 +12,8 @@ export function configureApp(app: INestApplication) {
   // Exact-origin allow list; bearer tokens only, so no credentials/cookies.
   app.enableCors({
     origin: config.get('CORS_ORIGINS', { infer: true }),
-    methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+    // PUT and DELETE: photo, signature and attachment endpoints of the personnel file (W1-4).
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type'],
     // The web login reads it on 429 to show the throttle countdown.
     exposedHeaders: ['Retry-After'],

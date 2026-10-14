@@ -54,8 +54,10 @@ describe('SeedAdminUseCase', () => {
         email: 'admin@sryg.test',
         fullName: 'Admin',
         role: 'administrador',
+        area: 'ambas',
         passwordHash: 'hash:S3cret-passphrase',
         isActive: true,
+        mustChangePassword: false,
       },
     ])
   })

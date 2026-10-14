@@ -12,7 +12,8 @@ const PASSWORD = 'correct horse battery staple'
 // Unique per run: users with audit rows (append-only, FK RESTRICT) cannot be deleted afterwards.
 const EMAIL = `personnel-${randomUUID().slice(0, 8)}@sryg.test`
 const DIGITS = String(randomInt(10_000_000, 99_999_999))
-const NAME = `Personnel Test ${DIGITS}`
+const LAST = `Prueba${DIGITS}`
+const NAME = { firstNames: 'Ana María', lastNames: LAST }
 
 const { db, pool } = createDb(DATABASE_URL)
 
@@ -39,9 +40,10 @@ describe('personnel http', () => {
     (await db.select().from(personalAeronautico).where(eq(personalAeronautico.cedula, DIGITS))).length
 
   beforeAll(async () => {
-    // Role `consulta` on purpose: writes follow only the auth guard until RBAC lands (AUTH-04).
     const passwordHash = await new Argon2PasswordHasher().hash(PASSWORD)
-    await db.insert(usuario).values({ email: EMAIL, fullName: 'Personnel Tester', role: 'consulta', passwordHash })
+    await db
+      .insert(usuario)
+      .values({ email: EMAIL, fullName: 'Personnel Tester', role: 'supervisor', area: 'licencias', passwordHash })
     app = await createTestApp()
     const login = await http().post('/api/auth/login').send({ email: EMAIL, password: PASSWORD }).expect(200)
     token = login.body.accessToken
@@ -61,14 +63,25 @@ describe('personnel http', () => {
     const id = randomUUID()
     await http().get('/api/personnel').expect(401)
     await http().get(`/api/personnel/${id}`).expect(401)
-    await http().post('/api/personnel').send({ cedula: DIGITS, fullName: NAME }).expect(401)
+    await http()
+      .post('/api/personnel')
+      .send({ cedula: DIGITS, ...NAME })
+      .expect(401)
     await http().patch(`/api/personnel/${id}`).send({ cargo: 'x' }).expect(401)
   })
 
   it('validates the body (400) and writes nothing', async () => {
     const before = await auditCount()
-    await http().post('/api/personnel').set(auth()).send({ fullName: NAME }).expect(400)
-    await http().post('/api/personnel').set(auth()).send({ cedula: '123', fullName: NAME }).expect(400)
+    await http()
+      .post('/api/personnel')
+      .set(auth())
+      .send({ ...NAME })
+      .expect(400)
+    await http()
+      .post('/api/personnel')
+      .set(auth())
+      .send({ cedula: '123', ...NAME })
+      .expect(400)
     await http().patch('/api/personnel/not-a-uuid').set(auth()).send({ cargo: 'x' }).expect(400)
     expect(await auditCount()).toBe(before)
   })
@@ -80,11 +93,23 @@ describe('personnel http', () => {
       .set(auth())
       .send({
         cedula: `V-${DIGITS.slice(0, 2)}.${DIGITS.slice(2, 5)}.${DIGITS.slice(5)}`,
-        fullName: NAME,
+        ...NAME,
+        birthDate: '1985-03-09',
+        address: 'Av. Las Delicias, Maracay',
         cargo: 'Piloto',
       })
       .expect(201)
-    expect(created.body).toMatchObject({ cedula: DIGITS, fullName: NAME, status: 'activo', cargo: 'Piloto' })
+    expect(created.body).toMatchObject({
+      cedula: DIGITS,
+      ...NAME,
+      birthDate: '1985-03-09',
+      address: 'Av. Las Delicias, Maracay',
+      status: 'activo',
+      cargo: 'Piloto',
+      hasPhoto: false,
+      hasSignature: false,
+    })
+    expect(created.body).not.toHaveProperty('photo')
     expect(await auditCount()).toBe(before + 1)
     const [row] = await db
       .select()
@@ -95,7 +120,7 @@ describe('personnel http', () => {
     const duplicate = await http()
       .post('/api/personnel')
       .set(auth())
-      .send({ cedula: DIGITS, fullName: 'Someone Else' })
+      .send({ cedula: DIGITS, firstNames: 'Someone', lastNames: 'Else' })
       .expect(409)
     expect(duplicate.body).toMatchObject({ statusCode: 409, error: 'Conflict' })
     expect(await personnelCount()).toBe(1)
@@ -103,7 +128,7 @@ describe('personnel http', () => {
   })
 
   it('reads one and lists with search, without writing audit rows', async () => {
-    const found = await http().get('/api/personnel').query({ q: NAME }).set(auth()).expect(200)
+    const found = await http().get('/api/personnel').query({ q: LAST }).set(auth()).expect(200)
     expect(found.body).toMatchObject({ page: 1, pageSize: 20, total: 1 })
     const id = found.body.items[0].id
     const before = await auditCount()
@@ -114,7 +139,7 @@ describe('personnel http', () => {
   })
 
   it('updates with PATCH, writes one actualizar row, 404 for unknown id, 409 for a taken cedula', async () => {
-    const { body } = await http().get('/api/personnel').query({ q: NAME }).set(auth()).expect(200)
+    const { body } = await http().get('/api/personnel').query({ q: LAST }).set(auth()).expect(200)
     const id: string = body.items[0].id
     const before = await auditCount(id)
     const updated = await http().patch(`/api/personnel/${id}`).set(auth()).send({ cargo: 'Capitan' }).expect(200)
@@ -133,7 +158,7 @@ describe('personnel http', () => {
     const other = await http()
       .post('/api/personnel')
       .set(auth())
-      .send({ cedula: otherDigits, fullName: 'Other' })
+      .send({ cedula: otherDigits, firstNames: 'Other', lastNames: 'Person' })
       .expect(201)
     const afterOther = await auditCount()
     await http().patch(`/api/personnel/${id}`).set(auth()).send({ cedula: otherDigits }).expect(409)

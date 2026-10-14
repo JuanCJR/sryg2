@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common'
 import { ThrottlerGuard } from '@nestjs/throttler'
 import { type LoginRequest, loginRequestSchema } from '@sryg/types'
+import type { Request } from 'express'
 import { GetCurrentUserUseCase } from '../application/get-current-user.use-case'
 import { LoginUseCase } from '../application/login.use-case'
 import { Public } from '../../shared/http/public.decorator'
@@ -18,8 +19,9 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Post('login')
   @HttpCode(200)
-  signIn(@Body(new ZodValidationPipe(loginRequestSchema)) body: LoginRequest) {
-    return this.login.execute(body)
+  signIn(@Req() request: Request, @Body(new ZodValidationPipe(loginRequestSchema)) body: LoginRequest) {
+    // `trust proxy` (configureApp) makes request.ip the client address behind the Render proxy.
+    return this.login.execute(body, { ip: request.ip ?? null })
   }
 
   @Get('me')

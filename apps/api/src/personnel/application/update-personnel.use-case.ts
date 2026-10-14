@@ -1,17 +1,12 @@
 import { normalizeCedula, type UpdatePersonnelInput } from '@sryg/types'
 import { NotFoundError } from '../../shared/domain/errors'
-import { PERSONNEL_ENTITY, type Personnel, type PersonnelChanges } from '../domain/personnel'
+import { type Actor, PERSONNEL_ENTITY, type Personnel, type PersonnelChanges } from '../domain/personnel'
 import type { PersonnelUnitOfWork } from '../domain/personnel-unit-of-work'
-import type { Actor, PersonnelWritePolicy } from '../domain/write-policy'
 
 export class UpdatePersonnelUseCase {
-  constructor(
-    private readonly uow: PersonnelUnitOfWork,
-    private readonly policy: PersonnelWritePolicy,
-  ) {}
+  constructor(private readonly uow: PersonnelUnitOfWork) {}
 
   async execute(actor: Actor, id: string, input: UpdatePersonnelInput): Promise<Personnel> {
-    await this.policy.assertCanWrite(actor)
     return this.uow.run(async ({ personnel, audit }) => {
       const current = await personnel.findById(id)
       if (!current) throw new NotFoundError('Personnel not found')

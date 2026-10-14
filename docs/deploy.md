@@ -58,8 +58,9 @@ added in the dashboard are preserved on later syncs even though they are not in 
 2. The first start applies all migrations to the empty Neon database (`Migrations applied.` in the logs).
 3. Set `VITE_API_URL` on `sryg-web` to the `sryg-api` URL and redeploy `sryg-web`.
 4. Seed the admin from the operator machine (credentials are never stored on Render), using the direct URL:
-   `DATABASE_MIGRATION_URL=<direct url> SEED_ADMIN_EMAIL=... SEED_ADMIN_PASSWORD=... SEED_ADMIN_NAME=... pnpm db:seed`.
-   The seed is idempotent.
+   `DATABASE_MIGRATION_URL=<direct url> SEED_ADMIN_EMAIL=... SEED_ADMIN_PASSWORD=... SEED_ADMIN_NAME=... pnpm db:seed:admin`.
+   The seed is idempotent. Never run `pnpm db:seed` against production: it loads fictitious development data
+   (it refuses to run with `NODE_ENV=production`).
 5. Smoke test: `curl -fsS https://sryg-api.onrender.com/health` (200), `/health/ready` (200), then
    `POST /api/auth/login` with the seeded admin returns a token.
 

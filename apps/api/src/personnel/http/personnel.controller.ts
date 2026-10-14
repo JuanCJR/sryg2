@@ -9,6 +9,7 @@ import {
 } from '@sryg/types'
 import { z } from 'zod'
 import type { AuthenticatedRequest } from '../../auth/http/jwt-auth.guard'
+import { RequirePermission } from '../../shared/http/require-permission.decorator'
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe'
 import { CreatePersonnelUseCase } from '../application/create-personnel.use-case'
 import { GetPersonnelUseCase } from '../application/get-personnel.use-case'
@@ -17,7 +18,7 @@ import { UpdatePersonnelUseCase } from '../application/update-personnel.use-case
 
 const idPipe = new ZodValidationPipe(z.uuid())
 
-/** Access follows the global JwtAuthGuard only: any authenticated user (see ../README.md). */
+/** Every role reads; Admin and Supervisors of any area write (D1, D24). */
 @Controller('personnel')
 export class PersonnelController {
   constructor(
@@ -28,17 +29,20 @@ export class PersonnelController {
   ) {}
 
   @Get()
+  @RequirePermission('personnel', 'read')
   list(@Query(new ZodValidationPipe(listQuerySchema)) query: ListQuery) {
     return this.listPersonnel.execute(query)
   }
 
   @Get(':id')
+  @RequirePermission('personnel', 'read')
   get(@Param('id', idPipe) id: string) {
     return this.getPersonnel.execute(id)
   }
 
   @Post()
   @HttpCode(201)
+  @RequirePermission('personnel', 'write')
   create(
     @Req() request: AuthenticatedRequest,
     @Body(new ZodValidationPipe(createPersonnelSchema)) body: CreatePersonnelInput,
@@ -47,6 +51,7 @@ export class PersonnelController {
   }
 
   @Patch(':id')
+  @RequirePermission('personnel', 'write')
   update(
     @Req() request: AuthenticatedRequest,
     @Param('id', idPipe) id: string,

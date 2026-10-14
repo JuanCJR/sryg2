@@ -2,13 +2,14 @@ import { type CanActivate, type ExecutionContext, Injectable, UnauthorizedExcept
 import { Reflector } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import type { Request } from 'express'
-import type { Role } from '@sryg/types'
+import type { Role, UserArea } from '@sryg/types'
 import { IS_PUBLIC_KEY } from '../../shared/http/public.decorator'
 
 export interface AuthenticatedUser {
   id: string
   email: string
   role: Role
+  area: UserArea
 }
 
 export type AuthenticatedRequest = Request & { user: AuthenticatedUser }
@@ -31,10 +32,10 @@ export class JwtAuthGuard implements CanActivate {
     const [scheme, token] = request.headers.authorization?.split(' ') ?? []
     if (scheme !== 'Bearer' || !token) throw unauthorized()
     try {
-      const payload = await this.jwt.verifyAsync<{ sub: string; email: string; role: Role }>(token, {
+      const payload = await this.jwt.verifyAsync<{ sub: string; email: string; role: Role; area: UserArea }>(token, {
         algorithms: ['HS256'],
       })
-      request.user = { id: payload.sub, email: payload.email, role: payload.role }
+      request.user = { id: payload.sub, email: payload.email, role: payload.role, area: payload.area }
     } catch {
       throw unauthorized()
     }
