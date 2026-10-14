@@ -8,3 +8,21 @@
   display: flex;
   justify-content: flex-end;
 }
+
+.loading {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.historyToggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
