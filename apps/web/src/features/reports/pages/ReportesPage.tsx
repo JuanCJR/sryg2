@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { ReportesContainer } from '../containers/ReportesContainer'
 
-/** Placeholder pre-registered by F0-B; W1-8 feat/reports replaces it. */
+/** Thin route entry — all state and derivation live in the container. */
 export function ReportesPage() {
-  return <PendingScreen title="Reportes" plannedChange="W1-8 feat/reports" />
+  return <ReportesContainer />
 }
