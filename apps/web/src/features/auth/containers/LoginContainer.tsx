@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
-import { PATHS } from '../../../app/routes'
+import { useNavigate, useSearchParams } from 'react-router'
 import { AuthTemplate } from '../../../app/templates/AuthTemplate'
 import { AtcScope } from '../components/AtcScope'
 import { AuthPitch } from '../components/AuthPitch'
 import { LoginForm } from '../components/LoginForm'
 import { noticeFor, type LoginPhase } from '../domain/login-notice'
+import { safeNextPath } from '../domain/auth-gate'
 import { login } from '../domain/login-client'
-import { sessionStore } from '../domain/session'
+import { sessionStore } from '../../../shared/session/session'
 import { validateLogin, type LoginFieldIssues } from '../domain/validation'
 
 /** Counts down from `seconds` once per second; null when there is nothing to wait for. */
@@ -35,6 +35,7 @@ function useCountdown(seconds: number | undefined): number | null {
 
 export function LoginContainer() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const passwordRef = useRef<HTMLInputElement>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -63,7 +64,8 @@ export function LoginContainer() {
     switch (outcome.kind) {
       case 'success':
         sessionStore.set(outcome.response.accessToken)
-        navigate(PATHS.panel, { replace: true })
+        // Back to where the expired session left off (D4), or to the panel.
+        navigate(safeNextPath(searchParams.get('next')), { replace: true })
         return
       case 'throttled':
         setPhase(

@@ -1,16 +1,14 @@
 import { NavLink } from 'react-router'
 import { Icon } from '../../design-system'
 import { useRole } from '../role/useRole'
-import { NAV_ITEMS } from './nav-items'
+import { visibleNavGroups, type NavItem } from './nav-items'
 import styles from './NavRail.module.css'
 
 export function NavRail() {
-  const { can } = useRole()
-  const visible = NAV_ITEMS.filter((item) => !item.permission || can(item.permission))
-  const primary = visible.filter((item) => !item.adminGroup)
-  const admin = visible.filter((item) => item.adminGroup)
+  const { role, area } = useRole()
+  const groups = role && area ? visibleNavGroups(role, area) : []
 
-  const renderItem = (item: (typeof NAV_ITEMS)[number]) => (
+  const renderItem = (item: NavItem) => (
     <NavLink
       key={item.path}
       to={item.path}
@@ -24,13 +22,12 @@ export function NavRail() {
 
   return (
     <nav className={styles.rail} aria-label="Navegación principal">
-      <div className={styles.group}>{primary.map(renderItem)}</div>
-      {admin.length > 0 ? (
-        <div className={styles.group}>
-          <p className={styles.groupLabel}>Administración</p>
-          {admin.map(renderItem)}
+      {groups.map((group) => (
+        <div key={group.id} className={styles.group} role="group" aria-label={group.label}>
+          {group.label ? <p className={styles.groupLabel}>{group.label}</p> : null}
+          {group.items.map(renderItem)}
         </div>
-      ) : null}
+      ))}
     </nav>
   )
 }

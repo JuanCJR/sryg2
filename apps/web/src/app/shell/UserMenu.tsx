@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Icon } from '../../design-system'
-import { ROLE_LABEL } from '../role/permissions'
+import { AREA_LABEL, ROLE_LABEL } from '../role/labels'
 import { useRole } from '../role/useRole'
 import { RoleMenuContent } from './RoleMenuContent'
 import styles from './UserMenu.module.css'
 
-/** "operador.demo" button opening a role switch, Perfil link, and Cerrar sesión. */
+/** The signed-in user (name, role and area) opening the Perfil link and Cerrar sesión. */
 export function UserMenu() {
-  const { role } = useRole()
+  const { user, role, area } = useRole()
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
 
@@ -43,13 +43,17 @@ export function UserMenu() {
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        <span className={styles.name}>operador.demo</span>
-        <span className={styles.roleTag}>{ROLE_LABEL[role]}</span>
+        <span className={styles.name}>{user?.fullName}</span>
+        {role && area ? (
+          <span className={styles.roleTag}>
+            {ROLE_LABEL[role]} · {AREA_LABEL[area]}
+          </span>
+        ) : null}
         <Icon icon={ChevronDown} size={16} />
       </button>
       {open ? (
         <div className={styles.panel} role="menu">
-          <RoleMenuContent idPrefix="user-menu" onNavigate={() => setOpen(false)} />
+          <RoleMenuContent onNavigate={() => setOpen(false)} />
         </div>
       ) : null}
     </div>

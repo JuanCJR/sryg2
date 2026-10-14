@@ -1,0 +1,54 @@
+.wrap {
+  position: relative;
+}
+
+.popup {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--s-1));
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: var(--s-1) 0;
+  border: var(--hair) solid var(--control-border-strong);
+  border-radius: var(--r-1);
+  background: var(--surface);
+}
+
+.listbox {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-2) var(--s-4);
+  cursor: pointer;
+}
+
+.option[data-active='true'] {
+  background: var(--surface-raised);
+}
+
+.option[aria-selected='true'] .nameEs {
+  font-weight: 700;
+}
+
+.nameEn {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}

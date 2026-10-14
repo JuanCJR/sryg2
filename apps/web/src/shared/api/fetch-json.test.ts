@@ -36,3 +36,41 @@ describe('ApiError headers', () => {
     expect(err.headers.get('Retry-After')).toBe('30')
   })
 })
+
+describe('createFetchJson session (D4)', () => {
+  const session = (token: string | null) => ({ getToken: () => token, onUnauthorized: vi.fn() })
+
+  it('sends the stored session token as Bearer when no explicit token is given', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(json(200, {}))
+    await createFetchJson('https://api.test', fetchImpl, session('stored'))('/api/personnel')
+    expect(new Headers(fetchImpl.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer stored')
+  })
+
+  it('reports a 401 on an authenticated request so the session can be cleared', async () => {
+    const auth = session('expired')
+    const fetchImpl = vi.fn().mockResolvedValue(json(401, { statusCode: 401, error: 'Unauthorized', message: 'x' }))
+    await expect(createFetchJson('https://api.test', fetchImpl, auth)('/api/auth/me')).rejects.toMatchObject({
+      status: 401,
+    })
+    expect(auth.onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  it('does not treat a 401 without a session (a rejected login) as an expired session', async () => {
+    const auth = session(null)
+    const fetchImpl = vi.fn().mockResolvedValue(json(401, { statusCode: 401, error: 'Unauthorized', message: 'x' }))
+    await expect(createFetchJson('https://api.test', fetchImpl, auth)('/api/auth/login')).rejects.toBeInstanceOf(
+      ApiError,
+    )
+    expect(auth.onUnauthorized).not.toHaveBeenCalled()
+  })
+
+  it('looks fetch up at call time when none is injected (tests and polyfills can replace it)', async () => {
+    const stub = vi.fn().mockResolvedValue(json(200, { late: true }))
+    vi.stubGlobal('fetch', stub)
+    try {
+      await expect(createFetchJson('https://api.test')('/x')).resolves.toEqual({ late: true })
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+})

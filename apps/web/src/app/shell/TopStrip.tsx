@@ -22,7 +22,6 @@ export function TopStrip({ onOpenMenu, menuButtonRef }: TopStripProps) {
         <span className={styles.brandSub}>INAC Maracay</span>
       </div>
       <div className={styles.right}>
-        <span className={styles.tag}>Datos de demostración</span>
         <span className={styles.clock}>{clock}</span>
         <ThemeKeys idPrefix="topstrip" />
         <UserMenu />

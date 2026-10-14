@@ -4,32 +4,6 @@
   gap: var(--s-4);
 }
 
-.groupLabel {
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-  color: var(--fg-muted);
-}
-
-.roleOption {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  padding: var(--s-2) 0;
-  cursor: pointer;
-}
-
-.roleOptionLabel {
-  font-size: var(--fs-base);
-}
-
-.rule {
-  border: 0;
-  border-top: var(--hair) solid var(--rule);
-  margin: 0;
-}
-
 .link {
   color: var(--fg);
   text-decoration: none;

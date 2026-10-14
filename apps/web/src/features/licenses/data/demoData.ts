@@ -1,11 +1,10 @@
-import { addDays, mulberry32 } from '../../../demo/seed'
-import { DEMO_PERSON_ID, DEMO_ROSTER, type DemoPersonSeed, type DemoScenario } from '../../../demo/roster'
+import { addDays, mulberry32, DEMO_PERSON_ID, DEMO_ROSTER, type DemoPersonSeed, type DemoScenario } from './demoKernel'
 import type { LicenseFormData, LicenseFormRating } from '../domain/types'
 import { deriveOwnStatus } from '../domain/status'
 
 /**
  * Canonical synthetic license id for `demo-017`'s record. This feature builds its own
- * deterministic view of a person's license, derived only from `src/demo/roster.ts`'s shared
+ * deterministic view of a person's license, derived only from `data/demoKernel.ts`'s shared
  * scenario — never from `personnel`'s data module, per the layering rule (a feature must not
  * import another feature's `data/`). Both features still agree on `demo-017`'s *status*
  * ('bloqueada') because both derive it from the same roster scenario.
