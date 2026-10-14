@@ -1,0 +1,16 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.status {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.figure {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}

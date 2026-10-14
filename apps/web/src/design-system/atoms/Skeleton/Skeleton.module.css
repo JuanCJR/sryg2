@@ -1,0 +1,23 @@
+.block {
+  display: block;
+  background: var(--surface-raised);
+  border-radius: var(--r-1);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    animation: none;
+    opacity: 0.6;
+  }
+}

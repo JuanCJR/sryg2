@@ -1,0 +1,108 @@
+.title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+/* Reserved height: swapping notices never shifts the fields below. */
+.slot {
+  display: flex;
+  min-height: 68px;
+}
+
+.slot > * {
+  flex: 1;
+}
+
+.countdown {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.block {
+  width: 100%;
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 84px;
+}
+
+.reveal {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  padding: 0 var(--s-4);
+  border: 0;
+  border-left: var(--hair) solid var(--rule);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.reveal:hover:not(:disabled) {
+  color: var(--fg);
+}
+
+.reveal:disabled {
+  cursor: not-allowed;
+}
+
+/* Submitting: a row of small monochrome airplanes marching left to right, faded at both edges. */
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.planes {
+  height: 14px;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, var(--n-0) 14%, var(--n-0) 86%, transparent);
+}
+
+.planes::before {
+  content: '';
+  display: block;
+  height: 100%;
+  width: calc(100% + 40px);
+  background-color: var(--fg);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cpolygon points='25,6 20,5 13,5 9,.5 6.5,.5 9,5 4.5,5 3,2.5 2,2.5 3,6 2,9.5 3,9.5 4.5,7 9,7 6.5,11.5 9,11.5 13,7 20,7'/%3E%3C/svg%3E")
+    0 0 / 40px 12px repeat-x;
+  animation: march 1.2s linear infinite;
+}
+
+@keyframes march {
+  to {
+    transform: translateX(40px);
+  }
+}
+
+.progressLabel {
+  color: var(--fg-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planes::before {
+    animation: none;
+  }
+}

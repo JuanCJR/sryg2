@@ -1,0 +1,42 @@
+.form {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: var(--control-h);
+  padding: 0 0 0 var(--s-4);
+  border: var(--hair) solid var(--control-border);
+  border-radius: var(--r-1);
+  background: var(--surface);
+}
+
+.form:focus-within {
+  border-color: var(--control-border-strong);
+}
+
+.icon {
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+}
+
+.input::placeholder {
+  color: var(--fg-muted);
+}
+
+.input:focus {
+  outline: none;
+}
+
+.input::-webkit-search-cancel-button {
+  display: none;
+}

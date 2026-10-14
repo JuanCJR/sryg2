@@ -1,0 +1,22 @@
+.strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--r-1);
+  background: var(--surface);
+}
+
+.cedula {
+  /* Standalone inline figure, not a column — stays B612, not B612 Mono (Mono-Is-For-Columns
+     rule): B612 Mono's punctuation renders a full monospace cell per character and reads wrong
+     outside a grid or counter (e.g. "V-00. 000. 001" instead of "V-00.000.001"). */
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.nombre {
+  color: var(--fg-muted);
+}

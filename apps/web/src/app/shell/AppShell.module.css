@@ -1,0 +1,40 @@
+.skipLink {
+  position: absolute;
+  top: -48px;
+  left: var(--s-3);
+  z-index: 50;
+  padding: var(--s-3) var(--s-5);
+  background: var(--inverse-bg);
+  color: var(--inverse-fg);
+  border-radius: var(--r-1);
+  text-decoration: none;
+  transition: top var(--dur-fast) var(--ease-out-expo);
+}
+
+.skipLink:focus-visible {
+  top: var(--s-3);
+}
+
+.layout {
+  --shell-top-offset: 36px;
+  display: flex;
+  min-height: calc(100svh - 36px);
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.main {
+  --shell-main-pad: var(--s-6);
+  max-width: 1280px;
+  padding: var(--s-6);
+}
+
+@media (max-width: 480px) {
+  .main {
+    --shell-main-pad: var(--s-5);
+    padding: var(--s-5);
+  }
+}

@@ -1,0 +1,49 @@
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+.breadcrumbRow {
+  padding: var(--s-4) 0;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  padding: var(--s-2) 0 var(--s-5);
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.toolbar {
+  padding-bottom: var(--s-5);
+}
+
+.summary {
+  padding-bottom: var(--s-6);
+}
+
+.results {
+  padding-bottom: var(--s-6);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  padding: var(--s-4) 0;
+  border-top: var(--hair) solid var(--rule);
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: var(--fs-xl);
+  }
+}

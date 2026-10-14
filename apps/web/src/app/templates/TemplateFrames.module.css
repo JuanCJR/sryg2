@@ -1,0 +1,25 @@
+.loading {
+  display: flex;
+  align-items: center;
+  padding: var(--s-6) 0;
+}
+
+.loadingLabel {
+  color: var(--fg-muted);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-4);
+  padding: var(--s-6) 0;
+}
+
+.emptyTitle {
+  font-weight: 600;
+}
+
+.emptyMessage {
+  color: var(--fg-muted);
+}

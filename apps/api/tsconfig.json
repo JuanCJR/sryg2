@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": { "noEmit": true, "rootDir": ".", "customConditions": ["@sryg/source"] },
+  "include": ["src", "vitest.config.mts"],
+  "exclude": []
+}

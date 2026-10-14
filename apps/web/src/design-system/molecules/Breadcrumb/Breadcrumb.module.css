@@ -1,0 +1,38 @@
+.nav {
+  display: flex;
+  align-items: center;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.link {
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--fg);
+  text-decoration: underline;
+}
+
+.current {
+  color: var(--fg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.separator {
+  color: var(--fg-muted);
+}

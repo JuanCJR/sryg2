@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "display",
+        "createdAt": "2026-09-26T20:49:24.095Z",
+        "reason": "token fontFamily.display resolves to Plus Jakarta Sans Variable, the single approved typeface (tokens.json:245-248); pre-existing code, false positive from name-only matching"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+.control {
+  display: block;
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 var(--s-4);
+  border-radius: var(--r-1);
+  border: var(--hair) solid var(--control-border);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  transition: border-color var(--dur-fast) var(--ease-out-expo);
+}
+
+.control::placeholder {
+  color: var(--fg-muted);
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--control-border-strong);
+}
+
+.control:disabled {
+  cursor: not-allowed;
+  color: var(--fg-muted);
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--fg);
+  border-width: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}

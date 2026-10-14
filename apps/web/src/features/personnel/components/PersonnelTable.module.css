@@ -1,0 +1,133 @@
+.table {
+  border: var(--hair) solid var(--rule);
+}
+
+.headerRow,
+.row {
+  display: grid;
+  grid-template-columns: 180px 150px 1fr 200px 240px 140px;
+  column-gap: var(--s-4);
+  align-items: center;
+  padding: var(--s-3) var(--s-4);
+}
+
+.headerRow {
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.headerCell {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.colRestante {
+  text-align: right;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list li:not(:last-child) .row {
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.row {
+  color: inherit;
+  text-decoration: none;
+}
+
+.row:hover {
+  background: var(--surface-raised);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.cedula {
+  /* B612 (not mono) with tabular-nums, like the Expediente header's cédula headline — B612 Mono's
+     full-width punctuation cells split "V-00.000.001" into "V -00. 000. 001" at this size. */
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.restante {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-sm);
+  text-align: right;
+  color: var(--fg);
+}
+
+.nombre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categoria,
+.credencial {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+
+/* Tablet and phone: drop Categoría and Credencial más crítica, keeping Días restantes — the
+   triage figure the lamp queue sorts on (per the direction contract's tablet rule). */
+@media (max-width: 1024px) {
+  .colCategoria,
+  .colCredencial {
+    display: none;
+  }
+}
+
+/* Tablet: still a dense grid, narrower without the dropped columns. */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .headerRow,
+  .row {
+    grid-template-columns: 180px 150px 1fr 120px;
+  }
+}
+
+/* Phone: rows become stacked cards instead of a grid. */
+@media (max-width: 480px) {
+  .headerRow {
+    display: none;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-2) var(--s-3);
+    padding: var(--s-4);
+  }
+
+  .estado {
+    flex-basis: 100%;
+  }
+
+  .nombre {
+    flex-basis: 100%;
+    white-space: normal;
+  }
+
+  .colCedula {
+    display: inline;
+  }
+
+  .restante {
+    margin-left: auto;
+  }
+}

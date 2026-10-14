@@ -1,0 +1,32 @@
+# dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+*.local
+*.log
+
+# environment
+.env
+.env.*
+!.env.example
+
+# tooling and local state
+.atl/
+.codegraph/
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/questions/
+.impeccable/review/
+
+# OS / editor
+~$*
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# temporary: remove after sryg-frontend/ is retired
+sryg-frontend/
+sryg-frontend-worktrees/

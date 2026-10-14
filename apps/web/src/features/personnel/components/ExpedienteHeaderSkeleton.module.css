@@ -1,0 +1,37 @@
+.loadingIdentity {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-5);
+  padding: var(--s-6) 0;
+}
+
+.loadingBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-top: var(--s-2);
+}
+
+/* Mirrors the real layout: avatar box, cédula bar, three text-line bars. */
+.skeletonAvatar {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.skeletonCedula {
+  width: 220px;
+  height: 40px;
+}
+
+.skeletonLine {
+  width: 280px;
+  height: 16px;
+}
+
+.skeletonLineShort {
+  width: 180px;
+  height: 14px;
+}

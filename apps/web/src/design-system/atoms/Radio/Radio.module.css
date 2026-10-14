@@ -1,0 +1,84 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px), (pointer: coarse) {
+  .wrapper {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--hair) solid var(--control-border);
+  border-radius: 50%;
+  background: var(--surface);
+  pointer-events: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out-expo),
+    border-color var(--dur-fast) var(--ease-out-expo);
+}
+
+.input:hover + .circle {
+  border-color: var(--control-border-strong);
+}
+
+.input:checked + .circle {
+  border-color: var(--inverse-bg);
+}
+
+.input:focus-visible + .circle {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.input:disabled + .circle {
+  cursor: not-allowed;
+  border-color: var(--rule);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--inverse-bg);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--dur-fast) var(--ease-out-expo),
+    transform var(--dur-fast) var(--ease-out-expo);
+}
+
+.input:checked ~ .circle .dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    transition: none;
+  }
+}

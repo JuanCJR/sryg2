@@ -1,0 +1,30 @@
+{
+  "name": "@sryg/root",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build:packages": "pnpm -r --filter \"./packages/*\" build",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm build:packages && pnpm -r typecheck",
+    "lint": "pnpm -r lint && eslint eslint.config.js",
+    "test": "pnpm build:packages && pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:up": "docker compose up -d db --wait",
+    "db:generate": "pnpm --filter @sryg/db generate",
+    "db:migrate": "pnpm --filter @sryg/db migrate",
+    "db:seed": "pnpm build:packages && pnpm --filter @sryg/api build && pnpm --filter @sryg/api seed:admin",
+    "dev": "pnpm --filter @sryg/web dev"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript-eslint": "catalog:"
+  }
+}

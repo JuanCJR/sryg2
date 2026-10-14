@@ -1,0 +1,136 @@
+.page {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+}
+
+/* Brand panel: always night-toned, whatever the theme (the neutral ramp is theme-independent). */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-7);
+  padding: var(--s-7) var(--s-8);
+  overflow: hidden;
+  background: var(--n-0);
+  color: var(--n-10);
+  border-right: var(--hair) solid var(--n-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.mark {
+  display: block;
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.caps,
+.sub {
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.sub {
+  color: var(--n-7);
+}
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.pitch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+/* Form column */
+.side {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.strip {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--s-5);
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.theme {
+  padding: 2px var(--s-3);
+  border: var(--hair) solid var(--control-border);
+  border-radius: var(--r-1);
+  background: none;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.theme:hover {
+  border-color: var(--control-border-strong);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-7) var(--s-6);
+}
+
+.column {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+@media (max-width: 1024px) {
+  .page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .panel {
+    padding: var(--s-5);
+    gap: var(--s-4);
+    border-right: 0;
+    border-bottom: var(--hair) solid var(--n-4);
+  }
+
+  .stage,
+  .pitch,
+  .strip {
+    display: none;
+  }
+
+  .content {
+    padding: var(--s-6) var(--s-5);
+    align-items: flex-start;
+  }
+}

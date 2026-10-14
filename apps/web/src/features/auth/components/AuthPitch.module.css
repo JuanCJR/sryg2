@@ -1,0 +1,60 @@
+.headline,
+.support,
+.item {
+  animation: rise 0.7s var(--ease-out-expo) both;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.headline {
+  margin: 0;
+  max-width: 14em;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.support {
+  margin: 0;
+  max-width: 34em;
+  color: var(--n-7);
+}
+
+.list {
+  list-style: none;
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  border-top: var(--hair) solid var(--n-4);
+}
+
+.item {
+  display: flex;
+  gap: var(--s-4);
+  align-items: baseline;
+  padding: var(--s-4) 0;
+  border-bottom: var(--hair) solid var(--n-4);
+  color: var(--n-9);
+}
+
+.tick {
+  display: block;
+  flex: none;
+  width: 12px;
+  height: 1px;
+  background: var(--n-6);
+  align-self: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headline,
+  .support,
+  .item {
+    animation: none;
+  }
+}

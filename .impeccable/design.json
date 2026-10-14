@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-29T00:00:00Z",
+  "title": "Design System: SRYG",
+  "extensions": {
+    "colorMeta": {
+      "n-0": { "role": "neutral", "displayName": "Ramp 0 — Night Ink", "canonical": "#07090b", "tonalRamp": ["#07090b", "#0e1114", "#161a1e", "#22272c", "#343a40", "#4d545b", "#6b737a", "#8e959b", "#b6bbc0", "#dde0e3", "#f5f6f7"] },
+      "n-10": { "role": "neutral", "displayName": "Ramp 10 — Day Paper", "canonical": "#f5f6f7", "tonalRamp": ["#07090b", "#0e1114", "#161a1e", "#22272c", "#343a40", "#4d545b", "#6b737a", "#8e959b", "#b6bbc0", "#dde0e3", "#f5f6f7"] },
+      "lamp-red-day": { "role": "status-danger", "displayName": "Vencida/Bloqueada Red (Day)", "canonical": "#d12f24", "tonalRamp": ["#5c1611", "#7a1d16", "#a8241b", "#c72b1f", "#d12f24", "#dd5b4e", "#e88176", "#f0a89e", "#f6c8c1", "#fae1dc", "#fdf1ee"] },
+      "lamp-red-night": { "role": "status-danger", "displayName": "Vencida/Bloqueada Red (Night)", "canonical": "#ff5a4e", "tonalRamp": ["#4a120d", "#6c1a13", "#9a271a", "#c8372d", "#ff5a4e", "#ff7d73", "#ff9d95", "#ffbcb6", "#ffd6d2", "#ffe9e7", "#fff5f4"] },
+      "lamp-amber": { "role": "status-caution", "displayName": "Próxima a Vencer Amber", "canonical": "#f2a900", "tonalRamp": ["#4d3700", "#6b4c00", "#996d00", "#c98f00", "#f2a900", "#f5bb33", "#f8cc66", "#fadd99", "#fceecc", "#fdf5e0", "#fffaf2"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "The cédula, the Expediente's one identity headline. B612, not mono — running text, not a column figure." },
+      "title": { "displayName": "Title", "purpose": "Person name and dialog titles." },
+      "body": { "displayName": "Body", "purpose": "Default running text throughout." },
+      "label": { "displayName": "Label", "purpose": "Caps-with-tracking semantic tags: page keys, nav groups, table headers, status badges, annunciator key labels." },
+      "figure": { "displayName": "Figure (Mono)", "purpose": "Column-aligned numeric data and discrete counters (table columns, pagination, annunciator totals). Never for standalone inline numbers." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for all state transitions and the warning-stack sweep." },
+      { "name": "dur-fast", "value": "120ms", "purpose": "Hover/focus state changes on buttons, keys, inputs." },
+      { "name": "dur-base", "value": "240ms", "purpose": "Standard UI transitions." },
+      { "name": "dur-slow", "value": "600ms", "purpose": "The one authored motion moment: the warning-to-credential sweep highlight." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "max-width: 480px" },
+      { "name": "tablet", "value": "481px – 1024px" },
+      { "name": "desktop", "value": "min-width: 1025px (proven at 1440px)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ramp-inverted fill; rendered primary only when the current role and credential state actually allow the action (e.g. issuance with no open block).",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Emitir o renovar</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 2px; border: 1px solid transparent; font-family: 'B612', system-ui, sans-serif; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16,1,0.3,1), border-color 120ms cubic-bezier(0.16,1,0.3,1), color 120ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary { background: #f5f6f7; color: #07090b; border-color: #f5f6f7; } .ds-btn-primary:hover { background: #4d545b; border-color: #4d545b; } .ds-btn-primary:focus-visible { outline: 2px solid #07090b; outline-offset: 2px; } .ds-btn-primary:disabled { cursor: not-allowed; background: transparent; color: #4d545b; border-color: #dde0e3; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outline button for non-primary actions (e.g. Registrar bloqueo).",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">Registrar bloqueo</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: #07090b; border: 1px solid #6b737a; } .ds-btn-secondary:hover { background: #dde0e3; border-color: #343a40; }"
+    },
+    {
+      "name": "Status Lamp — Bloqueada",
+      "kind": "custom",
+      "refersTo": "lamp-bloqueada",
+      "description": "24px lamp with a 45° diagonal hatch fill and a lock icon; the only lamp variant using a gradient/pattern, always paired with the text label.",
+      "html": "<span class=\"ds-lamp ds-lamp-bloqueada\" role=\"img\" aria-label=\"Bloqueada\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#ffffff\" stroke-width=\"1.75\"><rect x=\"5\" y=\"11\" width=\"14\" height=\"9\" rx=\"1\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/></svg></span>",
+      "css": ".ds-lamp { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 0; } .ds-lamp-bloqueada { background-image: repeating-linear-gradient(45deg, #d12f24 0, #d12f24 4px, #a8241b 4px, #a8241b 8px); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "custom",
+      "refersTo": "status-badge",
+      "description": "Lamp + uppercase label + optional mono detail; never color alone.",
+      "html": "<span class=\"ds-badge\"><span class=\"ds-lamp ds-lamp-activa\"></span><span class=\"ds-badge-label\">Activa</span><span class=\"ds-badge-detail\">245 días</span></span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 8px; } .ds-lamp-activa { background: transparent; box-shadow: inset 0 0 0 1px #4d545b; } .ds-badge-label { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #07090b; } .ds-badge-detail { font-family: 'B612 Mono', monospace; font-variant-numeric: tabular-nums slashed-zero; font-size: 12.5px; color: #4d545b; }"
+    },
+    {
+      "name": "Page Key",
+      "kind": "nav",
+      "refersTo": "page-key",
+      "description": "Square-cornered hairline pill; selected key gets the ramp-inverted fill. A key with an open problem carries a mini lamp.",
+      "html": "<button class=\"ds-key\" aria-selected=\"true\">Bloqueos</button>",
+      "css": ".ds-key { display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 16px; border-radius: 0; border: 1px solid #6b737a; background: transparent; color: #07090b; font-family: 'B612', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; } .ds-key:hover:not([aria-selected='true']) { background: #dde0e3; border-color: #343a40; } .ds-key[aria-selected='true'] { background: #07090b; color: #f5f6f7; border-color: #07090b; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Hairline outline field; invalid state doubles the border to 2px in foreground color rather than turning red.",
+      "html": "<input class=\"ds-input\" placeholder=\"Cédula\" />",
+      "css": ".ds-input { display: block; width: 100%; height: 36px; padding: 0 12px; border-radius: 2px; border: 1px solid #6b737a; background: #ffffff; color: #07090b; font-family: 'B612', sans-serif; font-size: 14px; } .ds-input:hover { border-color: #343a40; } .ds-input:focus-visible { outline: 2px solid #07090b; outline-offset: 2px; } .ds-input[aria-invalid='true'] { border-color: #07090b; border-width: 2px; }"
+    },
+    {
+      "name": "Warning Stack Row",
+      "kind": "custom",
+      "refersTo": "warning-stack-row",
+      "description": "Full-width 44px button row: lamp, uppercase title, detail, right-aligned figure. Selecting it triggers the sweep-in highlight on linked credential rows elsewhere on the page.",
+      "html": "<button class=\"ds-warning-row\"><span class=\"ds-lamp ds-lamp-bloqueada\"></span><span class=\"ds-warning-title\">Licencia bloqueada</span><span class=\"ds-warning-detail\">Impedimento administrativo abierto</span></button>",
+      "css": ".ds-warning-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 4px 16px; border: none; border-top: 1px solid #dde0e3; background: transparent; color: #07090b; text-align: left; cursor: pointer; font: inherit; } .ds-warning-row:hover { background: #dde0e3; } .ds-warning-title { font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; } .ds-warning-detail { font-size: 12.5px; color: #4d545b; }"
+    },
+    {
+      "name": "List Console Query Field",
+      "kind": "input",
+      "refersTo": "list-console-query-field",
+      "description": "Full-width 56px lookup field for list pages; a deliberate exception to the 36–44px control scale. Shows a trailing '/' key-cap hint until the field has a value.",
+      "html": "<div class=\"ds-query\"><input class=\"ds-query-input\" type=\"search\" placeholder=\"Nombre o cédula…\" /><span class=\"ds-query-keycap\">/</span></div>",
+      "css": ".ds-query { position: relative; display: flex; align-items: center; } .ds-query-input { width: 100%; height: 56px; padding: 0 48px 0 48px; border: 1px solid #6b737a; border-radius: 2px; background: #ffffff; color: #07090b; font-family: 'B612', sans-serif; font-size: 16px; } .ds-query-input:hover { border-color: #343a40; } .ds-query-input:focus-visible { outline: 2px solid #07090b; outline-offset: 2px; } .ds-query-keycap { position: absolute; right: 12px; display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 4px; border: 1px solid #6b737a; border-radius: 2px; color: #4d545b; font-family: 'B612 Mono', monospace; font-size: 12px; }"
+    },
+    {
+      "name": "Annunciator Key",
+      "kind": "custom",
+      "refersTo": "annunciator-key",
+      "description": "One of four equal lamp keys (Bloqueada, Vencida, Próxima a vencer, Activa); pressing filters results to that state and sorts by days remaining. Pressed key takes the ramp-inverted fill.",
+      "html": "<button class=\"ds-annunciator-key\" aria-pressed=\"true\"><span class=\"ds-lamp ds-lamp-bloqueada\"></span><span class=\"ds-annunciator-label\">Bloqueada</span><span class=\"ds-annunciator-total\">3</span></button>",
+      "css": ".ds-annunciator-key { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 12px 16px; border: 1px solid #6b737a; border-radius: 0; background: #ffffff; color: #07090b; cursor: pointer; text-align: left; transition: background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out; } .ds-annunciator-key:hover { background: #dde0e3; } .ds-annunciator-key:focus-visible { outline: 2px solid #07090b; outline-offset: 2px; } .ds-annunciator-key[aria-pressed='true'] { background: #07090b; color: #f5f6f7; border-color: #07090b; } .ds-annunciator-label { flex: 1; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; } .ds-annunciator-total { font-family: 'B612 Mono', monospace; font-variant-numeric: tabular-nums slashed-zero; font-size: 20px; font-weight: 700; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "ECAM/EICAS Crew Alerting",
+    "overview": "SRYG reads like a cockpit crew-alerting system, not a records app. An open credential problem is a warning message that never leaves the top of the screen, ranked by priority, and each license, rating, or medical certificate is a condition line the crew can inspect. The system refuses the category default it was built against: no sidebar of KPI cards, no tabbed card layout, no colored pills. Density and legibility come before decoration; the interface must read as precise and credible before it reads as friendly, matching INAC's institutional character.\n\nThe build is monochrome by discipline: one eleven-step cool-neutral ramp (--n-0 … --n-10) supplies every background, text, border, and control state, in both day and night variants. Hue is reserved entirely for status lamps — nowhere else. There are no shadows outside the one dialog surface, no glow, no gradients except the single repeating 45° hatch that marks a blocked lamp. Corners are square to 2px at most. The one authored motion moment — a linked-row sweep when a warning is selected — is deliberate and singular, not a house transition style.",
+    "keyCharacteristics": [
+      "Single neutral ramp for all surfaces and text; color exists only in status lamps.",
+      "B612 for running text and labels; B612 Mono strictly for column-aligned figures in tables and pagination.",
+      "Square corners (0–2px), hairline 1px rules, no shadows outside the confirm dialog.",
+      "One signature motion: a warning-to-credential sweep highlight, exponential ease-out, reduced-motion safe.",
+      "Status is never color alone: every lamp pairs a fill/outline treatment with an icon and a text label."
+    ],
+    "rules": [
+      { "name": "The One Ramp Rule", "body": "Every background, surface, border, and text color in the system resolves to a step of the single 11-step neutral ramp. A new component that reaches for a color outside --n-0…--n-10 or the three status hues is off-system.", "section": "colors" },
+      { "name": "The Hue-Is-A-Verdict Rule", "body": "Color never decorates. The only chromatic values in the build are the three status lamp colors (red, amber, unlit-neutral), and they appear nowhere except lamps, badges, and the blocked-row hatch — never as a border stripe, background tint, or brand accent.", "section": "colors" },
+      { "name": "The Mono-Is-For-Columns Rule", "body": "B612 Mono is reserved for figures that sit in an aligned column (table cells, pagination) or a discrete counter (the annunciator's totals). A standalone inline number — the cédula headline, an audit timestamp in running prose, a lone one-character badge detail — stays in B612 with tabular-nums, because B612 Mono's punctuation renders a full monospace cell and reads wrong outside a grid or counter.", "section": "typography" },
+      { "name": "The No-Shadow Rule", "body": "No box-shadow appears anywhere in the system except as a 1px inset outline (lamp rims, focused/highlighted rows) or the dialog backdrop. Depth is conveyed by ramp contrast and rules, not elevation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep every surface, text, and border color on the single --n-0…--n-10 ramp; remap only the semantic assignment between day and night, never the ramp values themselves.",
+      "Do reserve B612 Mono for column-aligned figures (table cells, pagination) and discrete counters (the annunciator's totals); use B612 with tabular-nums for standalone inline numbers (cédula headline, audit timestamps, badge details).",
+      "Do pair every status indicator with a lamp, an icon, and a text label — never color alone.",
+      "Do keep the primary button contextual to what the current role and state actually allow; disable it in place rather than hiding or reassigning it when an action is blocked.",
+      "Do keep corners at 2px or square, and reserve the diagonal hatch pattern for the Bloqueada state only.",
+      "Do use the lookup-console grammar (breadcrumb + title + single primary action, full-width query field, annunciator panel, idle hint, dense table with responsive column drops) for list-style pages; it is a sibling to the Expediente's warning stack, not a KPI-card dashboard.",
+      "Do keep list-page chrome (breadcrumb, title, primary action, toolbar) present and reachable in loading and error states so the page never reflows on resolve."
+    ],
+    "donts": [
+      "Don't introduce a shadow anywhere but the confirm dialog's backdrop scrim, or a glow of any kind — depth comes from ramp contrast and hairline rules.",
+      "Don't add a second hue-bearing UI element (a colored border stripe, a tinted card, a brand accent color) outside the three status lamp colors.",
+      "Don't invent kickers, eyebrows, or card/KPI layouts for new surfaces — the system's page-level grammar is the warning stack, the page keys, or the list console, not a dashboard-card default.",
+      "Don't style a second element with the ramp-inverted \"primary\" fill on the same view; it marks exactly one active/primary target (button, nav item, page key, or annunciator key) at a time."
+    ]
+  }
+}

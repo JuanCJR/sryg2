@@ -1,0 +1,69 @@
+# Render blueprint: static web site + API web service. The database is Neon (not Render), so there is no
+# `databases:` block; its URLs are dashboard secrets. See docs/deploy.md.
+# NODE_VERSION is set explicitly: Render documents NODE_VERSION, .node-version and package.json engines
+# (https://render.com/docs/node-version); it does not document .nvmrc.
+# Use `corepack pnpm`, never `corepack enable`: Render's /usr/bin/pnpm is on a read-only filesystem (EROFS).
+services:
+  - type: web
+    name: sryg-web
+    runtime: static
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm --filter "@sryg/web..." build
+    staticPublishPath: apps/web/dist
+    buildFilter:
+      paths:
+        - apps/web/**
+        - packages/**
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - package.json
+        - render.yaml
+      ignoredPaths:
+        - '**/*.test.ts'
+        - '**/*.md'
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: VITE_API_URL # full origin of sryg-api, e.g. https://sryg-api.onrender.com
+        sync: false
+
+  - type: web
+    name: sryg-api
+    runtime: node
+    plan: free
+    # --prod=false: NODE_ENV=production would otherwise skip devDependencies (typescript) during the build.
+    buildCommand: corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm --filter "@sryg/api..." build
+    # preDeployCommand is paid-only, so migrations run before the server starts (single instance).
+    startCommand: node packages/db/dist/migrate.js && node apps/api/dist/main.js
+    healthCheckPath: /health
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/**
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - package.json
+        - render.yaml
+      ignoredPaths:
+        - '**/*.test.ts'
+        - '**/*.md'
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL # Neon pooled connection string, ?sslmode=require
+        sync: false
+      - key: DATABASE_MIGRATION_URL # Neon direct (unpooled) connection string, ?sslmode=require
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN # full origin of sryg-web, e.g. https://sryg-web.onrender.com
+        sync: false

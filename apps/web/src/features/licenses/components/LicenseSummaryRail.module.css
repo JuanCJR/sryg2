@@ -1,0 +1,63 @@
+.title {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-bottom: var(--s-3);
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.itemLabel {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.itemDate {
+  color: var(--fg-muted);
+  /* Standalone inline figure, not a column — stays B612, not B612 Mono (Mono-Is-For-Columns). */
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+}
+
+.count {
+  margin-top: var(--s-4);
+  padding-top: var(--s-3);
+  border-top: var(--hair) solid var(--rule);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: var(--fs-md);
+}
+
+/* At tablet/phone the itemized list gives way to just this line, per the direction's "the rail
+   moves below the sections as a sticky bottom bar with the count and Emitir"; at desktop the
+   count still shows above Emitir, the same way the bottom bar does. */
+@media (max-width: 1024px) {
+  .title,
+  .list {
+    display: none;
+  }
+
+  .count {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+}

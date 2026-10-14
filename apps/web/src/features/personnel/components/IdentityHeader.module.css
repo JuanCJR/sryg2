@@ -1,0 +1,157 @@
+.wrap {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-6);
+  padding: var(--s-6) 0;
+}
+
+.identity {
+  display: flex;
+  gap: var(--s-5);
+  min-width: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* One identity headline: cédula, with the name beneath it — not beside it. */
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  /* Floor at the unbreakable cédula so the name can still wrap. */
+  min-width: min-content;
+}
+
+.cedula {
+  /* B612, not mono — the headline is plain running text, not a column of figures. */
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.name {
+  font-size: var(--fs-lg);
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+.category {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.statusBlock {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.statusLabel {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.auditLink {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Consulta: the same line, but plain text — no navigation into HISTORIAL (audit:view is Administrador + Supervisor only). */
+.auditText {
+  align-self: flex-start;
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+
+.auditFigure {
+  /* B612, not mono — the audit timestamp is plain running text, not a column of figures. */
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-3);
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.actionRow {
+  display: flex;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.reason {
+  max-width: 320px;
+  text-align: right;
+  color: var(--fg-muted);
+  font-size: var(--fs-xs);
+}
+
+@media (max-width: 1024px) {
+  .wrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    align-items: flex-start;
+  }
+
+  .actionRow,
+  .reason {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .cedula {
+    font-size: var(--fs-xl);
+  }
+
+  /* Avatar has no size prop between 40px and 96px; !important overrides the atom's fixed size for this 64px case. */
+  .avatarPhoto {
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  .actions {
+    align-items: stretch;
+  }
+
+  .actionRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actionRow > * {
+    width: 100%;
+  }
+}

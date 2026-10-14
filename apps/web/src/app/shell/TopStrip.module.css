@@ -1,0 +1,99 @@
+.strip {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-5);
+  height: 36px;
+  padding: 0 var(--s-5);
+  background: var(--bg);
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.brandName {
+  font-weight: 700;
+  font-size: var(--fs-base);
+}
+
+.brandSub {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 var(--s-3);
+  border: var(--hair) solid var(--control-border);
+  border-radius: var(--r-1);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.clock {
+  /* B612, not mono — the clock is plain running text, not a column of figures. */
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.menuButton {
+  display: none;
+}
+
+/* Tablet: trim the least essential pieces so the strip never forces horizontal scroll. */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .strip {
+    gap: var(--s-2);
+    padding: 0 var(--s-3);
+  }
+
+  .brandSub {
+    display: none;
+  }
+
+  .right {
+    gap: var(--s-3);
+  }
+
+  .tag {
+    padding: 0 var(--s-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .brandSub,
+  .right {
+    display: none;
+  }
+
+  .menuButton {
+    display: inline-flex;
+  }
+}

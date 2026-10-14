@@ -1,0 +1,13 @@
+.mark {
+  display: block;
+  object-fit: contain;
+}
+
+.night {
+  mix-blend-mode: screen;
+}
+
+.day {
+  filter: invert(1);
+  mix-blend-mode: multiply;
+}

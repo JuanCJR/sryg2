@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["node"],
+    "customConditions": ["@sryg/source"]
+  },
+  "include": ["src", "vitest.config.mts", "drizzle.config.ts"],
+  "exclude": []
+}

@@ -1,0 +1,36 @@
+/* Every section gets the identical treatment — same caps legend, same hairline rule above it,
+   including the first section — so LICENCIA and HABILITACIONES read as one consistent grammar
+   rather than the first section looking like a different, border-less kind of block. */
+.section {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: var(--s-6) 0 0;
+  border: 0;
+  border-top: var(--hair) solid var(--rule);
+}
+
+/* The legend's own spacing below it, not the container's flex `gap` (which would apply the same
+   tight spacing between every child regardless of role) — so there is always clear breathing
+   room between the caps label and whatever follows it. */
+.legend {
+  margin: 0 0 var(--s-5);
+  padding: 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.description {
+  margin: 0 0 var(--s-4);
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}

@@ -1,0 +1,83 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  height: var(--control-h);
+  padding: 0 var(--s-5);
+  border-radius: var(--r-1);
+  border: var(--hair) solid transparent;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out-expo),
+    border-color var(--dur-fast) var(--ease-out-expo),
+    color var(--dur-fast) var(--ease-out-expo);
+}
+
+.sm {
+  height: calc(var(--control-h) - var(--s-3));
+  padding: 0 var(--s-4);
+  font-size: var(--fs-xs);
+}
+
+.primary {
+  background: var(--inverse-bg);
+  color: var(--inverse-fg);
+  border-color: var(--inverse-bg);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--fg-muted);
+  border-color: var(--fg-muted);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--inverse-bg);
+  border-color: var(--inverse-bg);
+}
+
+.secondary {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--control-border);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--surface-raised);
+  border-color: var(--control-border-strong);
+}
+
+.secondary:active:not(:disabled) {
+  background: var(--surface);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--fg);
+  border-color: transparent;
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--surface-raised);
+}
+
+.ghost:active:not(:disabled) {
+  background: var(--surface);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  color: var(--fg-muted);
+  border-color: var(--rule);
+  background: transparent;
+}
+
+.button[aria-busy='true'] {
+  cursor: progress;
+}

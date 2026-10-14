@@ -1,0 +1,147 @@
+/* Base browser surfaces still carry the "Crew Alerting" direction, even where the design system doesn't hand-draw them. */
+
+@import '@fontsource/b612/400.css';
+@import '@fontsource/b612/400-italic.css';
+@import '@fontsource/b612/700.css';
+@import '@fontsource/b612/700-italic.css';
+@import '@fontsource/b612-mono/400.css';
+@import '@fontsource/b612-mono/700.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Text selection */
+::selection {
+  background: var(--inverse-bg);
+  color: var(--inverse-fg);
+}
+
+/* Caret */
+input,
+textarea {
+  caret-color: var(--fg);
+}
+
+/* Scrollbars */
+* {
+  scrollbar-color: var(--control-border) var(--surface);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--control-border);
+  border: 2px solid var(--surface);
+  border-radius: var(--r-1);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--control-border-strong);
+}
+
+/* Focus */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Numeric data — cédulas, dates, counts, IDs */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

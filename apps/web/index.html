@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es-VE">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/jpeg" href="/sryg-mark.jpg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>SRYG · INAC Maracay</title>
+    <script>
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('sryg.theme')
+          var mode = stored === 'day' || stored === 'night' ? stored : 'system'
+          var resolved =
+            mode === 'system' ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'day' : 'night') : mode
+          document.documentElement.setAttribute('data-theme', resolved)
+          document.documentElement.style.colorScheme = resolved === 'day' ? 'light' : 'dark'
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'night')
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,72 @@
+# openspec/config.yaml
+schema: spec-driven
+
+context: |
+  Project: sryg — Automated Credential Management System for INAC Maracay
+  (Venezuela). Registers aeronautical personnel and tracks licenses/ratings
+  (RAV 60) and medical certificates (RAV 67), auto-blocking expired status,
+  with reports, audit trail, and role-based access (admin, supervisor,
+  read-only/"consulta"). Client-server web app.
+  Stack (intended, not yet scaffolded): TypeScript for frontend and backend,
+  Node.js, PostgreSQL, stateless JWT auth, RBAC, ISO/IEC 25010 quality target,
+  ISO/IEC 27001-aligned security controls, audit trails.
+  Source of truth: docs/thesis.docx (engineering thesis).
+  Status: greenfield — no repository, no package.json, no code, no test
+  runner exist yet. Stack decided by user (2026-09-26): React + Vite
+  (frontend), NestJS (backend), Drizzle ORM (drizzle-kit migrations to be
+  confirmed in design), PostgreSQL. Test runner still open.
+
+strict_tdd: false # No test runner exists yet (greenfield, no scaffolded stack).
+                   # Revisit once the backend/frontend projects and a workspace
+                   # test command are scaffolded — do not set true without one.
+
+testing:
+  status: not-scaffolded
+  note: >
+    No package.json, go.mod, pyproject.toml, or any project marker exists.
+    Zero projects discovered under workspace-root discovery rules, so
+    strict_tdd fails closed to false per SDD init decision gates. See
+    `sdd/sryg/testing-capabilities` (Engram) / testing capabilities section
+    below for the full (empty) table.
+
+rules:
+  proposal:
+    - Every proposal MUST cite the governing regulation (RAV 60 and/or RAV 67)
+      or ICAO Annex 1 for any functional requirement it introduces.
+    - Include a rollback plan for risky changes.
+    - Treat frontend framework choice, ORM/query-builder choice, and
+      migration tool choice as open decisions to resolve explicitly, not to
+      assume from the source thesis.
+  specs:
+    - Use Given/When/Then for scenarios.
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY).
+    - Model core entities explicitly: PersonalAeronautico, Licencia,
+      Habilitacion, CertificadoMedico, Usuario (with Administrador,
+      Supervisor, Consulta roles).
+    - Every credential-expiry or status-blocking rule MUST reference its RAV
+      60/RAV 67 basis.
+  design:
+    - Document the client-server / REST API architecture explicitly
+      (UI component, API REST component, relational persistence module).
+    - Include ER/data model or state-machine diagrams for credential status
+      transitions (Activa -> Vencida -> Suspendida) when non-trivial.
+    - Document JWT/RBAC and audit-trail design decisions with rationale.
+  tasks:
+    - Group by phase, use hierarchical numbering.
+    - Keep tasks completable in one session.
+    - The first tasks in any initial change MUST scaffold the actual
+      TypeScript/Node.js + PostgreSQL project (package.json, tsconfig,
+      test runner) before feature work depends on strict_tdd.
+  apply:
+    guidelines:
+      - Follow existing code patterns once the codebase exists.
+      - Do not assume a test command exists; confirm or scaffold one before
+        claiming TDD compliance.
+    tdd: false # See strict_tdd above; revisit after scaffolding.
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: ""
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas.
