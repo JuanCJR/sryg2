@@ -122,7 +122,8 @@ describe('Expediente on the API', () => {
     expect(screen.queryByRole('button', { name: /Emitir o renovar/ })).toBeNull()
 
     await user.click(screen.getByRole('tab', { name: 'Médico' }))
-    expect(screen.getByRole('button', { name: /Registrar o renovar certificado/ }).hasAttribute('disabled')).toBe(true)
+    // Built by W1-6: the action is live for the Medicina Supervisor.
+    expect(screen.getByRole('button', { name: /Registrar o renovar certificado/ }).hasAttribute('disabled')).toBe(false)
   })
 
   it('hides the Historial and every action from Consulta', async () => {

@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { CertificadoMedicoContainer } from '../containers/CertificadoMedicoContainer'
 
-/** Placeholder pre-registered by F0-B; W1-6 feat/medical-certificates replaces it. */
+/** `/personal/:id/certificado-medico` (MED-05). */
 export function CertificadoMedicoPage() {
-  return <PendingScreen title="Certificado médico" plannedChange="W1-6 feat/medical-certificates" />
+  return <CertificadoMedicoContainer />
 }
