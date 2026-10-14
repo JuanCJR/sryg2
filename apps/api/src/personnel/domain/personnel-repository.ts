@@ -8,4 +8,8 @@ export interface PersonnelRepository {
   create(data: NewPersonnel, actorId: string): Promise<Personnel>
   /** Throws NotFoundError for an unknown id and ConflictError when the new cedula already exists. */
   update(id: string, changes: PersonnelChanges, actorId: string): Promise<Personnel>
+  /** Whether the person holds a license or a medical certificate (BR-10). */
+  hasCredentials(id: string): Promise<boolean>
+  /** Throws ConflictError when another record still references the person (e.g. a block). */
+  delete(id: string): Promise<void>
 }

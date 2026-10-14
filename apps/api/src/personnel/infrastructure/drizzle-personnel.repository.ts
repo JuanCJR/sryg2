@@ -1,4 +1,4 @@
-import { type DbExecutor, personalAeronautico } from '@sryg/db'
+import { certificadoMedico, type DbExecutor, licencia, personalAeronautico } from '@sryg/db'
 import type { ListQuery, Paginated } from '@sryg/types'
 import { asc, count, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
 import { ConflictError, NotFoundError } from '../../shared/domain/errors'
@@ -6,12 +6,14 @@ import type { NewPersonnel, Personnel, PersonnelChanges } from '../domain/person
 import type { PersonnelRepository } from '../domain/personnel-repository'
 
 const UNIQUE_VIOLATION = '23505'
+const FOREIGN_KEY_VIOLATION = '23503'
 
 /** drizzle-orm wraps driver errors in `cause`; check both levels. */
-function isUniqueViolation(error: unknown): boolean {
+function hasPgCode(error: unknown, expected: string): boolean {
   const code = (e: unknown) => (typeof e === 'object' && e !== null ? (e as { code?: unknown }).code : undefined)
-  return code(error) === UNIQUE_VIOLATION || code((error as { cause?: unknown } | null)?.cause) === UNIQUE_VIOLATION
+  return code(error) === expected || code((error as { cause?: unknown } | null)?.cause) === expected
 }
+const isUniqueViolation = (error: unknown) => hasPgCode(error, UNIQUE_VIOLATION)
 
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (c) => `\\${c}`)
 
@@ -99,6 +101,28 @@ export class DrizzlePersonnelRepository implements PersonnelRepository {
       return (await this.findById(id))!
     } catch (error) {
       if (isUniqueViolation(error)) throw new ConflictError('A person with this cedula already exists')
+      throw error
+    }
+  }
+
+  async hasCredentials(id: string): Promise<boolean> {
+    const [licenses, certificates] = await Promise.all([
+      this.executor.select({ id: licencia.id }).from(licencia).where(eq(licencia.personalId, id)).limit(1),
+      this.executor
+        .select({ id: certificadoMedico.id })
+        .from(certificadoMedico)
+        .where(eq(certificadoMedico.personalId, id))
+        .limit(1),
+    ])
+    return licenses.length > 0 || certificates.length > 0
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      await this.executor.delete(personalAeronautico).where(eq(personalAeronautico.id, id))
+    } catch (error) {
+      // Blocks (and any future RESTRICT reference) keep the person: refuse instead of a 500.
+      if (hasPgCode(error, FOREIGN_KEY_VIOLATION)) throw new ConflictError('Other records reference this person')
       throw error
     }
   }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Req } from '@nestjs/common'
 import {
   type CreatePersonnelInput,
   createPersonnelSchema,
@@ -12,6 +12,7 @@ import type { AuthenticatedRequest } from '../../auth/http/jwt-auth.guard'
 import { RequirePermission } from '../../shared/http/require-permission.decorator'
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe'
 import { CreatePersonnelUseCase } from '../application/create-personnel.use-case'
+import { DeletePersonnelUseCase } from '../application/delete-personnel.use-case'
 import { GetPersonnelUseCase } from '../application/get-personnel.use-case'
 import { ListPersonnelUseCase } from '../application/list-personnel.use-case'
 import { UpdatePersonnelUseCase } from '../application/update-personnel.use-case'
@@ -26,6 +27,7 @@ export class PersonnelController {
     private readonly updatePersonnel: UpdatePersonnelUseCase,
     private readonly getPersonnel: GetPersonnelUseCase,
     private readonly listPersonnel: ListPersonnelUseCase,
+    private readonly deletePersonnel: DeletePersonnelUseCase,
   ) {}
 
   @Get()
@@ -58,5 +60,13 @@ export class PersonnelController {
     @Body(new ZodValidationPipe(updatePersonnelSchema)) body: UpdatePersonnelInput,
   ) {
     return this.updatePersonnel.execute(request.user, id, body)
+  }
+
+  /** 409 while the person holds credentials or is referenced by a block (BR-10). */
+  @Delete(':id')
+  @HttpCode(204)
+  @RequirePermission('personnel', 'write')
+  async remove(@Req() request: AuthenticatedRequest, @Param('id', idPipe) id: string): Promise<void> {
+    await this.deletePersonnel.execute(request.user, id)
   }
 }

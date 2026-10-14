@@ -7,6 +7,7 @@ import type { PersonnelRepository } from '../domain/personnel-repository'
 import type { PersonnelUowRepos } from '../domain/personnel-unit-of-work'
 import type { Actor } from '../domain/personnel'
 import { CreatePersonnelUseCase } from './create-personnel.use-case'
+import { DeletePersonnelUseCase } from './delete-personnel.use-case'
 import { GetPersonnelUseCase } from './get-personnel.use-case'
 import { ListPersonnelUseCase } from './list-personnel.use-case'
 import { UpdatePersonnelUseCase } from './update-personnel.use-case'
@@ -52,6 +53,14 @@ class FakePersonnel implements PersonnelRepository {
     this.rows.set(id, next)
     return Promise.resolve(next)
   }
+  withCredentials = new Set<string>()
+  hasCredentials(id: string) {
+    return Promise.resolve(this.withCredentials.has(id))
+  }
+  delete(id: string) {
+    this.rows.delete(id)
+    return Promise.resolve()
+  }
 }
 
 class FakeAudit implements AuditLog {
@@ -92,6 +101,7 @@ function setup() {
     audit,
     create: new CreatePersonnelUseCase(uow),
     update: new UpdatePersonnelUseCase(uow),
+    remove: new DeletePersonnelUseCase(uow),
     get: new GetPersonnelUseCase(personnel),
     list: new ListPersonnelUseCase(personnel),
   }
@@ -216,5 +226,24 @@ describe('GetPersonnelUseCase / ListPersonnelUseCase', () => {
     expect((await list.execute({ page: 1, pageSize: 10 })).total).toBe(2)
     const found = await list.execute({ q: 'luis', page: 1, pageSize: 10 })
     expect(found.items.map((p) => p.lastNames)).toEqual(['Gomez'])
+  })
+})
+
+describe('DeletePersonnelUseCase', () => {
+  it('refuses a person with credentials (BR-10) and keeps the row', async () => {
+    const { create, remove, personnel, audit } = setup()
+    const created = await create.execute(actor, { cedula: '12345678', firstNames: 'Ana', lastNames: 'Perez' })
+    personnel.withCredentials.add(created.id)
+    await expect(remove.execute(actor, created.id)).rejects.toBeInstanceOf(ConflictError)
+    expect(personnel.rows.has(created.id)).toBe(true)
+    expect(audit.entries).toHaveLength(1)
+  })
+
+  it('keeps the person when the audit write fails', async () => {
+    const { create, remove, personnel, audit } = setup()
+    const created = await create.execute(actor, { cedula: '12345678', firstNames: 'Ana', lastNames: 'Perez' })
+    audit.failNext = true
+    await expect(remove.execute(actor, created.id)).rejects.toThrow('audit write failed')
+    expect(personnel.rows.has(created.id)).toBe(true)
   })
 })

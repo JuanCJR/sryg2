@@ -5,6 +5,7 @@ import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
 import { DB } from '../infrastructure/database/database.module'
 import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
 import { CreatePersonnelUseCase } from './application/create-personnel.use-case'
+import { DeletePersonnelUseCase } from './application/delete-personnel.use-case'
 import { GetPersonnelUseCase } from './application/get-personnel.use-case'
 import { ListPersonnelUseCase } from './application/list-personnel.use-case'
 import { UpdatePersonnelUseCase } from './application/update-personnel.use-case'
@@ -39,6 +40,11 @@ const PERSONNEL_UOW = Symbol('PERSONNEL_UOW')
       provide: UpdatePersonnelUseCase,
       inject: [PERSONNEL_UOW],
       useFactory: (uow: PersonnelUnitOfWork) => new UpdatePersonnelUseCase(uow),
+    },
+    {
+      provide: DeletePersonnelUseCase,
+      inject: [PERSONNEL_UOW],
+      useFactory: (uow: PersonnelUnitOfWork) => new DeletePersonnelUseCase(uow),
     },
     {
       provide: GetPersonnelUseCase,
