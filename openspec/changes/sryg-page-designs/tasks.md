@@ -142,19 +142,19 @@ Must-honor guard: this change stays inside `sryg-frontend`'s ESLint/`tsc -b` che
 
 ## Phase 7: S07 — HUMAN GATE (Auth) + AuthTemplate + Page 1 Login (outside shell)
 
-- [ ] 7.1 **HUMAN GATE — Auth direction.** Orchestrator runs `impeccable context --target src/features/auth/pages/LoginPage.tsx`, relays questions and three structures, waits for the user's pick/steer/re-roll. Blocks 7.3, 7.5–7.9. — *Spec: page-templates "Direction Choice Gate For New Templates"*
-- [ ] 7.2 Impeccable records the direction in `.impeccable/surfaces/src-features-auth-pages-loginpage-tsx.md`. Commit: `docs(impeccable): record Auth direction`.
-- [ ] 7.3 Create `src/app/templates/AuthTemplate.tsx` + css per the chosen direction: `placement: 'standalone' | 'inShell'`; `standalone` renders a full-viewport frame with brand, the `DATOS DE DEMOSTRACIÓN` tag, a reachable day/night control (reuse `app/shell/ThemeKeys`), and the panel; `inShell` renders only the panel; `live?: 'alert'` slot. — *Design §Template contracts, AuthTemplate*
-- [ ] 7.4 Verify: `npm run lint && npm run build` pass. Commit: `feat(templates): add AuthTemplate`.
-- [ ] 7.5 Create `src/features/auth/` (`domain/`, `data/demoData.ts`, `containers/`, `components/`, `pages/LoginPage.tsx`) on `AuthTemplate` (`standalone`); mock submit calls `navigate(HOME.path, { replace: true })`.
-- [ ] 7.6 Implement valid/invalid mock submission and required-states coverage. — *Spec: auth-pages "Login Authenticates And Routes Into The Shell (Mocked)", "Login covers its required states"*
-- [ ] 7.7 **Conditional Q3**: by default, omit the "olvidé mi contraseña" link (`AuthTemplate.footer`). If the user resolves Q3 to add recovery, add `/ingreso/recuperar` as another `standalone` sibling page and its AUTH task in this slice. — *Spec: auth-pages "Login's Forgot-Password Affordance Is Pending Q3"; Proposal Q3*
-- [ ] 7.8 Modify `src/app/App.tsx`: add `/ingreso` route, a sibling of the shell layout route, still inside `RoleProvider`/`ToastProvider`/`ThemeProvider`, rendered outside `AppShell`. — *Spec: app-routing "Login Renders Outside AppShell"*
-- [ ] 7.9 Modify `src/app/shell/RoleMenuContent.tsx`: disabled "Cerrar sesión" becomes a link to `/ingreso`.
-- [ ] 7.10 Run `impeccable harden` + `impeccable audit`; fix in one batch.
-- [ ] 7.11 Verify: `npm run lint && npm run build` pass.
-- [ ] 7.12 Commit: `feat(auth): add Login on AuthTemplate`.
-- [ ] 7.13 Update `/home/jc/projects/sryg/docs/pages-inventory.md` Progreso item 1 to checked, and check tasks 7.1–7.12 in this file.
+- [x] 7.1 **HUMAN GATE — Auth direction.** Orchestrator runs `impeccable context --target src/features/auth/pages/LoginPage.tsx`, relays questions and three structures, waits for the user's pick/steer/re-roll. Blocks 7.3, 7.5–7.9. — *Spec: page-templates "Direction Choice Gate For New Templates"*
+- [x] 7.2 Impeccable records the direction in `.impeccable/surfaces/src-features-auth-pages-loginpage-tsx.md`. Commit: `docs(impeccable): record Auth direction`.
+- [x] 7.3 Create `src/app/templates/AuthTemplate.tsx` + css per the chosen direction: `placement: 'standalone' | 'inShell'`; `standalone` renders a full-viewport frame with brand, the `DATOS DE DEMOSTRACIÓN` tag, a reachable day/night control (reuse `app/shell/ThemeKeys`), and the panel; `inShell` renders only the panel; `live?: 'alert'` slot. — *Design §Template contracts, AuthTemplate*
+- [x] 7.4 Verify: `npm run lint && npm run build` pass. Commit: `feat(templates): add AuthTemplate`.
+- [x] 7.5 Create `src/features/auth/` (`domain/`, `data/demoData.ts`, `containers/`, `components/`, `pages/LoginPage.tsx`) on `AuthTemplate` (`standalone`); mock submit calls `navigate(HOME.path, { replace: true })`.
+- [x] 7.6 Implement valid/invalid mock submission and required-states coverage. — *Spec: auth-pages "Login Authenticates And Routes Into The Shell (Mocked)", "Login covers its required states"*
+- [x] 7.7 **Conditional Q3**: by default, omit the "olvidé mi contraseña" link (`AuthTemplate.footer`). If the user resolves Q3 to add recovery, add `/ingreso/recuperar` as another `standalone` sibling page and its AUTH task in this slice. — *Spec: auth-pages "Login's Forgot-Password Affordance Is Pending Q3"; Proposal Q3*
+- [x] 7.8 Modify `src/app/App.tsx`: add `/ingreso` route, a sibling of the shell layout route, still inside `RoleProvider`/`ToastProvider`/`ThemeProvider`, rendered outside `AppShell`. — *Spec: app-routing "Login Renders Outside AppShell"*
+- [x] 7.9 Modify `src/app/shell/RoleMenuContent.tsx`: disabled "Cerrar sesión" becomes a link to `/ingreso`.
+- [x] 7.10 Run `impeccable harden` + `impeccable audit`; fix in one batch.
+- [x] 7.11 Verify: `npm run lint && npm run build` pass.
+- [x] 7.12 Commit: `feat(auth): add Login on AuthTemplate`.
+- [x] 7.13 Update `/home/jc/projects/sryg/docs/pages-inventory.md` Progreso item 1 to checked, and check tasks 7.1–7.12 in this file.
 
 ## Phase 8: Wave 1 (S08) — Page 15 ErrorTemplate alignment + Page 14 Perfil
 

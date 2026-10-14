@@ -8,7 +8,7 @@ Para generarlas con Impeccable, sigue [`impeccable-design-workflow.md`](impeccab
 
 Fuente de verdad: `sryg-frontend/openspec/changes/sryg-page-designs/tasks.md`. Si esta lista y `tasks.md` difieren, manda `tasks.md`.
 
-- [ ] 1. Login — AuthTemplate
+- [x] 1. Login — AuthTemplate
 - [ ] 2. Dashboard / Alertas — DashboardTemplate
 - [x] 3. Listado / búsqueda de personal — ListPageTemplate
 - [x] 4. Expediente del personal — DetailPageTemplate
