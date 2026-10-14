@@ -1,76 +1,83 @@
-import { useRef, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
-import { Breadcrumb, Button, Notice, useToast } from '../../../design-system'
-import { useDemoResource, useDemoStateOverride, useDemoToday } from '../data/useDemoLicenseResource'
-import { addDays } from '../data/demoKernel'
+import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { PENDING_INAC_LABEL, type LicenseDto, type PersonnelDto } from '@sryg/types'
+import { Breadcrumb, Button, Notice, useToast, worstStatus } from '../../../design-system'
 import { FormPageTemplate } from '../../../app/templates/FormPageTemplate'
 import { FormSection } from '../../../app/templates/FormSection'
 import { ErrorTemplate } from '../../../app/templates/ErrorTemplate'
-import { personnelDetail } from '../../../app/routes'
-import { buildLicenseFormData } from '../data/demoData'
-import { DEMO_LICENSE_VALIDITY_DAYS } from '../domain/config'
-import { formatDate } from '../domain/format'
+import { PATHS, personnelDetail } from '../../../app/routes'
+import { ApiError } from '../../../shared/api/fetch-json'
+import { useApiResource } from '../../../shared/api/useApiResource'
+import { checkLicense, getPerson, getPersonLicenses, issueLicense, renewLicense } from '../data/licenses-client'
+import {
+  existingAction,
+  initialDraft,
+  issueBody,
+  renewBody,
+  submitLabel,
+  summarize,
+  validateDraft,
+  type EmissionDraft,
+  type EmissionErrors,
+  type ExistingRatingAction,
+  type NewClassRatingDraft,
+  type NewTypeRatingDraft,
+} from '../domain/emission'
+import { formatDate, formatExpiry, todayIso } from '../domain/format'
+import { classRatingLabel, typeRatingLabel } from '../domain/license-view'
+import { toCredentialStatus } from '../domain/status'
 import { LicenseSubjectStrip } from '../components/LicenseSubjectStrip'
 import { LicenseSection } from '../components/LicenseSection'
-import { RatingsSection } from '../components/RatingsSection'
-import { LicenseSummaryRail, type LicenseSummaryItem } from '../components/LicenseSummaryRail'
+import { ObservationsSection } from '../components/ObservationsSection'
+import { RatingsSection, type RatingRowView } from '../components/RatingsSection'
+import { NewClassRatingsEditor, NewTypeRatingsEditor } from '../components/NewRatingsEditor'
+import { TramiteSection } from '../components/TramiteSection'
+import { LicenseSummaryRail } from '../components/LicenseSummaryRail'
 
-type SubmitPhase = 'editing' | 'submitting'
+const TITLE = 'Emitir o renovar licencia'
+const NEW_LICENSE = 'nueva'
 
-function toDateValue(iso: string): string {
-  return iso.slice(0, 10)
-}
+const fullName = (person: PersonnelDto) => `${person.firstNames} ${person.lastNames}`.trim()
 
-/**
- * Emisión/renovación de licencia — the Form direction's reference page ("Sectioned form with
- * fixed summary rail"). The block check runs as soon as the page opens (not at submit): an open
- * block replaces the whole form with the `blocked` status. One trámite issues or renews the
- * license together with whichever ratings the operator includes.
- */
-export function EmisionLicenciaContainer() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const toast = useToast()
-  const today = useDemoToday()
-  const estadoOverride = useDemoStateOverride(['cargando', 'error', 'bloqueado'] as const)
-
-  const resource = useDemoResource(`license-form-${id ?? ''}`, () => buildLicenseFormData(id ?? '', today), {
-    forceLoading: estadoOverride === 'cargando',
-    forceError: estadoOverride === 'error',
-  })
-
-  const [phase, setPhase] = useState<SubmitPhase>('editing')
-  const [excludedRatingIds, setExcludedRatingIds] = useState<Set<string>>(new Set())
-  const [dateOverrides, setDateOverrides] = useState<Record<string, string>>({})
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [showErrorSummary, setShowErrorSummary] = useState(false)
-  const errorSummaryRef = useRef<HTMLDivElement>(null)
-
-  const defaultNewDate = toDateValue(addDays(today, DEMO_LICENSE_VALIDITY_DAYS))
-
-  // Computed once, before any early return, so the breadcrumb's person segment (the route id,
-  // refined to the cédula once resolved) and the identity-strip slot stay identical in shape
-  // across loading, error, blocked, and ready — nothing reflows when the trámite resolves.
-  const resolvedData = resource.status === 'ready' ? resource.data : undefined
-  const breadcrumb = (
+function breadcrumbFor(id: string, person?: PersonnelDto) {
+  return (
     <Breadcrumb
       items={[
-        { label: 'Inicio', href: '/' },
-        { label: 'Personal', href: '/personal' },
-        resolvedData
-          ? { label: resolvedData.person.cedula, href: personnelDetail(resolvedData.person.id) }
-          : { label: id ?? '—', href: id ? personnelDetail(id) : undefined },
+        { label: 'Inicio', href: PATHS.panel },
+        { label: 'Personal', href: PATHS.personnel },
+        { label: person?.cedula ?? id, href: personnelDetail(id) },
         { label: 'Emisión' },
       ]}
     />
   )
+}
+
+/**
+ * Emisión/renovación de licencia — the Form direction's reference page ("Sectioned form with
+ * fixed summary rail"), on the licenses API. The block check runs as soon as the page opens (not
+ * at submit): an open block replaces the whole form with the `blocked` status (BR-07). A 409 at
+ * submit (a block registered meanwhile, or the D13 coherence) lands in the same state. One
+ * trámite issues or renews the license together with its observations and rating changes.
+ */
+export function EmisionLicenciaContainer() {
+  const { id = '' } = useParams()
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const resource = useApiResource(`license-form:${id}`, async () => {
+    const [person, licenses, check] = await Promise.all([
+      getPerson(id),
+      getPersonLicenses(id),
+      checkLicense({ personalId: id }),
+    ])
+    return { person, licenses, check }
+  })
 
   if (resource.status === 'loading') {
     return (
       <FormPageTemplate
         status="loading"
-        title="Emitir o renovar licencia"
-        breadcrumb={breadcrumb}
+        title={TITLE}
+        breadcrumb={breadcrumbFor(id)}
         subject={<LicenseSubjectStrip loading />}
         loadingLabel="Cargando trámite"
       />
@@ -78,11 +85,20 @@ export function EmisionLicenciaContainer() {
   }
 
   if (resource.status === 'error') {
+    if (resource.error instanceof ApiError && [400, 404].includes(resource.error.status)) {
+      return (
+        <ErrorTemplate
+          code="404"
+          title="Persona no encontrada"
+          explanation="No existe un expediente con ese identificador."
+        />
+      )
+    }
     return (
       <FormPageTemplate
         status="error"
-        title="Emitir o renovar licencia"
-        breadcrumb={breadcrumb}
+        title={TITLE}
+        breadcrumb={breadcrumbFor(id)}
         subject={<LicenseSubjectStrip loading />}
         error={{
           title: 'No se pudo cargar el trámite',
@@ -93,179 +109,362 @@ export function EmisionLicenciaContainer() {
     )
   }
 
-  const data = resolvedData
-  if (!data) {
-    return (
-      <ErrorTemplate
-        code="404"
-        title="Persona no encontrada"
-        explanation="No existe un expediente sintético con esa cédula o identificador en esta demostración."
-      />
-    )
-  }
+  const { person, licenses, check } = resource.data
+  const backToExpediente = (
+    <Button variant="primary" onClick={() => navigate(personnelDetail(person.id))}>
+      Volver al expediente
+    </Button>
+  )
 
-  const isBlocked = Boolean(data.block) || estadoOverride === 'bloqueado'
-
-  if (isBlocked) {
-    const block =
-      data.block ??
-      ({
-        id: 'B-DEMO',
-        motivo: 'Bloqueo administrativo abierto (demostración).',
-        registradoEn: today.toISOString(),
-      } as const)
+  if (check.blocked) {
     return (
       <FormPageTemplate
         status="blocked"
-        title="Emitir o renovar licencia"
-        breadcrumb={breadcrumb}
-        subject={
-          <LicenseSubjectStrip cedula={data.person.cedula} nombre={data.person.nombre} overallStatus="bloqueada" />
-        }
+        title={TITLE}
+        breadcrumb={breadcrumbFor(id, person)}
+        subject={<LicenseSubjectStrip cedula={person.cedula} nombre={fullName(person)} overallStatus="bloqueada" />}
         blocked={{
-          title: `Bloqueo ${block.id} abierto · emisión impedida`,
-          reason: `${block.motivo} Resuelva el bloqueo desde el expediente antes de continuar.`,
-          action: (
-            <Button variant="primary" onClick={() => navigate(personnelDetail(data.person.id))}>
-              Volver al expediente
-            </Button>
-          ),
+          title: 'Bloqueo activo · Emisión impedida',
+          reason: check.problems.join(' '),
+          action: backToExpediente,
         }}
       />
     )
   }
 
-  const includedRatings = data.ratings.filter((r) => !excludedRatingIds.has(r.id))
-  const emitLabel =
-    includedRatings.length === 0
-      ? 'Emitir licencia'
-      : `Emitir licencia + ${includedRatings.length} ${includedRatings.length === 1 ? 'habilitación' : 'habilitaciones'}`
+  const requested = searchParams.get('licencia')
+  const license = licenses.find((l) => l.id === requested) ?? null
+  const changeMode = (value: string) =>
+    setSearchParams(value === NEW_LICENSE ? {} : { licencia: value }, { replace: true })
 
-  const licenseDate = dateOverrides[data.license.id] ?? defaultNewDate
-  const summaryItems: LicenseSummaryItem[] = [
-    { id: data.license.id, label: `Licencia — ${data.license.categoria}`, nuevaFechaLabel: formatDate(licenseDate) },
-    ...includedRatings.map((r) => ({
-      id: r.id,
-      label: `Habilitación — ${r.nombre}`,
-      nuevaFechaLabel: formatDate(dateOverrides[r.id] ?? defaultNewDate),
-    })),
+  return (
+    <EmisionForm
+      // A new trámite starts from a clean draft.
+      key={license?.id ?? NEW_LICENSE}
+      person={person}
+      licenses={licenses}
+      license={license}
+      onModeChange={changeMode}
+      backToExpediente={backToExpediente}
+    />
+  )
+}
+
+interface EmisionFormProps {
+  person: PersonnelDto
+  licenses: LicenseDto[]
+  license: LicenseDto | null
+  onModeChange: (value: string) => void
+  backToExpediente: ReactNode
+}
+
+type Phase = 'editing' | 'submitting'
+
+function EmisionForm({ person, licenses, license, onModeChange, backToExpediente }: EmisionFormProps) {
+  const navigate = useNavigate()
+  const toast = useToast()
+  const [today] = useState(todayIso)
+  const [draft, setDraft] = useState<EmissionDraft>(() => initialDraft(license, person.cedula, today))
+  const [errors, setErrors] = useState<EmissionErrors>({})
+  const [showErrorSummary, setShowErrorSummary] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [conflict, setConflict] = useState<string | null>(null)
+  const [phase, setPhase] = useState<Phase>('editing')
+  const errorSummaryRef = useRef<HTMLDivElement>(null)
+  const nextKey = useRef(0)
+
+  const licenseTypeId = draft.license ? undefined : draft.licenseType?.id
+  const canCheck = Boolean(draft.license || licenseTypeId) && Boolean(draft.issueDate)
+  const projection = useApiResource(
+    canCheck ? `license-check:${person.id}:${draft.license?.id ?? licenseTypeId}:${draft.issueDate}` : null,
+    () =>
+      checkLicense({
+        personalId: person.id,
+        licenseTypeId,
+        licenseId: draft.license?.id,
+        issueDate: draft.issueDate,
+      }),
+  )
+
+  const subject = (
+    <LicenseSubjectStrip
+      cedula={person.cedula}
+      nombre={fullName(person)}
+      overallStatus={
+        license
+          ? toCredentialStatus(license.status)
+          : (worstStatus(licenses.map((l) => toCredentialStatus(l.status))) ?? null)
+      }
+    />
+  )
+  const breadcrumb = breadcrumbFor(person.id, person)
+
+  if (conflict) {
+    return (
+      <FormPageTemplate
+        status="blocked"
+        title={TITLE}
+        breadcrumb={breadcrumb}
+        subject={subject}
+        blocked={{ title: 'Trámite rechazado · Emisión impedida', reason: conflict, action: backToExpediente }}
+      />
+    )
+  }
+
+  const update = (patch: Partial<EmissionDraft>, clear: string[] = []) => {
+    setDraft((current) => ({ ...current, ...patch }))
+    if (clear.length > 0) {
+      setErrors((current) => {
+        const next = { ...current }
+        for (const key of clear) delete next[key]
+        return next
+      })
+    }
+  }
+
+  const setAction = (kind: 'type' | 'class', ratingId: string, action: ExistingRatingAction) => {
+    const field = kind === 'type' ? 'typeActions' : 'classActions'
+    setDraft((current) => ({ ...current, [field]: { ...current[field], [ratingId]: action } }))
+    setErrors((current) => {
+      const next = { ...current }
+      delete next[`${kind}-${ratingId}`]
+      return next
+    })
+  }
+
+  const ratingRows = (kind: 'type' | 'class'): RatingRowView[] => {
+    const source =
+      kind === 'type'
+        ? (license?.typeRatings ?? []).map((r) => ({ rating: r, nombre: typeRatingLabel(r) }))
+        : (license?.classRatings ?? []).map((r) => ({ rating: r, nombre: classRatingLabel(r) }))
+    return source.map(({ rating, nombre }) => ({
+      id: rating.id,
+      nombre,
+      estadoActual: toCredentialStatus(rating.status),
+      venceActualLabel: formatDate(rating.expiryDate),
+      action: existingAction(draft, kind, rating.id),
+      nuevaFechaError: errors[`${kind}-${rating.id}`],
+    }))
+  }
+
+  const toggle = (kind: 'type' | 'class', ratingId: string, target: 'renew' | 'remove') => {
+    const current = existingAction(draft, kind, ratingId)
+    if (current.kind === target) setAction(kind, ratingId, { kind: 'keep' })
+    else setAction(kind, ratingId, target === 'renew' ? { kind: 'renew', expiryDate: '' } : { kind: 'remove' })
+  }
+
+  const patchNewType = (key: string, patch: Partial<NewTypeRatingDraft>) => {
+    setDraft((current) => ({
+      ...current,
+      newTypeRatings: current.newTypeRatings.map((r) => (r.key === key ? { ...r, ...patch } : r)),
+    }))
+  }
+  const patchNewClass = (key: string, patch: Partial<NewClassRatingDraft>) => {
+    setDraft((current) => ({
+      ...current,
+      newClassRatings: current.newClassRatings.map((r) => (r.key === key ? { ...r, ...patch } : r)),
+    }))
+  }
+  const newKey = (prefix: string) => `${prefix}-${(nextKey.current += 1)}`
+
+  let nuevoVenceLabel = '—'
+  if (canCheck && projection.status === 'loading') nuevoVenceLabel = 'Calculando…'
+  if (projection.status === 'error') nuevoVenceLabel = 'No disponible'
+  if (canCheck && projection.status === 'ready' && projection.data.projection) {
+    const { expiryDate, validityIsPlaceholder } = projection.data.projection
+    nuevoVenceLabel = formatExpiry(expiryDate)
+    if (expiryDate && validityIsPlaceholder) nuevoVenceLabel += ` · ${PENDING_INAC_LABEL}`
+  }
+  const problems = canCheck && projection.status === 'ready' ? projection.data.problems : []
+
+  const { issued, removed } = summarize(draft)
+  const licenseLabel = license?.licenseType.nameEs ?? draft.licenseType?.nameEs ?? 'tipo por elegir'
+  const railItems = [
+    { id: license?.id ?? NEW_LICENSE, label: `Licencia — ${licenseLabel}`, nuevaFechaLabel: nuevoVenceLabel },
+    ...issued.map((item) => ({ id: item.id, label: item.label, nuevaFechaLabel: formatDate(item.date ?? '') })),
   ]
 
-  const handleToggleRating = (ratingId: string) => {
-    setExcludedRatingIds((current) => {
-      const next = new Set(current)
-      if (next.has(ratingId)) {
-        next.delete(ratingId)
-      } else {
-        next.add(ratingId)
-      }
-      return next
-    })
-  }
-
-  const handleDateChange = (itemId: string, value: string) => {
-    setDateOverrides((current) => ({ ...current, [itemId]: value }))
-    setFieldErrors((current) => {
-      if (!current[itemId]) {
-        return current
-      }
-      const next = { ...current }
-      delete next[itemId]
-      return next
-    })
-  }
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const errors: Record<string, string> = {}
-    if (!licenseDate) {
-      errors[data.license.id] = 'Ingrese la nueva fecha de vencimiento.'
-    }
-    for (const rating of includedRatings) {
-      const value = dateOverrides[rating.id] ?? defaultNewDate
-      if (!value) {
-        errors[rating.id] = 'Ingrese la nueva fecha de vencimiento.'
-      }
-    }
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors)
+    const found = validateDraft(draft)
+    setErrors(found)
+    setSubmitError(null)
+    if (Object.keys(found).length > 0) {
       setShowErrorSummary(true)
       requestAnimationFrame(() => errorSummaryRef.current?.focus())
       return
     }
     setShowErrorSummary(false)
     setPhase('submitting')
-    setTimeout(() => {
-      toast.show({ tone: 'info', message: `Trámite emitido (demostración): ${emitLabel}.` })
-      navigate(personnelDetail(data.person.id))
-    }, 600)
+    try {
+      if (draft.license) await renewLicense(draft.license.id, renewBody(draft))
+      else await issueLicense(issueBody(draft, person.id))
+      toast.show({ tone: 'info', message: draft.license ? 'Licencia renovada.' : 'Licencia emitida.' })
+      navigate(`${personnelDetail(person.id)}?pagina=licencias`)
+    } catch (error) {
+      setPhase('editing')
+      if (error instanceof ApiError && error.status === 409) {
+        setConflict(error.message)
+        return
+      }
+      setSubmitError(
+        error instanceof ApiError && error.status < 500
+          ? error.message
+          : 'El servidor no respondió. Revise la conexión a la red local e intente de nuevo.',
+      )
+      requestAnimationFrame(() => errorSummaryRef.current?.focus())
+    }
   }
 
-  const ratingRows = data.ratings.map((rating) => ({
-    id: rating.id,
-    nombre: rating.nombre,
-    estadoActual: rating.estadoActual,
-    venceActualLabel: formatDate(rating.venceActual),
-    included: !excludedRatingIds.has(rating.id),
-    nuevaFecha: dateOverrides[rating.id] ?? defaultNewDate,
-    nuevaFechaError: fieldErrors[rating.id],
-  }))
+  const errorSummary =
+    showErrorSummary || submitError ? (
+      <div ref={errorSummaryRef} tabIndex={-1}>
+        {submitError ? (
+          <Notice tone="warning" title="No se pudo completar el trámite">
+            {submitError}
+          </Notice>
+        ) : (
+          <Notice tone="warning" title="Revise los campos marcados">
+            Complete los campos obligatorios antes de continuar.
+          </Notice>
+        )}
+      </div>
+    ) : undefined
 
   return (
     <FormPageTemplate
       status={phase}
-      title="Emitir o renovar licencia"
+      title={TITLE}
       breadcrumb={breadcrumb}
-      subject={
-        <LicenseSubjectStrip
-          cedula={data.person.cedula}
-          nombre={data.person.nombre}
-          overallStatus={data.license.estadoActual}
+      subject={subject}
+      onSubmit={handleSubmit}
+      errorSummary={errorSummary}
+      rail={
+        <LicenseSummaryRail
+          items={railItems}
+          removals={removed.map((item) => ({ id: item.id, label: item.label, nuevaFechaLabel: '' }))}
         />
       }
-      onSubmit={handleSubmit}
-      errorSummary={
-        showErrorSummary ? (
-          <div ref={errorSummaryRef} tabIndex={-1}>
-            <Notice tone="warning" title="Revise los campos marcados">
-              Complete la nueva fecha de vencimiento antes de continuar.
-            </Notice>
-          </div>
-        ) : undefined
-      }
-      rail={<LicenseSummaryRail items={summaryItems} />}
       actions={
         <>
           <Button type="submit" variant="primary" loading={phase === 'submitting'}>
-            {emitLabel}
+            {submitLabel(draft)}
           </Button>
           <Button
             type="button"
             variant="secondary"
             disabled={phase === 'submitting'}
-            onClick={() => navigate(personnelDetail(data.person.id))}
+            onClick={() => navigate(personnelDetail(person.id))}
           >
             Cancelar
           </Button>
         </>
       }
     >
+      {licenses.length > 0 ? (
+        <FormSection legend="Trámite" description="Emita una licencia nueva o renueve una que la persona ya tiene.">
+          <TramiteSection
+            value={license?.id ?? NEW_LICENSE}
+            onChange={onModeChange}
+            options={[
+              { value: NEW_LICENSE, label: 'Emitir una licencia nueva' },
+              ...licenses.map((l) => ({
+                value: l.id,
+                label: `Renovar ${l.licenseType.nameEs}`,
+                detail: `N° ${l.number} · vence ${formatExpiry(l.expiryDate)}`,
+              })),
+            ]}
+          />
+        </FormSection>
+      ) : null}
       <FormSection legend="Licencia">
         <LicenseSection
-          categoria={data.license.categoria}
-          numero={data.license.numero}
-          estadoActual={data.license.estadoActual}
-          venceActualLabel={formatDate(data.license.venceActual)}
-          nuevaFecha={licenseDate}
-          onNuevaFechaChange={(value) => handleDateChange(data.license.id, value)}
-          nuevaFechaError={fieldErrors[data.license.id]}
+          current={
+            license
+              ? {
+                  tipo: license.licenseType.nameEs,
+                  estadoActual: toCredentialStatus(license.status),
+                  venceActualLabel: formatExpiry(license.expiryDate),
+                }
+              : undefined
+          }
+          licenseType={draft.licenseType}
+          onLicenseTypeChange={(licenseType) => update({ licenseType }, ['licenseType'])}
+          numero={draft.number}
+          onNumeroChange={(number) => update({ number }, ['number'])}
+          fechaEmision={draft.issueDate}
+          onFechaEmisionChange={(issueDate) => update({ issueDate }, ['issueDate'])}
+          nuevoVenceLabel={nuevoVenceLabel}
+          problems={problems}
+          errors={errors}
+        />
+      </FormSection>
+      <FormSection legend="Observaciones">
+        <ObservationsSection
+          observations={draft.observations}
+          onAdd={(option) => {
+            if (!draft.observations.some((o) => o.id === option.id)) {
+              update({ observations: [...draft.observations, option] })
+            }
+          }}
+          onRemove={(observationId) =>
+            update({ observations: draft.observations.filter((o) => o.id !== observationId) })
+          }
         />
       </FormSection>
       <FormSection
-        legend="Habilitaciones"
-        description="Incluya las habilitaciones que también desea renovar en este trámite."
+        legend="Habilitaciones de tipo"
+        description="Aeronave, función y vencimiento. Requieren una licencia vigente."
       >
-        <RatingsSection rows={ratingRows} onToggle={handleToggleRating} onDateChange={handleDateChange} />
+        {license ? (
+          <RatingsSection
+            rows={ratingRows('type')}
+            onToggleRenew={(ratingId) => toggle('type', ratingId, 'renew')}
+            onToggleRemove={(ratingId) => toggle('type', ratingId, 'remove')}
+            onDateChange={(ratingId, expiryDate) => setAction('type', ratingId, { kind: 'renew', expiryDate })}
+          />
+        ) : null}
+        <NewTypeRatingsEditor
+          ratings={draft.newTypeRatings}
+          errors={errors}
+          onAdd={() =>
+            update({
+              newTypeRatings: [
+                ...draft.newTypeRatings,
+                { key: newKey('nueva-tipo'), typeRating: null, fn: null, expiryDate: '' },
+              ],
+            })
+          }
+          onChange={patchNewType}
+          onDiscard={(key) => update({ newTypeRatings: draft.newTypeRatings.filter((r) => r.key !== key) })}
+        />
+      </FormSection>
+      <FormSection
+        legend="Habilitaciones de clase"
+        description="Clase, aeronaves y vencimiento. Requieren una licencia vigente."
+      >
+        {license ? (
+          <RatingsSection
+            rows={ratingRows('class')}
+            onToggleRenew={(ratingId) => toggle('class', ratingId, 'renew')}
+            onToggleRemove={(ratingId) => toggle('class', ratingId, 'remove')}
+            onDateChange={(ratingId, expiryDate) => setAction('class', ratingId, { kind: 'renew', expiryDate })}
+          />
+        ) : null}
+        <NewClassRatingsEditor
+          ratings={draft.newClassRatings}
+          errors={errors}
+          onAdd={() =>
+            update({
+              newClassRatings: [
+                ...draft.newClassRatings,
+                { key: newKey('nueva-clase'), classRating: null, aircraft: [], expiryDate: '' },
+              ],
+            })
+          }
+          onChange={patchNewClass}
+          onDiscard={(key) => update({ newClassRatings: draft.newClassRatings.filter((r) => r.key !== key) })}
+        />
       </FormSection>
     </FormPageTemplate>
   )

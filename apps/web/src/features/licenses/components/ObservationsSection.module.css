@@ -1,0 +1,32 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 44px;
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.empty {
+  color: var(--fg-muted);
+}
+
+.add {
+  max-width: 560px;
+}

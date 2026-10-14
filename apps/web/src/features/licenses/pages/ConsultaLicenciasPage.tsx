@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { ConsultaLicenciasContainer } from '../containers/ConsultaLicenciasContainer'
 
-/** Placeholder pre-registered by F0-B; W1-5 feat/licenses replaces it. */
+/** Thin route entry — all state and derivation live in the container. */
 export function ConsultaLicenciasPage() {
-  return <PendingScreen title="Consulta de licencias" plannedChange="W1-5 feat/licenses" />
+  return <ConsultaLicenciasContainer />
 }
