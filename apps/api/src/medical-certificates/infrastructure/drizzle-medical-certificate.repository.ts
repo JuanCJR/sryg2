@@ -1,0 +1,124 @@
+import {
+  catalogMedicalObservation,
+  certificadoMedico,
+  certificadoObservacion,
+  type DbExecutor,
+  personalAeronautico,
+} from '@sryg/db'
+import type { CatalogOption } from '@sryg/types'
+import { asc, desc, eq, inArray } from 'drizzle-orm'
+import { NotFoundError } from '../../shared/domain/errors'
+import type {
+  MedicalCertificate,
+  MedicalCertificateRenewal,
+  NewMedicalCertificate,
+} from '../domain/medical-certificate'
+import type {
+  HolderLookup,
+  MedicalCertificateRepository,
+  MedicalObservationCatalog,
+} from '../domain/medical-certificate-repository'
+
+const c = certificadoMedico
+// The administrative fields only (BR-05); the stored status and the QR token stay out of the domain.
+const certificateFields = {
+  id: c.id,
+  personalId: c.personalId,
+  rav67Class: c.rav67Class,
+  number: c.number,
+  issueDate: c.issueDate,
+  expiryDate: c.expiryDate,
+  restrictions: c.restrictions,
+  createdAt: c.createdAt,
+  updatedAt: c.updatedAt,
+}
+
+/** Works against the pool or a transaction handle; the unit of work builds one per transaction. */
+export class DrizzleMedicalCertificateRepository implements MedicalCertificateRepository {
+  constructor(private readonly executor: DbExecutor) {}
+
+  async findById(id: string): Promise<MedicalCertificate | null> {
+    const rows = await this.executor.select(certificateFields).from(c).where(eq(c.id, id)).limit(1)
+    return (await this.withObservations(rows))[0] ?? null
+  }
+
+  async listByPerson(personalId: string): Promise<MedicalCertificate[]> {
+    const rows = await this.executor
+      .select(certificateFields)
+      .from(c)
+      .where(eq(c.personalId, personalId))
+      .orderBy(desc(c.issueDate), desc(c.createdAt), asc(c.id))
+    return this.withObservations(rows)
+  }
+
+  async create({ observationIds, ...data }: NewMedicalCertificate): Promise<MedicalCertificate> {
+    const [row] = await this.executor.insert(c).values(data).returning({ id: c.id })
+    await this.link(row!.id, observationIds)
+    return (await this.findById(row!.id))!
+  }
+
+  async renew(id: string, { observationIds, ...data }: MedicalCertificateRenewal): Promise<MedicalCertificate> {
+    const [row] = await this.executor.update(c).set(data).where(eq(c.id, id)).returning({ id: c.id })
+    if (!row) throw new NotFoundError('Medical certificate not found')
+    await this.executor.delete(certificadoObservacion).where(eq(certificadoObservacion.certificadoMedicoId, id))
+    await this.link(id, observationIds)
+    return (await this.findById(id))!
+  }
+
+  private async link(certificateId: string, observationIds: readonly string[]) {
+    if (observationIds.length === 0) return
+    await this.executor
+      .insert(certificadoObservacion)
+      .values(observationIds.map((observationId) => ({ certificadoMedicoId: certificateId, observationId })))
+  }
+
+  private async withObservations(rows: Array<Omit<MedicalCertificate, 'observations'>>) {
+    if (rows.length === 0) return []
+    const links = await this.executor
+      .select({
+        certificateId: certificadoObservacion.certificadoMedicoId,
+        id: catalogMedicalObservation.id,
+        nameEs: catalogMedicalObservation.nameEs,
+        nameEn: catalogMedicalObservation.nameEn,
+      })
+      .from(certificadoObservacion)
+      .innerJoin(catalogMedicalObservation, eq(catalogMedicalObservation.id, certificadoObservacion.observationId))
+      .where(
+        inArray(
+          certificadoObservacion.certificadoMedicoId,
+          rows.map((r) => r.id),
+        ),
+      )
+      .orderBy(asc(catalogMedicalObservation.nameEs))
+    const byCertificate = new Map<string, CatalogOption[]>()
+    for (const { certificateId, ...option } of links) {
+      byCertificate.set(certificateId, [...(byCertificate.get(certificateId) ?? []), option])
+    }
+    return rows.map((row) => ({ ...row, observations: byCertificate.get(row.id) ?? [] }))
+  }
+}
+
+export class DrizzleMedicalObservationCatalog implements MedicalObservationCatalog {
+  constructor(private readonly executor: DbExecutor) {}
+
+  findByIds(ids: readonly string[]) {
+    if (ids.length === 0) return Promise.resolve([])
+    return this.executor
+      .select({ id: catalogMedicalObservation.id, active: catalogMedicalObservation.active })
+      .from(catalogMedicalObservation)
+      .where(inArray(catalogMedicalObservation.id, [...ids]))
+  }
+}
+
+export class DrizzleHolderLookup implements HolderLookup {
+  constructor(private readonly executor: DbExecutor) {}
+
+  async documentNumber(personalId: string): Promise<string | null> {
+    const [row] = await this.executor
+      .select({ cedula: personalAeronautico.cedula })
+      .from(personalAeronautico)
+      .where(eq(personalAeronautico.id, personalId))
+      .limit(1)
+    return row?.cedula ?? null
+  }
+}
