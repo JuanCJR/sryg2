@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { BloqueosListContainer } from '../containers/BloqueosListContainer'
 
-/** Placeholder pre-registered by F0-B; W1-3 feat/blocking replaces it. */
+/** /bloqueos — registro y resolución de bloqueos (page 8, W1-3). */
 export function BloqueosPage() {
-  return <PendingScreen title="Bloqueos" plannedChange="W1-3 feat/blocking" />
+  return <BloqueosListContainer />
 }

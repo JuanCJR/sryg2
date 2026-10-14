@@ -1,15 +1,17 @@
 import { useState } from 'react'
-import { Lamp, Button } from '../../../design-system'
-import type { LampStatus } from '../../../design-system'
+import { Button, Lamp } from '../../../design-system'
 import styles from './BloqueosPanel.module.css'
 
 export interface BloqueoRowView {
   id: string
+  referencia: string
   tipo: string
   motivo: string
   registradoLabel: string
   estado: 'abierto' | 'resuelto'
   detieneLabel: string
+  /** Null while the block is open. */
+  resolucionLabel: string | null
   canResolve: boolean
 }
 
@@ -55,14 +57,15 @@ export function BloqueosPanel({ rows, onResolve }: BloqueosPanelProps) {
         ) : (
           visible.map((row) => (
             <div key={row.id} className={styles.row}>
-              <Lamp status={(row.estado === 'abierto' ? 'bloqueada' : 'activa') as LampStatus} size="md" />
-              <span className={styles.id}>{row.id}</span>
+              <Lamp status={row.estado === 'abierto' ? 'bloqueada' : 'activa'} size="md" />
+              <span className={styles.id}>{row.referencia}</span>
               <div className={styles.body}>
                 <span className={styles.motivo}>
                   {row.tipo} — {row.motivo}
                 </span>
                 <span className={styles.meta}>{row.registradoLabel}</span>
-                <span className={styles.detiene}>Detiene: {row.detieneLabel}</span>
+                {row.estado === 'abierto' ? <span className={styles.detiene}>Detiene: {row.detieneLabel}</span> : null}
+                {row.resolucionLabel ? <span className={styles.meta}>{row.resolucionLabel}</span> : null}
               </div>
               {row.canResolve ? (
                 <Button variant="secondary" onClick={() => onResolve(row.id)}>

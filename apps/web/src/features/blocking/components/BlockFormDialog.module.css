@@ -1,0 +1,63 @@
+.dialog {
+  width: min(480px, calc(100vw - var(--s-6) * 2));
+  padding: 0;
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--r-1);
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.dialog::backdrop {
+  background: rgba(7, 9, 11, 0.6);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-6);
+}
+
+.title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.consequence {
+  font-size: var(--fs-base);
+}
+
+.error {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+}
+
+.textarea {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-1);
+  border: var(--hair) solid var(--control-border);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  resize: vertical;
+}
+
+.textarea:hover:not(:disabled) {
+  border-color: var(--control-border-strong);
+}
+
+.textarea[aria-invalid='true'] {
+  border-color: var(--fg);
+  border-width: 2px;
+}
