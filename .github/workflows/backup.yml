@@ -1,0 +1,79 @@
+# Respaldo diario cifrado de PostgreSQL (OPS-01, OPS-05, D11). Runbook: docs/respaldos.md.
+name: Backup
+
+on:
+  schedule:
+    # 07:17 UTC = 03:17 en Caracas (UTC-4). Minuto no redondo para evitar la congestión de :00.
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/backup.yml
+      - scripts/backup.sh
+      - scripts/restore.sh
+      - scripts/backup-restore.test.sh
+
+permissions:
+  contents: read
+
+jobs:
+  # En los PR que tocan los scripts: guardas + ciclo completo contra un Postgres descartable.
+  test-scripts:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sryg
+          POSTGRES_PASSWORD: sryg
+          POSTGRES_DB: sryg
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sryg -d sryg"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      PG_BIN: /usr/lib/postgresql/17/bin
+      BACKUP_TEST_ADMIN_URL: postgres://sryg:sryg@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar postgresql-client-17 y age
+        run: |
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y --no-install-recommends postgresql-client-17 age
+      - run: scripts/backup-restore.test.sh
+
+  backup:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: backup
+      cancel-in-progress: false
+    env:
+      PG_BIN: /usr/lib/postgresql/17/bin
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar postgresql-client-17 y age
+        run: |
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y --no-install-recommends postgresql-client-17 age
+      - name: pg_dump cifrado con age
+        id: dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/backup"
+          scripts/backup.sh "$RUNNER_TEMP/backup"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sryg-backup-${{ github.run_id }}
+          path: ${{ steps.dump.outputs.file }}
+          retention-days: 30
+          if-no-files-found: error
+          # Ya está comprimido (pg_dump -Fc) y cifrado: recomprimir no ahorra espacio.
+          compression-level: 0
