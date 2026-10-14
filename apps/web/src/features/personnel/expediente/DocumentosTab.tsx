@@ -1,8 +1,7 @@
-import { ComingSoonPanel } from '../../../app/expediente/ComingSoon'
+import type { ExpedienteSlotProps } from '../../../app/expediente/types'
+import { DocumentosContainer } from '../containers/DocumentosContainer'
 
-/** Documentos page key (D21 attachments). W1-4 implements it. */
-export function DocumentosTab() {
-  return (
-    <ComingSoonPanel description="Los documentos adjuntos de la persona." plannedChange="W1-4 feat/personnel-form" />
-  )
+/** Documentos page key (D21): the person's attached documents. */
+export function DocumentosTab({ person }: ExpedienteSlotProps) {
+  return <DocumentosContainer person={person} />
 }
