@@ -1,0 +1,16 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.input {
+  width: 8ch;
+  min-width: 0;
+  text-align: right;
+}
+
+.unit {
+  color: var(--fg-muted);
+}

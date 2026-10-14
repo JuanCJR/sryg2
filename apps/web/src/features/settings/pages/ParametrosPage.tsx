@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { ParametrosContainer } from '../containers/ParametrosContainer'
 
-/** Placeholder pre-registered by F0-B; W1-2 feat/settings replaces it. */
+/** `/parametros` (page 12, W1-2). */
 export function ParametrosPage() {
-  return <PendingScreen title="Parámetros" plannedChange="W1-2 feat/settings" />
+  return <ParametrosContainer />
 }

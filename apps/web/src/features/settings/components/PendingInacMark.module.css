@@ -1,0 +1,12 @@
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3);
+  border: var(--hair) dashed var(--control-border);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
