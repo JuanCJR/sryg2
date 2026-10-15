@@ -121,6 +121,7 @@ export interface SeedData {
 }
 
 export const PEOPLE = 50
+const DEFAULT_CATALOG_SEED = 2026
 
 const DAY_MS = 86_400_000
 const parse = (iso: string) => new Date(`${iso}T00:00:00Z`)
@@ -171,16 +172,18 @@ function expiryCycle(random: Random, today: string) {
   }
 }
 
-/** Fictitious, deterministic development data (D25): same `seed` and `today`, same data. */
-export function buildSeedData({ seed, today }: { seed: number; today: string }): SeedData {
-  const random = createRandom(seed)
+/**
+ * The reference catalogs alone (SLYM values, see catalog-data.ts). Safe for production: no people or
+ * users. Ids are deterministic for a given random generator.
+ */
+export function buildSeedCatalogs(random: Random = createRandom(DEFAULT_CATALOG_SEED)): SeedData['catalogs'] {
   const licenseTypes: SeedLicenseType[] = LICENSE_TYPES.map((type) => ({
     id: random.uuid(),
     ...type,
     validityMonths: PLACEHOLDER_LICENSE_VALIDITY_MONTHS,
     validityIsPlaceholder: true,
   }))
-  const catalogs: SeedData['catalogs'] = {
+  return {
     licenseTypes,
     typeRatings: catalog(random, TYPE_RATINGS),
     classRatings: catalog(random, CLASS_RATINGS),
@@ -192,6 +195,13 @@ export function buildSeedData({ seed, today }: { seed: number; today: string }):
     attachmentTypes: catalog(random, ATTACHMENT_TYPES),
     nationalities: catalog(random, NATIONALITIES),
   }
+}
+
+/** Fictitious, deterministic development data (D25): same `seed` and `today`, same data. */
+export function buildSeedData({ seed, today }: { seed: number; today: string }): SeedData {
+  const random = createRandom(seed)
+  const catalogs = buildSeedCatalogs(random)
+  const { licenseTypes } = catalogs
 
   const users = ROLES.flatMap((role) =>
     USER_AREAS.map((area) => ({

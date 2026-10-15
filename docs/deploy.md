@@ -61,7 +61,11 @@ added in the dashboard are preserved on later syncs even though they are not in 
    `DATABASE_MIGRATION_URL=<direct url> SEED_ADMIN_EMAIL=... SEED_ADMIN_PASSWORD=... SEED_ADMIN_NAME=... pnpm db:seed:admin`.
    The seed is idempotent. Never run `pnpm db:seed` against production: it loads fictitious development data
    (it refuses to run with `NODE_ENV=production`).
-5. Smoke test: `curl -fsS https://sryg-api.onrender.com/health` (200), `/health/ready` (200), then
+5. Load the reference catalogs (license types, type and class ratings, aircraft, observations… transcribed from SLYM,
+   see `docs/slym-catalogos/`), also from the operator machine with the direct URL:
+   `DATABASE_MIGRATION_URL=<direct url> pnpm db:seed:catalogs`. It loads no people or users and is idempotent: items
+   that already exist under the same name, including ones an administrator edited, are left untouched.
+6. Smoke test: `curl -fsS https://sryg-api.onrender.com/health` (200), `/health/ready` (200), then
    `POST /api/auth/login` with the seeded admin returns a token.
 
 ## Limits and cold starts

@@ -1,10 +1,18 @@
 import { randomUUID } from 'node:crypto'
-import { createDb, licencia, personalAeronautico, runMigrations, usuario } from '@sryg/db'
+import {
+  catalogLicenseType,
+  catalogTypeRating,
+  createDb,
+  licencia,
+  personalAeronautico,
+  runMigrations,
+  usuario,
+} from '@sryg/db'
 import { count } from 'drizzle-orm'
 import { Client } from 'pg'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { applySeed } from './apply-seed'
-import { buildSeedData } from './build-seed-data'
+import { applySeed, applySeedCatalogs } from './apply-seed'
+import { buildSeedCatalogs, buildSeedData } from './build-seed-data'
 
 const BASE_URL = process.env.DATABASE_URL ?? 'postgres://sryg:sryg@localhost:5432/sryg'
 // A throwaway database: the seed must not mix with the data other suites rely on.
@@ -35,6 +43,15 @@ describe('applySeed', () => {
   afterAll(async () => {
     await pool.end()
     await admin(`DROP DATABASE IF EXISTS "${name}"`)
+  })
+
+  it('loads only the catalogs for production, idempotently', async () => {
+    const catalogs = buildSeedCatalogs()
+    await applySeedCatalogs(db, catalogs)
+    await applySeedCatalogs(db, catalogs)
+    expect(await counts()).toEqual({ users: 0, personnel: 0, licenses: 0 })
+    expect((await db.select({ n: count() }).from(catalogLicenseType))[0]!.n).toBe(catalogs.licenseTypes.length)
+    expect((await db.select({ n: count() }).from(catalogTypeRating))[0]!.n).toBe(catalogs.typeRatings.length)
   })
 
   it('loads the whole data set and is idempotent', async () => {

@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "seed:admin": "node dist/cli/seed-admin.js",
+    "seed:catalogs": "node dist/cli/seed-catalogs.js",
     "seed:dev": "node dist/cli/seed.js",
     "dev": "tsc -p tsconfig.build.json && node --watch dist/main.js",
     "typecheck": "tsc -p tsconfig.json",

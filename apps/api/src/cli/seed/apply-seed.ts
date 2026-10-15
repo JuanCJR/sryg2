@@ -55,6 +55,39 @@ async function upsertCatalog(tx: DbExecutor, catalog: unknown, items: SeedCatalo
   for (const item of items) ids.set(item.id, byKey.get(item.nameEs.toLowerCase())!)
 }
 
+// D3 placeholders: normally loaded by the migration; restored here if missing.
+async function insertSettings(tx: DbExecutor) {
+  await tx
+    .insert(parametroSistema)
+    .values(Object.entries(PLACEHOLDER_SETTINGS).map(([key, value]) => ({ key, value, isPlaceholder: true })))
+    .onConflictDoNothing()
+}
+
+async function upsertCatalogs(tx: DbExecutor, catalogs: SeedData['catalogs'], ids: IdMap) {
+  await upsertCatalog(tx, catalogLicenseType, catalogs.licenseTypes, ids)
+  await upsertCatalog(tx, catalogTypeRating, catalogs.typeRatings, ids)
+  await upsertCatalog(tx, catalogClassRating, catalogs.classRatings, ids)
+  await upsertCatalog(tx, catalogAircraft, catalogs.aircraft, ids)
+  await upsertCatalog(tx, catalogFunction, catalogs.functions, ids)
+  await upsertCatalog(tx, catalogLicenseObservation, catalogs.licenseObservations, ids)
+  await upsertCatalog(tx, catalogMedicalObservation, catalogs.medicalObservations, ids)
+  await upsertCatalog(tx, catalogDocumentType, catalogs.documentTypes, ids)
+  await upsertCatalog(tx, catalogAttachmentType, catalogs.attachmentTypes, ids)
+  await upsertCatalog(tx, catalogNationality, catalogs.nationalities, ids)
+}
+
+/**
+ * Loads only the system settings and the reference catalogs, in one transaction: the production
+ * seed. Idempotent; items that already exist under the same name (any case) are left untouched, so
+ * catalogs edited by an administrator are never overwritten.
+ */
+export async function applySeedCatalogs(db: Db, catalogs: SeedData['catalogs']): Promise<void> {
+  await db.transaction(async (tx) => {
+    await insertSettings(tx)
+    await upsertCatalogs(tx, catalogs, new Map())
+  })
+}
+
 /**
  * Loads the development data set in one transaction. Idempotent: rows keep deterministic ids and
  * every insert skips conflicts, so a second run changes nothing. Catalog items, users and people
@@ -66,11 +99,7 @@ export async function applySeed(db: Db, data: SeedData, options: ApplySeedOption
     const ids: IdMap = new Map()
     const id = (seedId: string) => ids.get(seedId) ?? seedId
 
-    // D3 placeholders: normally loaded by the migration; restored here if missing.
-    await tx
-      .insert(parametroSistema)
-      .values(Object.entries(PLACEHOLDER_SETTINGS).map(([key, value]) => ({ key, value, isPlaceholder: true })))
-      .onConflictDoNothing()
+    await insertSettings(tx)
 
     await tx
       .insert(usuario)
@@ -88,17 +117,7 @@ export async function applySeed(db: Db, data: SeedData, options: ApplySeedOption
     const userByEmail = new Map(storedUsers.map((u) => [u.email.toLowerCase(), u.id]))
     for (const user of data.users) ids.set(user.id, userByEmail.get(user.email.toLowerCase())!)
 
-    const { catalogs } = data
-    await upsertCatalog(tx, catalogLicenseType, catalogs.licenseTypes, ids)
-    await upsertCatalog(tx, catalogTypeRating, catalogs.typeRatings, ids)
-    await upsertCatalog(tx, catalogClassRating, catalogs.classRatings, ids)
-    await upsertCatalog(tx, catalogAircraft, catalogs.aircraft, ids)
-    await upsertCatalog(tx, catalogFunction, catalogs.functions, ids)
-    await upsertCatalog(tx, catalogLicenseObservation, catalogs.licenseObservations, ids)
-    await upsertCatalog(tx, catalogMedicalObservation, catalogs.medicalObservations, ids)
-    await upsertCatalog(tx, catalogDocumentType, catalogs.documentTypes, ids)
-    await upsertCatalog(tx, catalogAttachmentType, catalogs.attachmentTypes, ids)
-    await upsertCatalog(tx, catalogNationality, catalogs.nationalities, ids)
+    await upsertCatalogs(tx, data.catalogs, ids)
 
     const admin = data.users.find((u) => u.role === 'administrador' && u.area === 'ambas')!
     await tx

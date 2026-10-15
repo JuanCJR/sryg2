@@ -20,6 +20,7 @@
     "db:migrate": "pnpm --filter @sryg/db migrate",
     "db:seed": "pnpm build:packages && pnpm --filter @sryg/api build && pnpm --filter @sryg/api seed:dev",
     "db:seed:admin": "pnpm build:packages && pnpm --filter @sryg/api build && pnpm --filter @sryg/api seed:admin",
+    "db:seed:catalogs": "pnpm build:packages && pnpm --filter @sryg/api build && pnpm --filter @sryg/api seed:catalogs",
     "dev": "pnpm --filter @sryg/web dev"
   },
   "devDependencies": {

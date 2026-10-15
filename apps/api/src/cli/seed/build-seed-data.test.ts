@@ -1,6 +1,6 @@
 import { deriveCredentialStatus, RAV67_CLASSES, ROLES, USER_AREAS } from '@sryg/types'
 import { describe, expect, it } from 'vitest'
-import { buildSeedData } from './build-seed-data'
+import { buildSeedCatalogs, buildSeedData } from './build-seed-data'
 import { AIRCRAFT, CLASS_RATINGS, LICENSE_OBSERVATIONS, TYPE_RATINGS } from './catalog-data'
 
 const TODAY = '2026-10-14'
@@ -37,6 +37,11 @@ describe('buildSeedData (D25)', () => {
       const names = items.map((i) => i.nameEs.toLowerCase())
       expect(new Set(names).size).toBe(names.length)
     }
+  })
+
+  it('builds the production catalogs alone, with the same ids as the default development seed', () => {
+    expect(buildSeedCatalogs()).toEqual(buildSeedCatalogs())
+    expect(buildSeedCatalogs()).toEqual(data.catalogs)
   })
 
   it('marks every license type validity as a placeholder (D3)', () => {
