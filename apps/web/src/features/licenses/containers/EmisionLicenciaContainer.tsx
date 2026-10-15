@@ -1,7 +1,15 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { PENDING_INAC_LABEL, type LicenseDto, type PersonnelDto } from '@sryg/types'
-import { Breadcrumb, Button, Notice, useToast, worstStatus } from '../../../design-system'
+import {
+  Breadcrumb,
+  Button,
+  Notice,
+  ReviewDialog,
+  useToast,
+  worstStatus,
+  type ReviewSection,
+} from '../../../design-system'
 import { FormPageTemplate } from '../../../app/templates/FormPageTemplate'
 import { FormSection } from '../../../app/templates/FormSection'
 import { ErrorTemplate } from '../../../app/templates/ErrorTemplate'
@@ -170,6 +178,7 @@ function EmisionForm({ person, licenses, license, onModeChange, backToExpediente
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [conflict, setConflict] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>('editing')
+  const [reviewing, setReviewing] = useState(false)
   const errorSummaryRef = useRef<HTMLDivElement>(null)
   const nextKey = useRef(0)
 
@@ -284,7 +293,8 @@ function EmisionForm({ person, licenses, license, onModeChange, backToExpediente
     ...issued.map((item) => ({ id: item.id, label: item.label, nuevaFechaLabel: formatDate(item.date ?? '') })),
   ]
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  // Submitting the form only opens the review: nothing is sent until the operator confirms it.
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const found = validateDraft(draft)
     setErrors(found)
@@ -295,6 +305,10 @@ function EmisionForm({ person, licenses, license, onModeChange, backToExpediente
       return
     }
     setShowErrorSummary(false)
+    setReviewing(true)
+  }
+
+  const handleConfirm = async () => {
     setPhase('submitting')
     try {
       if (draft.license) await renewLicense(draft.license.id, renewBody(draft))
@@ -303,6 +317,7 @@ function EmisionForm({ person, licenses, license, onModeChange, backToExpediente
       navigate(`${personnelDetail(person.id)}?pagina=licencias`)
     } catch (error) {
       setPhase('editing')
+      setReviewing(false)
       if (error instanceof ApiError && error.status === 409) {
         setConflict(error.message)
         return
@@ -315,6 +330,45 @@ function EmisionForm({ person, licenses, license, onModeChange, backToExpediente
       requestAnimationFrame(() => errorSummaryRef.current?.focus())
     }
   }
+
+  const review: ReviewSection[] = [
+    {
+      title: 'Titular',
+      rows: [
+        { label: 'Cédula', value: person.cedula },
+        { label: 'Nombre', value: fullName(person) },
+      ],
+    },
+    {
+      title: 'Licencia',
+      rows: [
+        {
+          label: 'Trámite',
+          value: license
+            ? `Renovación de ${license.licenseType.nameEs} (N° ${license.number})`
+            : 'Emisión de una licencia nueva',
+        },
+        { label: 'Tipo de licencia', value: licenseLabel },
+        { label: 'Número', value: draft.number.trim() },
+        { label: 'Fecha de emisión', value: formatDate(draft.issueDate) },
+        { label: 'Nuevo vencimiento', value: nuevoVenceLabel },
+        {
+          label: 'Observaciones',
+          value: draft.observations.length > 0 ? draft.observations.map((o) => o.nameEs).join(', ') : 'Ninguna',
+        },
+      ],
+    },
+    {
+      title: 'Habilitaciones',
+      rows:
+        issued.length + removed.length > 0
+          ? [
+              ...issued.map((item) => ({ label: item.label, value: `Vence ${formatDate(item.date ?? '')}` })),
+              ...removed.map((item) => ({ label: item.label, value: 'Se retira' })),
+            ]
+          : [{ label: 'Cambios', value: 'Ninguno' }],
+    },
+  ]
 
   const errorSummary =
     showErrorSummary || submitError ? (
@@ -466,6 +520,15 @@ function EmisionForm({ person, licenses, license, onModeChange, backToExpediente
           onDiscard={(key) => update({ newClassRatings: draft.newClassRatings.filter((r) => r.key !== key) })}
         />
       </FormSection>
+      <ReviewDialog
+        open={reviewing}
+        title={draft.license ? 'Revise la renovación antes de confirmarla' : 'Revise la licencia antes de emitirla'}
+        sections={review}
+        confirmLabel={`Confirmar · ${submitLabel(draft)}`}
+        submitting={phase === 'submitting'}
+        onConfirm={() => void handleConfirm()}
+        onCancel={() => setReviewing(false)}
+      />
     </FormPageTemplate>
   )
 }

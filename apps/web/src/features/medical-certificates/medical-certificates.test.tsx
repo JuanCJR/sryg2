@@ -249,6 +249,20 @@ describe('Certificado médico form page (MED-01, MED-05, MED-06)', () => {
     await user.type(screen.getByLabelText(/Restricciones/), 'Solo vuelo diurno')
     await user.click(screen.getByRole('button', { name: 'Registrar certificado' }))
 
+    // Nothing is sent before the operator reviews the data and confirms it.
+    const review = await screen.findByRole('dialog', { name: 'Revise el certificado antes de registrarlo' })
+    expect(bodyOf(api, certificatesPath)).toBeUndefined()
+    const certificate = within(review).getByRole('region', { name: 'Certificado médico' })
+    expect(certificate.textContent).toContain('Registro de un certificado nuevo')
+    expect(certificate.textContent).toContain('Segunda clase')
+    expect(certificate.textContent).toContain('00000202')
+    expect(certificate.textContent).toContain(label(medicalExpiryDate('2026-08-31', 12)))
+    expect(certificate.textContent).toContain('PENDIENTE INAC')
+    const notes = within(review).getByRole('region', { name: 'Observaciones y restricciones' })
+    expect(notes.textContent).toContain('No apto para vuelo nocturno')
+    expect(notes.textContent).toContain('Solo vuelo diurno')
+    await user.click(within(review).getByRole('button', { name: 'Confirmar y registrar' }))
+
     await waitFor(() => expect(currentLocation()).toBe(`/personal/${PERSON.id}?pagina=medico`))
     expect(bodyOf(api, certificatesPath)).toEqual({
       rav67Class: 'clase_2',
@@ -275,6 +289,9 @@ describe('Certificado médico form page (MED-01, MED-05, MED-06)', () => {
     expect((screen.getByLabelText(/Restricciones/) as HTMLTextAreaElement).value).toBe('Solo vuelo diurno')
     await user.click(screen.getByRole('button', { name: 'Quitar Debe usar lentes correctivos' }))
     await user.click(screen.getByRole('button', { name: 'Renovar certificado' }))
+    const review = await screen.findByRole('dialog', { name: 'Revise la renovación del certificado' })
+    expect(review.textContent).toContain('Renovación de Segunda clase · Nº 00000202')
+    await user.click(within(review).getByRole('button', { name: 'Confirmar y renovar' }))
 
     await waitFor(() => expect(currentLocation()).toBe(`/personal/${PERSON.id}?pagina=medico`))
     expect(bodyOf(api, renewPath)).toEqual({
@@ -296,6 +313,23 @@ describe('Certificado médico form page (MED-01, MED-05, MED-06)', () => {
     expect((screen.getByLabelText(/Clase RAV 67/) as HTMLSelectElement).disabled).toBe(false)
     expect((screen.getByLabelText(/Restricciones/) as HTMLTextAreaElement).value).toBe('')
     expect(screen.getByRole('button', { name: 'Registrar certificado' })).toBeTruthy()
+  })
+
+  it('sends nothing when the operator goes back from the review to correct the data', async () => {
+    const api = signIn(userWith('supervisor', 'medicina'), (url) =>
+      url.pathname === certificatesPath ? listOf([]) : undefined,
+    )
+    const user = userEvent.setup()
+    renderApp(`/personal/${PERSON.id}/certificado-medico`)
+
+    await user.selectOptions(await screen.findByLabelText(/Clase RAV 67/), 'clase_3')
+    await user.click(screen.getByRole('button', { name: 'Registrar certificado' }))
+    await user.click(await screen.findByRole('button', { name: 'Volver y corregir' }))
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Revise el certificado antes de registrarlo' })).toBeNull(),
+    )
+    expect(bodyOf(api, certificatesPath)).toBeUndefined()
+    expect((screen.getByLabelText(/Clase RAV 67/) as HTMLSelectElement).value).toBe('clase_3')
   })
 
   it('validates before sending: a class and an issue date are required', async () => {
@@ -342,6 +376,7 @@ describe('Certificado médico form page (MED-01, MED-05, MED-06)', () => {
 
     await user.selectOptions(await screen.findByLabelText(/Clase RAV 67/), 'clase_1')
     await user.click(screen.getByRole('button', { name: 'Registrar certificado' }))
+    await user.click(await screen.findByRole('button', { name: 'Confirmar y registrar' }))
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain('La persona tiene un bloqueo activo (ficticio).')
     expect(screen.queryByRole('button', { name: 'Registrar certificado' })).toBeNull()

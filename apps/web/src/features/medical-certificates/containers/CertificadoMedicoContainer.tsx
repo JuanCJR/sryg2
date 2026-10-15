@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import type { MedicalCertificateDto, MedicalValidityDto, PersonnelDto } from '@sryg/types'
-import { Breadcrumb, Button, Notice, useToast } from '../../../design-system'
+import { PENDING_INAC_LABEL, type MedicalCertificateDto, type MedicalValidityDto, type PersonnelDto } from '@sryg/types'
+import { Breadcrumb, Button, Notice, ReviewDialog, useToast, type ReviewSection } from '../../../design-system'
 import { personnelDetail, PATHS } from '../../../app/routes'
 import { ErrorTemplate } from '../../../app/templates/ErrorTemplate'
 import { FormPageTemplate } from '../../../app/templates/FormPageTemplate'
@@ -25,8 +25,8 @@ import {
   type CertificateFormErrors,
   type CertificateFormValues,
 } from '../domain/certificate-form'
-import { localToday } from '../domain/dates'
-import { BLOCKED_TITLE, NO_CLINICAL_DATA_TITLE, STATUS_TO_BADGE } from '../domain/labels'
+import { formatDay, localToday } from '../domain/dates'
+import { BLOCKED_TITLE, certificateName, CLASS_LABEL, NO_CLINICAL_DATA_TITLE, STATUS_TO_BADGE } from '../domain/labels'
 
 const TITLE = 'Registrar o renovar certificado médico'
 const BLOCKED_REASON =
@@ -167,6 +167,7 @@ function CertificateForm({ data, breadcrumb, subject, onBlocked, onDone }: Certi
   const [errors, setErrors] = useState<CertificateFormErrors>({})
   const [summary, setSummary] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [reviewing, setReviewing] = useState(false)
   const summaryRef = useRef<HTMLDivElement>(null)
   const renewing = values.mode !== 'new'
 
@@ -184,7 +185,10 @@ function CertificateForm({ data, breadcrumb, subject, onBlocked, onDone }: Certi
     })
   }
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const expiry = previewExpiry(values, validity)
+
+  // Submitting the form only opens the review: nothing is sent until the operator confirms it.
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const found = validate(values)
     setErrors(found)
@@ -193,6 +197,10 @@ function CertificateForm({ data, breadcrumb, subject, onBlocked, onDone }: Certi
       return
     }
     setSummary(null)
+    setReviewing(true)
+  }
+
+  const handleConfirm = async () => {
     setSubmitting(true)
     try {
       if (renewing) await renewCertificate(values.mode, toRenewBody(values))
@@ -204,6 +212,7 @@ function CertificateForm({ data, breadcrumb, subject, onBlocked, onDone }: Certi
       onDone()
     } catch (error) {
       setSubmitting(false)
+      setReviewing(false)
       if (error instanceof ApiError && error.status === 409) {
         onBlocked(error.message)
         return
@@ -217,6 +226,44 @@ function CertificateForm({ data, breadcrumb, subject, onBlocked, onDone }: Certi
   }
 
   const submitLabel = renewing ? 'Renovar certificado' : 'Registrar certificado'
+  const renewed = certificates.find((c) => c.id === values.mode)
+  const review: ReviewSection[] = [
+    {
+      title: 'Titular',
+      rows: [
+        { label: 'Cédula', value: person.cedula },
+        { label: 'Nombre', value: fullName(person) },
+      ],
+    },
+    {
+      title: 'Certificado médico',
+      rows: [
+        {
+          label: 'Trámite',
+          value: renewed ? `Renovación de ${certificateName(renewed)}` : 'Registro de un certificado nuevo',
+        },
+        { label: 'Clase RAV 67', value: values.rav67Class ? CLASS_LABEL[values.rav67Class] : '—' },
+        { label: 'Número', value: values.number.trim() },
+        { label: 'Fecha de emisión', value: formatDay(values.issueDate) },
+        {
+          label: 'Vencimiento calculado',
+          value: expiry
+            ? `${formatDay(expiry.date)} (${expiry.months} meses)${expiry.isPlaceholder ? ` · ${PENDING_INAC_LABEL}` : ''}`
+            : '—',
+        },
+      ],
+    },
+    {
+      title: 'Observaciones y restricciones',
+      rows: [
+        {
+          label: 'Observaciones',
+          value: values.observations.length > 0 ? values.observations.map((o) => o.nameEs).join(', ') : 'Ninguna',
+        },
+        { label: 'Restricciones operacionales', value: values.restrictions.trim() || 'Ninguna' },
+      ],
+    },
+  ]
 
   return (
     <FormPageTemplate
@@ -224,7 +271,7 @@ function CertificateForm({ data, breadcrumb, subject, onBlocked, onDone }: Certi
       title={TITLE}
       breadcrumb={breadcrumb}
       subject={subject}
-      onSubmit={(event) => void handleSubmit(event)}
+      onSubmit={handleSubmit}
       errorSummary={
         <>
           <Notice tone="info" title={NO_CLINICAL_DATA_TITLE}>
@@ -255,12 +302,21 @@ function CertificateForm({ data, breadcrumb, subject, onBlocked, onDone }: Certi
         certificates={certificates}
         values={values}
         errors={errors}
-        expiry={previewExpiry(values, validity)}
+        expiry={expiry}
         onModeChange={(mode) => {
           setValues(valuesFor(mode, certificates, person.cedula, localToday()))
           setErrors({})
         }}
         onChange={handleChange}
+      />
+      <ReviewDialog
+        open={reviewing}
+        title={renewing ? 'Revise la renovación del certificado' : 'Revise el certificado antes de registrarlo'}
+        sections={review}
+        confirmLabel={`Confirmar y ${renewing ? 'renovar' : 'registrar'}`}
+        submitting={submitting}
+        onConfirm={() => void handleConfirm()}
+        onCancel={() => setReviewing(false)}
       />
     </FormPageTemplate>
   )

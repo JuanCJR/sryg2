@@ -411,6 +411,18 @@ describe('Emisión o renovación de licencia', () => {
     expect(within(rail).getByText('Habilitación de tipo — B737 · Capitán')).toBeTruthy()
 
     await user.click(screen.getByRole('button', { name: 'Emitir licencia + 1 habilitación' }))
+    // Nothing is sent before the operator reviews the data and confirms it.
+    const review = await screen.findByRole('dialog', { name: 'Revise la licencia antes de emitirla' })
+    expect(api.mock.calls.some(([, i]) => i?.method === 'POST')).toBe(false)
+    const licenseSection = within(review).getByRole('region', { name: 'Licencia' })
+    expect(licenseSection.textContent).toContain('Emisión de una licencia nueva')
+    expect(licenseSection.textContent).toContain('Piloto Comercial - Avión')
+    expect(licenseSection.textContent).toContain(PERSON.cedula)
+    expect(licenseSection.textContent).toContain('14 oct 2028 · PENDIENTE INAC')
+    expect(within(review).getByRole('region', { name: 'Habilitaciones' }).textContent).toContain(
+      'Habilitación de tipo — B737 · Capitán',
+    )
+    await user.click(within(review).getByRole('button', { name: 'Confirmar · Emitir licencia + 1 habilitación' }))
     await waitFor(() => expect(currentLocation()).toBe(`/personal/${PERSON.id}?pagina=licencias`))
     const [, init] = api.mock.calls.find(([, i]) => i?.method === 'POST')!
     expect(json(init!)).toEqual({
@@ -445,6 +457,11 @@ describe('Emisión o renovación de licencia', () => {
     expect(within(screen.getByLabelText('Se emitirá')).getByText(/Monomotores Terrestres · C172/)).toBeTruthy()
 
     await user.click(screen.getByRole('button', { name: 'Renovar licencia + 1 habilitación' }))
+    const review = await screen.findByRole('dialog', { name: 'Revise la renovación antes de confirmarla' })
+    const ratings = within(review).getByRole('region', { name: 'Habilitaciones' })
+    expect(ratings.textContent).toContain('B737 · Capitán')
+    expect(ratings.textContent).toContain('Se retira')
+    await user.click(within(review).getByRole('button', { name: 'Confirmar · Renovar licencia + 1 habilitación' }))
     await waitFor(() => expect(currentLocation()).toBe(`/personal/${PERSON.id}?pagina=licencias`))
     const [url, init] = api.mock.calls.find(([, i]) => i?.method === 'POST')!
     expect(new URL(String(url)).pathname).toBe(`/api/licenses/${LICENSE.id}/renew`)
@@ -471,6 +488,7 @@ describe('Emisión o renovación de licencia', () => {
     renderApp(`/personal/${PERSON.id}/licencia?licencia=${LICENSE.id}`)
 
     await user.click(await screen.findByRole('button', { name: 'Renovar licencia' }))
+    await user.click(await screen.findByRole('button', { name: 'Confirmar · Renovar licencia' }))
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain(reason)
     expect(screen.queryByRole('button', { name: 'Renovar licencia' })).toBeNull()
