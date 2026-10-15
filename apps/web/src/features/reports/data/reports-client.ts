@@ -9,10 +9,14 @@ import { API_URL } from '../../../shared/api/config'
 import { ApiError, fetchJson as defaultFetchJson, type FetchJson } from '../../../shared/api/fetch-json'
 import { sessionStore } from '../../../shared/session/session'
 
-/** Query string of the filters, without the empty ones. */
+/** Query string of the filters, without the empty ones; lists travel comma-joined (`?status=a,b`). */
 export function filtersToParams(filters: ReportFilters): URLSearchParams {
   const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(filters)) if (value) params.set(key, String(value))
+  for (const [key, value] of Object.entries(filters)) {
+    if (Array.isArray(value)) {
+      if (value.length) params.set(key, value.join(','))
+    } else if (value) params.set(key, String(value))
+  }
   return params
 }
 

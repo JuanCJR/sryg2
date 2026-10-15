@@ -6,6 +6,7 @@ import { toAuditFilter, validateFilters } from '../domain/audit-view'
 import { EMPTY_FILTERS, type AuditFilterValues } from '../domain/types'
 
 export const AUDIT_PAGE_SIZE = 50
+export const AUDIT_PAGE_SIZES = [25, 50, 100] as const
 const TEXT_DEBOUNCE_MS = 300
 
 /**
@@ -16,8 +17,9 @@ const TEXT_DEBOUNCE_MS = 300
 export function useAuditTrail(personId?: string) {
   const [values, setValues] = useState<AuditFilterValues>(EMPTY_FILTERS)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSizeState] = useState<number>(AUDIT_PAGE_SIZE)
   const debounced = useDebouncedValue(values, TEXT_DEBOUNCE_MS)
-  // Selects and dates apply at once; only the free-text fields wait for the pause.
+  // Checkboxes and dates apply at once; only the free-text fields wait for the pause.
   const effective = { ...values, actor: debounced.actor, entityId: debounced.entityId }
   const errors = validateFilters(values)
   const valid = !errors.entityId && !errors.range && !validateFilters(effective).entityId
@@ -26,8 +28,8 @@ export function useAuditTrail(personId?: string) {
   const next = { ...toAuditFilter(effective), ...(personId ? { personId } : {}) }
   if (valid && JSON.stringify(next) !== JSON.stringify(applied)) setApplied(next)
 
-  const resource = useApiResource(`audit:${JSON.stringify(applied)}:${page}`, () =>
-    listAudit({ ...applied, page, pageSize: AUDIT_PAGE_SIZE }),
+  const resource = useApiResource(`audit:${JSON.stringify(applied)}:${page}:${pageSize}`, () =>
+    listAudit({ ...applied, page, pageSize }),
   )
 
   const setFilter = <K extends keyof AuditFilterValues>(key: K, value: AuditFilterValues[K]) => {
@@ -35,5 +37,15 @@ export function useAuditTrail(personId?: string) {
     setPage(1)
   }
 
-  return { values, errors, valid, applied, page, setPage, setFilter, resource }
+  const clearFilters = () => {
+    setValues(EMPTY_FILTERS)
+    setPage(1)
+  }
+
+  const setPageSize = (next: number) => {
+    setPageSizeState(next)
+    setPage(1)
+  }
+
+  return { values, errors, valid, applied, page, setPage, pageSize, setPageSize, setFilter, clearFilters, resource }
 }

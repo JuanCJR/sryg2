@@ -7,13 +7,16 @@ export interface AuditTableProps {
   rows: AuditRow[]
 }
 
-/** The trail, one entry per row: date, actor, action, entity and the fields the change touched. */
+/**
+ * The trail, one entry per row, in the list convention's order: entry number (ID), actor
+ * (Persona), action (Tipo), entity and the fields the change touched (Detalle), then the date.
+ */
 export function AuditTable({ label, rows }: AuditTableProps) {
   return (
     <div className={styles.table} role="table" aria-label={label}>
       <div className={styles.headerRow} role="row">
         <span className={styles.headerCell} role="columnheader">
-          Fecha y hora (UTC)
+          N.º
         </span>
         <span className={styles.headerCell} role="columnheader">
           Actor
@@ -27,11 +30,14 @@ export function AuditTable({ label, rows }: AuditTableProps) {
         <span className={styles.headerCell} role="columnheader">
           Campos
         </span>
+        <span className={styles.headerCell} role="columnheader">
+          Fecha y hora (UTC)
+        </span>
       </div>
       {rows.map((row) => (
         <div key={row.id} className={styles.row} role="row">
-          <span role="cell" className={styles.fecha}>
-            {row.fecha}
+          <span role="cell" className={styles.numero}>
+            {row.numero}
           </span>
           <span role="cell" className={styles.cell}>
             {row.actor}
@@ -44,6 +50,9 @@ export function AuditTable({ label, rows }: AuditTableProps) {
           </span>
           <span role="cell" className={styles.detalle}>
             {row.detalle}
+          </span>
+          <span role="cell" className={styles.fecha}>
+            {row.fecha}
           </span>
         </div>
       ))}

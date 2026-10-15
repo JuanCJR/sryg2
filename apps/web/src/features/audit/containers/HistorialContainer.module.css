@@ -1,10 +1,26 @@
-.wrap {
+/* Filter column left of the results; it stacks above them on tablets and phones, where the
+   FilterPanel itself collapses behind its "Filtros" toggle. */
+.layout {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-6);
+}
+
+.filters {
+  min-width: 0;
+}
+
+.main {
   display: flex;
   flex-direction: column;
   gap: var(--s-5);
+  min-width: 0;
 }
 
-.footer {
-  display: flex;
-  justify-content: flex-end;
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-5);
+  }
 }

@@ -127,6 +127,16 @@ describe('Reportes (D10)', () => {
     ).toBeTruthy()
     expect(screen.getByText(/Umbral de próxima a vencer: 30 días/)).toBeTruthy()
     expect(screen.getByText('PENDIENTE INAC')).toBeTruthy()
+    expect(screen.getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
+      'Cédula',
+      'Titular',
+      'Credencial',
+      'Descripción',
+      'Categoría RAV 60',
+      'Vencimiento',
+      'Días restantes',
+      'Estado',
+    ])
 
     const picker = screen.getByRole('radiogroup', { name: 'Reporte' })
     expect(
@@ -148,14 +158,34 @@ describe('Reportes (D10)', () => {
     expect(within(row).getByText(/Piloto Comercial - Avión/)).toBeTruthy()
     expect(within(row).getByText('1 / 0 / 2')).toBeTruthy()
     expect(within(row).getByText(/Clase 1/)).toBeTruthy()
+    expect(screen.getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
+      'Cédula',
+      'Titular',
+      'Licencias',
+      'Habilitacionesvenc. / próx. / total',
+      'Certificado médico',
+      'Bloqueos',
+      'Próximo vencimiento',
+      'Estado',
+    ])
 
     await user.click(screen.getByRole('radio', { name: /Bloqueos activos/ }))
     const block = await screen.findByRole('row', { name: /Persona De Prueba Dos/ })
     expect(within(block).getByText('Médico')).toBeTruthy()
     expect(within(block).getByText('Impedimento ficticio')).toBeTruthy()
     expect(within(block).getByText('Supervisor Ficticio')).toBeTruthy()
+    expect(screen.getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
+      'Cédula',
+      'Titular',
+      'Tipo',
+      'Motivo',
+      'Registrado por',
+      'Registrado',
+    ])
     // Blocks have no status filter.
-    expect(screen.queryByLabelText('Estado')).toBeNull()
+    const filters = screen.getByRole('complementary', { name: 'Filtros del reporte' })
+    expect(within(filters).queryByRole('group', { name: 'Estado' })).toBeNull()
+    expect(within(filters).getByRole('button', { name: 'Registrado' })).toBeTruthy()
 
     expect(reportCalls(api).map((url) => url.pathname)).toEqual([
       '/api/reports/vencimientos',
@@ -164,25 +194,89 @@ describe('Reportes (D10)', () => {
     ])
   })
 
-  it('sends the status, RAV 60 category and date filters to the API', async () => {
+  it('sends the checked statuses and RAV 60 categories comma-joined, and the date range, to the API', async () => {
     const api = signIn(userWith('supervisor', 'licencias'))
     const user = userEvent.setup()
     renderApp('/reportes')
     await screen.findByRole('row', { name: /Persona De Prueba Uno/ })
 
-    await user.selectOptions(screen.getByLabelText('Estado'), 'vencida')
-    await user.selectOptions(screen.getByLabelText('Categoría RAV 60'), 'piloto_comercial')
-    await user.type(screen.getByLabelText('Vencimiento desde'), '01102026')
-    await user.type(screen.getByLabelText('Vencimiento hasta'), '31102026')
+    const filters = screen.getByRole('complementary', { name: 'Filtros del reporte' })
+    await user.click(within(filters).getByRole('checkbox', { name: 'Bloqueada' }))
+    await user.click(within(filters).getByRole('checkbox', { name: 'Vencida' }))
+    await user.click(within(filters).getByRole('checkbox', { name: 'Piloto comercial' }))
+    await user.click(within(filters).getByRole('checkbox', { name: 'Piloto privado' }))
+    await user.type(within(filters).getByLabelText('Desde'), '01102026')
+    await user.type(within(filters).getByLabelText('Hasta'), '31102026')
 
     await waitFor(() => {
       const last = reportCalls(api).at(-1)!
       expect(Object.fromEntries(last.searchParams)).toMatchObject({
-        status: 'vencida',
-        rav60Category: 'piloto_comercial',
+        // The options' own order, whatever the click order.
+        status: 'vencida,bloqueada',
+        rav60Category: 'piloto_comercial,piloto_privado',
         from: '2026-10-01',
         to: '2026-10-31',
+        page: '1',
       })
+    })
+
+    await user.click(within(filters).getByRole('button', { name: /Limpiar todo/ }))
+    await waitFor(() => {
+      const params = reportCalls(api).at(-1)!.searchParams
+      expect(['status', 'rav60Category', 'from', 'to'].some((key) => params.has(key))).toBe(false)
+    })
+  })
+
+  it('keeps only the statuses the next report offers when switching reports', async () => {
+    const api = signIn(userWith('administrador', 'ambas'))
+    const user = userEvent.setup()
+    renderApp('/reportes')
+    await screen.findByRole('row', { name: /Persona De Prueba Uno/ })
+
+    await user.click(screen.getByRole('checkbox', { name: 'Vencida' }))
+    await waitFor(() => expect(reportCalls(api).at(-1)!.searchParams.get('status')).toBe('vencida'))
+    await user.click(screen.getByRole('radio', { name: /Estado consolidado/ }))
+    await waitFor(() => expect(reportCalls(api).at(-1)!.pathname).toBe('/api/reports/estado_consolidado'))
+    expect(reportCalls(api).at(-1)!.searchParams.get('status')).toBe('vencida')
+    expect((screen.getByRole('checkbox', { name: 'Vencida' }) as HTMLInputElement).checked).toBe(true)
+
+    await user.click(screen.getByRole('radio', { name: /Bloqueos activos/ }))
+    await waitFor(() => expect(reportCalls(api).at(-1)!.pathname).toBe('/api/reports/bloqueos_activos'))
+    expect(reportCalls(api).at(-1)!.searchParams.has('status')).toBe(false)
+  })
+
+  it('pages on the server, with the range line and a rows-per-page choice', async () => {
+    const api = signIn(userWith('supervisor', 'licencias'), (url) => {
+      if (url.pathname !== '/api/reports/vencimientos') return undefined
+      const pageNumber = Number(url.searchParams.get('page'))
+      const pageSize = Number(url.searchParams.get('pageSize'))
+      return reportPage('vencimientos', ROWS.vencimientos, { total: 120, page: pageNumber, pageSize })
+    })
+    const user = userEvent.setup()
+    renderApp('/reportes')
+    await screen.findByRole('row', { name: /Persona De Prueba Uno/ })
+
+    const nav = () => screen.getByRole('navigation', { name: 'Paginación' })
+    expect(nav().textContent).toContain('Mostrando 1–50 de 120')
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }))
+    await waitFor(() => expect(reportCalls(api).at(-1)!.searchParams.get('page')).toBe('2'))
+    await waitFor(() => expect(nav().textContent).toContain('Mostrando 51–100 de 120'))
+
+    await user.selectOptions(screen.getByLabelText('Filas por página'), '25')
+    await waitFor(() => {
+      const params = reportCalls(api).at(-1)!.searchParams
+      expect(params.get('pageSize')).toBe('25')
+      expect(params.get('page')).toBe('1')
+    })
+
+    // A filter change goes back to page 1 too.
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }))
+    await waitFor(() => expect(reportCalls(api).at(-1)!.searchParams.get('page')).toBe('2'))
+    await user.click(screen.getByRole('checkbox', { name: 'Vencida' }))
+    await waitFor(() => {
+      const params = reportCalls(api).at(-1)!.searchParams
+      expect(params.get('status')).toBe('vencida')
+      expect(params.get('page')).toBe('1')
     })
   })
 
@@ -213,14 +307,15 @@ describe('Reportes (D10)', () => {
     renderApp('/reportes')
     await screen.findByRole('row', { name: /Persona De Prueba Uno/ })
 
-    await user.selectOptions(screen.getByLabelText('Estado'), 'proxima_a_vencer')
+    await user.click(screen.getByRole('checkbox', { name: 'Próxima a vencer' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Vencida' }))
     await user.click(screen.getByRole('button', { name: 'Exportar CSV' }))
 
     await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob)))
     expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledTimes(1)
     const call = api.mock.calls.find(([url]) => String(url).includes('/export'))!
     const url = new URL(String(call[0]))
-    expect(Object.fromEntries(url.searchParams)).toEqual({ format: 'csv', status: 'proxima_a_vencer' })
+    expect(Object.fromEntries(url.searchParams)).toEqual({ format: 'csv', status: 'vencida,proxima_a_vencer' })
     expect(authorizationOf(call[1])).toBe(`Bearer ${TOKEN}`)
     expect(screen.getByRole('button', { name: 'Exportar PDF' })).toBeTruthy()
   })

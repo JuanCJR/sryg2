@@ -36,7 +36,7 @@
 }
 
 .input:checked + .face {
-  border-bottom-color: var(--fg);
+  border-bottom-color: var(--accent-ink);
   background: var(--surface);
 }
 

@@ -17,6 +17,7 @@ function changedFields(changes: AuditEntryDto['changes']): string {
 export function toAuditRow(entry: AuditEntryDto): AuditRow {
   return {
     id: entry.id,
+    numero: String(entry.id),
     fecha: formatDateTime(entry.occurredAt),
     actor: entry.actor?.fullName ?? 'Sistema',
     accion: ACTION_LABELS[entry.action],
@@ -32,14 +33,14 @@ export function validateFilters({ entityId, from, to }: AuditFilterValues): Audi
   return errors
 }
 
-/** The filters as the API reads them: blank fields left out. */
+/** The filters as the API reads them: blank fields and empty checkbox groups left out. */
 export function toAuditFilter(values: AuditFilterValues): AuditFilter {
   const filter: AuditFilter = {}
   const actor = values.actor.trim()
   const entityId = values.entityId.trim()
   if (actor) filter.actor = actor
-  if (values.action) filter.action = values.action
-  if (values.entity) filter.entity = values.entity
+  if (values.action.length) filter.action = [...values.action]
+  if (values.entity.length) filter.entity = [...values.entity]
   if (entityId) filter.entityId = entityId
   if (values.from) filter.from = values.from
   if (values.to) filter.to = values.to
@@ -48,3 +49,15 @@ export function toAuditFilter(values: AuditFilterValues): AuditFilter {
 
 export const formatCount = (total: number) =>
   `${total.toLocaleString('es-VE')} ${total === 1 ? 'registro' : 'registros'}`
+
+/** How many filters narrow the trail (a non-empty text, a checked group, each date bound). */
+export function countActiveFilters(values: AuditFilterValues): number {
+  return [
+    values.actor.trim(),
+    values.action.length,
+    values.entity.length,
+    values.entityId.trim(),
+    values.from,
+    values.to,
+  ].filter(Boolean).length
+}

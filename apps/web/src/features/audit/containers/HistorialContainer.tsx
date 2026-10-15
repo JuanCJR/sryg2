@@ -1,9 +1,9 @@
 import { Pagination } from '../../../design-system'
 import { TemplateEmptyFrame, TemplateErrorFrame, TemplateLoadingFrame } from '../../../app/templates/TemplateFrames'
-import { AuditFilterBar } from '../components/AuditFilterBar'
+import { AuditFilterPanel } from '../components/AuditFilterPanel'
 import { AuditTable } from '../components/AuditTable'
 import { toAuditRow } from '../domain/audit-view'
-import { AUDIT_PAGE_SIZE, useAuditTrail } from '../hooks/useAuditTrail'
+import { AUDIT_PAGE_SIZES, useAuditTrail } from '../hooks/useAuditTrail'
 import styles from './HistorialContainer.module.css'
 
 export interface HistorialContainerProps {
@@ -12,10 +12,12 @@ export interface HistorialContainerProps {
 
 /**
  * The Expediente's Historial page key: the person's trail (BR-11) — their record plus the
- * credentials, blocks and attachments that hang from it — filtered by person on the server.
+ * credentials, blocks and attachments that hang from it — filtered by person on the server. The
+ * filter column sits left of the results, as on every list page.
  */
 export function HistorialContainer({ personId }: HistorialContainerProps) {
-  const { values, errors, page, setPage, setFilter, resource } = useAuditTrail(personId)
+  const { values, errors, page, setPage, pageSize, setPageSize, setFilter, clearFilters, resource } =
+    useAuditTrail(personId)
 
   let body
   if (resource.status === 'loading') {
@@ -41,23 +43,37 @@ export function HistorialContainer({ personId }: HistorialContainerProps) {
       />
     )
   } else {
-    const pageCount = Math.max(1, Math.ceil(resource.data.total / AUDIT_PAGE_SIZE))
+    const { items, total } = resource.data
+    const pageCount = Math.max(1, Math.ceil(total / pageSize))
     body = (
       <>
-        <AuditTable label="Historial de la persona" rows={resource.data.items.map(toAuditRow)} />
-        {pageCount > 1 ? (
-          <div className={styles.footer}>
-            <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
-          </div>
-        ) : null}
+        <AuditTable label="Historial de la persona" rows={items.map(toAuditRow)} />
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={total}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
+          pageSizeOptions={AUDIT_PAGE_SIZES}
+        />
       </>
     )
   }
 
   return (
-    <div className={styles.wrap}>
-      <AuditFilterBar values={values} errors={errors} onChange={setFilter} showEntityId={false} />
-      {body}
+    <div className={styles.layout}>
+      <div className={styles.filters}>
+        <AuditFilterPanel
+          aria-label="Filtros del historial"
+          values={values}
+          errors={errors}
+          onChange={setFilter}
+          onClearAll={clearFilters}
+          showEntityId={false}
+        />
+      </div>
+      <div className={styles.main}>{body}</div>
     </div>
   )
 }

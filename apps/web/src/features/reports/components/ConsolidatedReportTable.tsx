@@ -5,14 +5,16 @@ import { formatDate, RAV67_LABELS, STATUS_LABELS } from '../domain/report-view'
 import { ReportStatusCell } from './ReportStatusCell'
 import styles from './ReportTable.module.css'
 
-/** Report 2: one row per person with the worst status of their current credentials. */
+/**
+ * Report 2: one row per person with the worst status of their current credentials, which closes
+ * the row (list convention: identity, credentials, next expiry, then status).
+ */
 export function ConsolidatedReportTable({ rows }: { rows: ConsolidatedReportRow[] }) {
   return (
     <div className={styles.scroller}>
       <table className={styles.table}>
         <thead>
           <tr>
-            <th scope="col">Estado</th>
             <th scope="col">Cédula</th>
             <th scope="col">Titular</th>
             <th scope="col">Licencias</th>
@@ -26,14 +28,12 @@ export function ConsolidatedReportTable({ rows }: { rows: ConsolidatedReportRow[
               Bloqueos
             </th>
             <th scope="col">Próximo vencimiento</th>
+            <th scope="col">Estado</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.personalId}>
-              <td>
-                <ReportStatusCell status={row.status} />
-              </td>
               <td className={styles.mono}>{row.cedula}</td>
               <td>
                 <Link to={personnelDetail(row.personalId)} className={styles.name}>
@@ -74,6 +74,9 @@ export function ConsolidatedReportTable({ rows }: { rows: ConsolidatedReportRow[
               </td>
               <td className={`${styles.mono} ${styles.numeric}`}>{row.activeBlocks}</td>
               <td className={styles.mono}>{row.nextExpiryDate ? formatDate(row.nextExpiryDate) : '—'}</td>
+              <td>
+                <ReportStatusCell status={row.status} />
+              </td>
             </tr>
           ))}
         </tbody>
