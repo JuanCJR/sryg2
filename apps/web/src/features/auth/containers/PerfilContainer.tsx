@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router'
 import { Breadcrumb, Button, Notice, useToast } from '../../../design-system'
 import { useRole } from '../../../app/role/useRole'
-import { HOME } from '../../../app/routes'
+import { HOME, PATHS } from '../../../app/routes'
 import { FormPageTemplate } from '../../../app/templates/FormPageTemplate'
 import { FormSection } from '../../../app/templates/FormSection'
 import { ApiError } from '../../../shared/api/fetch-json'
@@ -21,11 +22,12 @@ const BLANK: PasswordChangeForm = { current: '', next: '', confirm: '' }
 
 /**
  * Perfil (AUTH-08, page 14): the user's own account data, the password change (D4) and the access
- * log (D23). After an Admin reset the session gate keeps the user here until the change is done;
- * reloading `/me` then releases them.
+ * log (D23). After an Admin reset (or on the first sign-in) the session gate keeps the user here
+ * until the change is done; reloading `/me` then releases them and they land on the panel.
  */
 export function PerfilContainer() {
   const { user, reload } = useRole()
+  const navigate = useNavigate()
   const toast = useToast()
   const [values, setValues] = useState(BLANK)
   const [issues, setIssues] = useState<PasswordChangeIssues>({})
@@ -54,6 +56,8 @@ export function PerfilContainer() {
       toast.show({ tone: 'info', message: 'Contraseña actualizada.' })
       // Clears mustChangePassword in the session (D4).
       reload()
+      // A forced change was the only thing between the user and the app: take them to it.
+      if (user.mustChangePassword) navigate(PATHS.panel, { replace: true })
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) setIssues({ current: WRONG_CURRENT_PASSWORD })
       else setFailure(true)
@@ -87,7 +91,7 @@ export function PerfilContainer() {
       <FormSection legend="Contraseña">
         {user.mustChangePassword ? (
           <Notice tone="caution" title="Debe cambiar su contraseña">
-            El Administrador restableció su contraseña. Elija una nueva para seguir usando el sistema.
+            Su contraseña es temporal (primer ingreso o restablecida por el Administrador). Elija una nueva para seguir usando el sistema.
           </Notice>
         ) : null}
         <PasswordChangeFields values={values} issues={issues} onChange={handleChange} />

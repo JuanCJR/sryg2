@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import type { AccessLog, AuthUser } from '@sryg/types'
 import { sessionStore } from '../../shared/session/session'
 import { mockApi, type MockHandler } from '../../test/api-mock'
-import { TOKEN, renderApp, userWith } from '../../test/render-app'
+import { TOKEN, currentLocation, renderApp, userWith } from '../../test/render-app'
 
 const LOG: AccessLog = {
   successful: [
@@ -107,7 +107,7 @@ describe('Perfil (AUTH-08, D4, D23)', () => {
     expect(sessionStore.get()).toBe(TOKEN)
   })
 
-  it('forces the change after a reset and releases the user once it is done', async () => {
+  it('forces the change after a reset and sends the user to the panel once it is done', async () => {
     let mustChange = true
     const api = signIn(
       () => userWith('supervisor', 'licencias', { mustChangePassword: mustChange }),
@@ -127,8 +127,20 @@ describe('Perfil (AUTH-08, D4, D23)', () => {
     await fillPasswords('temporal-123', 'mi-clave-nueva')
 
     expect(await screen.findByText('Contraseña actualizada.')).toBeTruthy()
-    await waitFor(() => expect(screen.queryByText('Debe cambiar su contraseña')).toBeNull())
+    await waitFor(() => expect(currentLocation()).toBe('/panel'))
+    expect(screen.queryByText('Debe cambiar su contraseña')).toBeNull()
     const changeCall = api.mock.calls.find(([url]) => String(url).endsWith('/api/auth/change-password'))
     expect(new Headers(changeCall?.[1]?.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`)
+  })
+
+  it('keeps the user on Perfil after a voluntary change', async () => {
+    signIn(
+      () => userWith('supervisor', 'licencias'),
+      (url) => (url.pathname === '/api/auth/change-password' ? { status: 204 } : undefined),
+    )
+    renderApp('/perfil')
+    await fillPasswords('mi-clave-actual', 'mi-clave-nueva')
+    expect(await screen.findByText('Contraseña actualizada.')).toBeTruthy()
+    expect(currentLocation()).toBe('/perfil')
   })
 })
