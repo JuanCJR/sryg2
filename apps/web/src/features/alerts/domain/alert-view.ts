@@ -1,14 +1,18 @@
 import type { AlertArea, AlertKind, CredentialKind, UserArea } from '@sryg/types'
 
-export type Acknowledgement = 'pendientes' | 'reconocidas' | 'todas'
+/** One value of the "Reconocimiento" checkbox group. */
+export type Acknowledgement = 'pendientes' | 'reconocidas'
 
-/** The dashboard filters as edited; `''` means "all". */
+export const ACKNOWLEDGEMENTS: readonly Acknowledgement[] = ['pendientes', 'reconocidas']
+
+/** The dashboard filters as edited; an empty list means "all". */
 export interface AlertFilterValues {
   /** Set by the annunciator keys; `null` shows both kinds. */
   kind: AlertKind | null
-  credentialKind: CredentialKind | ''
-  area: AlertArea | ''
-  acknowledgement: Acknowledgement
+  credentialKind: CredentialKind[]
+  area: AlertArea[]
+  /** Both or none checked = every alert. */
+  acknowledgement: Acknowledgement[]
 }
 
 /**
@@ -19,24 +23,37 @@ export interface AlertFilterValues {
 export function defaultFilters(area: UserArea | null): AlertFilterValues {
   return {
     kind: null,
-    credentialKind: '',
-    area: area === 'licencias' || area === 'medicina' ? area : '',
-    acknowledgement: 'pendientes',
+    credentialKind: [],
+    area: area === 'licencias' || area === 'medicina' ? [area] : [],
+    acknowledgement: ['pendientes'],
   }
 }
 
-const ACKNOWLEDGED_PARAM: Record<Acknowledgement, string | null> = {
-  pendientes: 'false',
-  reconocidas: 'true',
-  todas: null,
+/** Whether the panel filters (not the annunciator `kind`) are still the user's default view. */
+export function isDefaultView(filters: AlertFilterValues, area: UserArea | null): boolean {
+  const initial = defaultFilters(area)
+  const same = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((v) => b.includes(v))
+  return (
+    filters.kind === null &&
+    same(filters.credentialKind, initial.credentialKind) &&
+    same(filters.area, initial.area) &&
+    same(filters.acknowledgement, initial.acknowledgement)
+  )
+}
+
+/** `acknowledged` is a single boolean on the API: one box checked narrows, both or none do not. */
+function acknowledgedParam(values: readonly Acknowledgement[]): string | null {
+  if (values.length !== 1) return null
+  return values[0] === 'reconocidas' ? 'true' : 'false'
 }
 
 /** GET /api/alerts/summary: every filter but `kind`, so the annunciator keeps counting both kinds. */
 export function toSummaryParams({ credentialKind, area, acknowledgement }: AlertFilterValues): URLSearchParams {
   const params = new URLSearchParams()
-  if (credentialKind) params.set('credentialKind', credentialKind)
-  if (area) params.set('area', area)
-  const acknowledged = ACKNOWLEDGED_PARAM[acknowledgement]
+  // Multi-value filters travel as one comma-joined parameter.
+  if (credentialKind.length) params.set('credentialKind', credentialKind.join(','))
+  if (area.length) params.set('area', area.join(','))
+  const acknowledged = acknowledgedParam(acknowledgement)
   if (acknowledged) params.set('acknowledged', acknowledged)
   return params
 }

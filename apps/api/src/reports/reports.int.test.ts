@@ -283,6 +283,25 @@ describe('reports http (D10)', () => {
       expect(await kinds({ from: day(-5), to: day(5) })).toEqual([ids.licenses.bloqueado, ids.habTipo, ids.certNear])
     })
 
+    it('accepts several statuses, comma-separated or as repeated params', async () => {
+      const kinds = async (query: string) =>
+        (
+          (await http().get(`/api/reports/vencimientos?q=${RUN}&${query}`).set(as(users.admin)).expect(200)).body
+            .items as ExpiryReportRow[]
+        ).map((r) => r.credentialId)
+      expect(await kinds('status=bloqueada,proxima_a_vencer')).toEqual([
+        ids.licenses.bloqueado,
+        ids.certNear,
+        ids.licenses.proximo,
+      ])
+      expect(await kinds('status=bloqueada&status=vencida&rav60Category=piloto_comercial')).toEqual([
+        ids.licenses.vencido,
+        ids.licenses.bloqueado,
+        ids.habTipo,
+      ])
+      await http().get(`/api/reports/vencimientos?status=vencida,activa`).set(as(users.admin)).expect(400)
+    })
+
     it('paginates', async () => {
       const { body } = await report(users.admin, 'vencimientos', { page: '2', pageSize: '2' }).expect(200)
       expect(body).toMatchObject({ page: 2, pageSize: 2, total: 5 })
@@ -323,6 +342,27 @@ describe('reports http (D10)', () => {
       expect(await persons({ licenseTypeId: ids.types.controlador })).toEqual([people.vigente.id])
       expect(await persons({ rav60Category: 'tecnico_mantenimiento' })).toEqual([people.permanente.id])
       expect(await persons({ from: day(-5), to: day(0) })).toEqual([people.proximo.id, people.bloqueado.id])
+    })
+
+    it('accepts several statuses, license types and categories, comma-separated or as repeated params', async () => {
+      const persons = async (query: string) =>
+        (
+          (await http().get(`/api/reports/estado_consolidado?q=${RUN}&${query}`).set(as(users.admin)).expect(200)).body
+            .items as ConsolidatedReportRow[]
+        ).map((r) => r.personalId)
+      expect(await persons('status=sin_credenciales,bloqueada')).toEqual([
+        people.bloqueado.id,
+        people.sinCredenciales.id,
+      ])
+      expect(await persons(`licenseTypeId=${ids.types.controlador}&licenseTypeId=${ids.types.permanente}`)).toEqual([
+        people.vigente.id,
+        people.permanente.id,
+      ])
+      expect(await persons('rav60Category=tecnico_mantenimiento,controlador_transito_aereo&status=vigente')).toEqual([
+        people.vigente.id,
+        people.permanente.id,
+      ])
+      expect(await persons('status=&rav60Category=')).toHaveLength(6)
     })
   })
 
@@ -416,6 +456,20 @@ describe('reports http (D10)', () => {
       expect(audits).toHaveLength(before + 1)
       expect(audits.at(-1)).toMatchObject({
         changes: { after: { report: 'estado_consolidado', format: 'pdf', rows: 6 } },
+      })
+    })
+
+    it('exports with several values per filter and audits them as lists', async () => {
+      const before = (await exportsBy(users.admin.id)).length
+      const res = await http()
+        .get(`/api/reports/estado_consolidado/export?format=csv&q=${RUN}&status=bloqueada,sin_credenciales`)
+        .set(as(users.admin))
+        .expect(200)
+      expect(res.text.trimEnd().split('\r\n')).toHaveLength(3)
+      const audits = await exportsBy(users.admin.id)
+      expect(audits).toHaveLength(before + 1)
+      expect(audits.at(-1)).toMatchObject({
+        changes: { after: { rows: 2, filters: { q: RUN, status: ['bloqueada', 'sin_credenciales'] } } },
       })
     })
   })

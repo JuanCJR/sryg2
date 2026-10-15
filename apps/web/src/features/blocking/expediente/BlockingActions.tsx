@@ -26,7 +26,7 @@ export function BlockingActions({ person }: ExpedienteSlotProps) {
   const [registering, setRegistering] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const active = useBlocks({ personalId: person.id, status: 'activo', page: 1, pageSize: MAX_ACTIVE })
+  const active = useBlocks({ personalId: person.id, status: ['activo'], page: 1, pageSize: MAX_ACTIVE })
 
   const submit = async (values: RegisterBlockValues) => {
     setSubmitting(true)

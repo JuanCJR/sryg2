@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { Download } from 'lucide-react'
 import { Breadcrumb, Button, Pagination, useToast } from '../../../design-system'
 import { ListPageTemplate } from '../../../app/templates/ListPageTemplate'
-import { AuditFilterBar } from '../components/AuditFilterBar'
+import { AuditFilterPanel } from '../components/AuditFilterPanel'
 import { AuditTable } from '../components/AuditTable'
 import { downloadAuditCsv } from '../data/audit-client'
 import { formatCount, toAuditRow } from '../domain/audit-view'
-import { AUDIT_PAGE_SIZE, useAuditTrail } from '../hooks/useAuditTrail'
+import { AUDIT_PAGE_SIZES, useAuditTrail } from '../hooks/useAuditTrail'
 import styles from './AuditoriaContainer.module.css'
 
 const LOAD_ERROR = {
@@ -21,7 +21,8 @@ const LOAD_ERROR = {
  */
 export function AuditoriaContainer() {
   const toast = useToast()
-  const { values, errors, valid, applied, page, setPage, setFilter, resource } = useAuditTrail()
+  const { values, errors, valid, applied, page, setPage, pageSize, setPageSize, setFilter, clearFilters, resource } =
+    useAuditTrail()
   const [exporting, setExporting] = useState(false)
 
   const handleExport = async () => {
@@ -36,19 +37,15 @@ export function AuditoriaContainer() {
   }
 
   const breadcrumb = <Breadcrumb items={[{ label: 'Inicio', href: '/' }, { label: 'Auditoría' }]} />
+  const filters = <AuditFilterPanel values={values} errors={errors} onChange={setFilter} onClearAll={clearFilters} />
   const toolbar = (
-    <AuditFilterBar
-      values={values}
-      errors={errors}
-      onChange={setFilter}
-      action={
-        <Button variant="secondary" icon={Download} loading={exporting} disabled={!valid} onClick={handleExport}>
-          Exportar CSV
-        </Button>
-      }
-    />
+    <div className={styles.toolbar}>
+      <Button variant="secondary" icon={Download} loading={exporting} disabled={!valid} onClick={handleExport}>
+        Exportar CSV
+      </Button>
+    </div>
   )
-  const common = { title: 'Auditoría', breadcrumb, toolbar }
+  const common = { title: 'Auditoría', breadcrumb, filters, toolbar }
 
   if (resource.status === 'loading') {
     return <ListPageTemplate {...common} status="loading" loadingLabel="Cargando auditoría" />
@@ -74,13 +71,23 @@ export function AuditoriaContainer() {
     )
   }
 
-  const pageCount = Math.max(1, Math.ceil(total / AUDIT_PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
   return (
     <ListPageTemplate
       {...common}
       status="ready"
       summary={summary}
-      pagination={pageCount > 1 ? <Pagination page={page} pageCount={pageCount} onPageChange={setPage} /> : undefined}
+      pagination={
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={total}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
+          pageSizeOptions={AUDIT_PAGE_SIZES}
+        />
+      }
     >
       <AuditTable label="Registro de auditoría" rows={items.map(toAuditRow)} />
     </ListPageTemplate>

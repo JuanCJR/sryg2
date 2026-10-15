@@ -1,6 +1,6 @@
 import { bloqueo, type DbExecutor, personalAeronautico, usuario } from '@sryg/db'
 import type { ListBlocksQuery, Paginated } from '@sryg/types'
-import { aliasedTable, and, count, desc, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
+import { aliasedTable, and, count, desc, eq, ilike, inArray, or, type SQL, sql } from 'drizzle-orm'
 import { NotFoundError } from '../../shared/domain/errors'
 import type { Block, NewBlock } from '../domain/block'
 import type { BlockRepository } from '../domain/block-repository'
@@ -102,8 +102,8 @@ export class DrizzleBlockRepository implements BlockRepository {
     const term = q?.trim()
     const like = term ? `%${escapeLike(term)}%` : ''
     const filter = and(
-      status ? eq(bloqueo.status, status) : undefined,
-      type ? eq(bloqueo.type, type) : undefined,
+      status ? inArray(bloqueo.status, status) : undefined,
+      type ? inArray(bloqueo.type, type) : undefined,
       personalId ? eq(bloqueo.personalId, personalId) : undefined,
       term
         ? or(

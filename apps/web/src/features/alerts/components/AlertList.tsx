@@ -19,16 +19,21 @@ export interface AlertListProps {
 
 const holderOf = (alert: Alert) => `${alert.personnel.firstNames} ${alert.personnel.lastNames}`
 
-/** Dense list of expiry alerts, most urgent first (the API orders by due date); stacked rows on phone. */
+/**
+ * Dense list of expiry alerts, most urgent first (the API orders by due date); stacked rows on phone.
+ * Columns follow the UI conventions: Cédula (ID), Titular, Credencial (tipo), Área, Vencimiento,
+ * Estado, then the Reconocimiento action.
+ */
 export function AlertList({ alerts, today, onAcknowledge, pendingId = null }: AlertListProps) {
   return (
     <div className={styles.table}>
       <div className={styles.headerRow} aria-hidden="true">
-        <span className={styles.headerCell}>Estado</span>
-        <span className={styles.headerCell}>Credencial</span>
+        <span className={styles.headerCell}>Cédula</span>
         <span className={styles.headerCell}>Titular</span>
+        <span className={styles.headerCell}>Credencial</span>
         <span className={clsx(styles.headerCell, styles.colArea)}>Área</span>
         <span className={styles.headerCell}>Vencimiento</span>
+        <span className={styles.headerCell}>Estado</span>
         <span className={clsx(styles.headerCell, styles.colAction)}>Reconocimiento</span>
       </div>
       <ul className={styles.list} aria-label="Alertas de vencimiento">
@@ -37,20 +42,20 @@ export function AlertList({ alerts, today, onAcknowledge, pendingId = null }: Al
           const holder = holderOf(alert)
           return (
             <li key={alert.id} className={styles.row}>
-              <span className={styles.estado}>
-                <StatusBadge status={alert.kind === 'vencida' ? 'vencida' : 'proxima'} />
-              </span>
-              <span className={styles.credencial}>{credential}</span>
+              <span className={styles.cedula}>{alert.personnel.cedula}</span>
               <span className={styles.titular}>
                 <Link to={personnelDetail(alert.personalId)} className={styles.nombre}>
                   {holder}
                 </Link>
-                <span className={styles.cedula}>{alert.personnel.cedula}</span>
               </span>
+              <span className={styles.credencial}>{credential}</span>
               <span className={clsx(styles.area, styles.colArea)}>{AREA_LABELS[alert.area]}</span>
               <span className={styles.vencimiento}>
                 <span className={styles.fecha}>{formatDueDate(alert.dueDate)}</span>
                 <span className={styles.restante}>{formatRemaining(alert.dueDate, today)}</span>
+              </span>
+              <span className={styles.estado}>
+                <StatusBadge status={alert.kind === 'vencida' ? 'vencida' : 'proxima'} />
               </span>
               <span className={clsx(styles.accion, styles.colAction)}>
                 {alert.acknowledgedAt ? (

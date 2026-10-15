@@ -4,7 +4,7 @@ import { personnelDetail } from '../../../app/routes'
 import { BLOCK_TYPE_LABELS, formatDateTime } from '../domain/report-view'
 import styles from './ReportTable.module.css'
 
-/** Report 3: one row per unresolved block, newest first. */
+/** Report 3: one row per unresolved block, newest first; the registration date closes the row. */
 export function ActiveBlocksReportTable({ rows }: { rows: ActiveBlockReportRow[] }) {
   return (
     <div className={styles.scroller}>
@@ -15,8 +15,8 @@ export function ActiveBlocksReportTable({ rows }: { rows: ActiveBlockReportRow[]
             <th scope="col">Titular</th>
             <th scope="col">Tipo</th>
             <th scope="col">Motivo</th>
-            <th scope="col">Registrado</th>
             <th scope="col">Registrado por</th>
+            <th scope="col">Registrado</th>
           </tr>
         </thead>
         <tbody>
@@ -30,8 +30,8 @@ export function ActiveBlocksReportTable({ rows }: { rows: ActiveBlockReportRow[]
               </td>
               <td>{BLOCK_TYPE_LABELS[row.type]}</td>
               <td>{row.reason}</td>
-              <td className={styles.mono}>{formatDateTime(row.createdAt)}</td>
               <td>{row.createdByName}</td>
+              <td className={styles.mono}>{formatDateTime(row.createdAt)}</td>
             </tr>
           ))}
         </tbody>

@@ -112,6 +112,39 @@ describe('/catalogos/:catalogo (D19)', () => {
     expect(searched?.url.pathname).toBe('/api/catalogs/nationalities')
   })
 
+  it('pages on the server with the range line and a rows-per-page choice', async () => {
+    const api = signIn(ADMIN, (url) =>
+      url.pathname === '/api/catalogs/nationalities'
+        ? {
+            status: 200,
+            body: {
+              items: [VEN],
+              page: Number(url.searchParams.get('page')),
+              pageSize: Number(url.searchParams.get('pageSize')),
+              total: 30,
+            },
+          }
+        : undefined,
+    )
+    const user = userEvent.setup()
+    renderApp('/catalogos/nationalities')
+
+    const pagination = await screen.findByRole('navigation', { name: 'Paginación' })
+    expect(pagination.textContent).toContain('Mostrando 1–25 de 30')
+    await user.click(within(pagination).getByRole('button', { name: 'Página siguiente' }))
+    await waitFor(() =>
+      expect(screen.getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Mostrando 26–30 de 30'),
+    )
+    await user.selectOptions(screen.getByLabelText('Filas por página'), '10')
+    await waitFor(() =>
+      expect(screen.getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Mostrando 1–10 de 30'),
+    )
+    const last = requests(api, 'GET')
+      .filter(({ url }) => url.pathname === '/api/catalogs/nationalities')
+      .at(-1)
+    expect([last?.url.searchParams.get('page'), last?.url.searchParams.get('pageSize')]).toEqual(['1', '10'])
+  })
+
   it('shows the empty state of a catalog with no items', async () => {
     signIn(ADMIN, () => page([]))
     renderApp('/catalogos/aircraft')

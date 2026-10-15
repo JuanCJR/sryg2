@@ -1,11 +1,5 @@
 import { useState } from 'react'
-import {
-  canAccessReport,
-  type ReportExportFormat,
-  type ReportFilters,
-  type ReportId,
-  type ReportPage,
-} from '@sryg/types'
+import { canAccessReport, type ReportExportFormat, type ReportId, type ReportPage } from '@sryg/types'
 import { Breadcrumb, Pagination, useToast } from '../../../design-system'
 import { useRole } from '../../../app/role/useRole'
 import { ListPageTemplate } from '../../../app/templates/ListPageTemplate'
@@ -15,32 +9,22 @@ import { ActiveBlocksReportTable } from '../components/ActiveBlocksReportTable'
 import { ConsolidatedReportTable } from '../components/ConsolidatedReportTable'
 import { ExpiryReportTable } from '../components/ExpiryReportTable'
 import { ExportActions } from '../components/ExportActions'
-import { ReportFiltersBar } from '../components/ReportFiltersBar'
+import { ReportFilterPanel } from '../components/ReportFilterPanel'
 import { ReportPicker } from '../components/ReportPicker'
 import { ReportSummary } from '../components/ReportSummary'
 import { downloadReport, fetchReport } from '../data/reports-client'
-import { EMPTY_FILTERS, type ReportFilterValues } from '../domain/report-filters'
-import { visibleReports } from '../domain/report-view'
-import styles from './ReportesContainer.module.css'
+import { EMPTY_FILTERS, toReportFilters, type ReportFilterValues } from '../domain/report-filters'
+import { STATUS_FILTERS, visibleReports } from '../domain/report-view'
 
-const PAGE_SIZE = 50
+const DEFAULT_PAGE_SIZE = 50
+/** The API pages up to 200 rows. */
+const PAGE_SIZES = [25, 50, 100, 200] as const
 const SEARCH_DEBOUNCE_MS = 300
 const RANGE_ERROR = 'La fecha final no puede ser anterior a la inicial.'
 
 const LOAD_ERROR = {
   title: 'No se pudo generar el reporte',
   message: 'El servidor no respondió. Revise la conexión a la red local e intente de nuevo.',
-}
-
-function toFilters(values: ReportFilterValues, q: string, report: ReportId): ReportFilters {
-  return {
-    q: q || undefined,
-    licenseTypeId: values.licenseType?.id,
-    rav60Category: values.rav60Category || undefined,
-    status: report === 'bloqueos_activos' ? undefined : values.status || undefined,
-    from: values.from || undefined,
-    to: values.to || undefined,
-  }
 }
 
 /** Saves a downloaded file through a temporary link. */
@@ -77,22 +61,28 @@ export function ReportesContainer() {
   const [report, setReport] = useState<ReportId>('vencimientos')
   const [values, setValues] = useState<ReportFilterValues>(EMPTY_FILTERS)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE)
   const [exporting, setExporting] = useState<ReportExportFormat | null>(null)
   const q = useDebouncedValue(values.q.trim(), SEARCH_DEBOUNCE_MS)
 
-  const filters = toFilters(values, q, report)
+  const filters = toReportFilters(values, q, report)
   const rangeInvalid = Boolean(filters.from && filters.to && filters.from > filters.to)
-  const key = rangeInvalid ? null : JSON.stringify([report, filters, page])
-  const resource = useApiResource(key, () => fetchReport(report, filters, { page, pageSize: PAGE_SIZE }))
+  const key = rangeInvalid ? null : JSON.stringify([report, filters, page, pageSize])
+  const resource = useApiResource(key, () => fetchReport(report, filters, { page, pageSize }))
   const canExport = role !== null && area !== null && canAccessReport(role, area, report, 'export')
 
   const changeReport = (next: ReportId) => {
     setReport(next)
-    setValues((current) => ({ ...current, status: '' }))
+    // Each report has its own statuses: keep only the checked ones the new report also offers.
+    setValues((current) => ({ ...current, status: current.status.filter((s) => STATUS_FILTERS[next].includes(s)) }))
     setPage(1)
   }
   const changeFilters = (next: ReportFilterValues) => {
     setValues(next)
+    setPage(1)
+  }
+  const changePageSize = (next: number) => {
+    setPageSize(next)
     setPage(1)
   }
   const handleExport = async (format: ReportExportFormat) => {
@@ -113,16 +103,14 @@ export function ReportesContainer() {
     primaryAction: canExport ? (
       <ExportActions pending={exporting} disabled={rangeInvalid} onExport={(format) => void handleExport(format)} />
     ) : undefined,
-    toolbar: (
-      <div className={styles.toolbar}>
-        <ReportPicker reports={reports} value={report} onChange={changeReport} />
-        <ReportFiltersBar
-          report={report}
-          value={values}
-          onChange={changeFilters}
-          rangeError={rangeInvalid ? RANGE_ERROR : undefined}
-        />
-      </div>
+    toolbar: <ReportPicker reports={reports} value={report} onChange={changeReport} />,
+    filters: (
+      <ReportFilterPanel
+        report={report}
+        value={values}
+        onChange={changeFilters}
+        rangeError={rangeInvalid ? RANGE_ERROR : undefined}
+      />
     ),
   }
 
@@ -165,13 +153,23 @@ export function ReportesContainer() {
       />
     )
   }
-  const pageCount = Math.max(1, Math.ceil(data.total / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(data.total / pageSize))
   return (
     <ListPageTemplate
       {...common}
       status="ready"
       summary={summary}
-      pagination={pageCount > 1 ? <Pagination page={page} pageCount={pageCount} onPageChange={setPage} /> : undefined}
+      pagination={
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={data.total}
+          pageSize={pageSize}
+          onPageSizeChange={changePageSize}
+          pageSizeOptions={PAGE_SIZES}
+        />
+      }
     >
       <ReportRows page={data} />
     </ListPageTemplate>

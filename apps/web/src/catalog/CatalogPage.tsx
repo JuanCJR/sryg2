@@ -6,8 +6,12 @@ import {
   BrandMark,
   Button,
   Checkbox,
+  CheckboxFilter,
+  Combobox,
   ConfirmDialog,
   DateInput,
+  FilterPanel,
+  FilterSection,
   FormField,
   IconButton,
   Input,
@@ -28,6 +32,39 @@ import {
   type PageKeyItem,
 } from '../design-system'
 import styles from './CatalogPage.module.css'
+
+const DEMO_OPTIONS = [
+  { value: 'pla', label: 'Piloto de transporte de línea', description: 'Airline transport pilot' },
+  { value: 'pc', label: 'Piloto comercial', description: 'Commercial pilot' },
+  { value: 'tcp', label: 'Tripulante de cabina', description: 'Cabin crew' },
+  { value: 'tma', label: 'Técnico de mantenimiento', description: 'Maintenance technician' },
+]
+
+function ComboboxDemo() {
+  const [value, setValue] = useState<string | null>(null)
+  return <Combobox aria-label="Tipo de licencia" options={DEMO_OPTIONS} value={value} onChange={setValue} />
+}
+
+function FilterPanelDemo() {
+  const [types, setTypes] = useState<string[]>([])
+  const [from, setFrom] = useState('')
+  return (
+    <div style={{ maxWidth: 280 }}>
+      <FilterPanel
+        activeCount={types.length + (from ? 1 : 0)}
+        onClearAll={() => {
+          setTypes([])
+          setFrom('')
+        }}
+      >
+        <CheckboxFilter title="Tipo" options={DEMO_OPTIONS} value={types} onChange={setTypes} />
+        <FilterSection title="Vence desde" activeCount={from ? 1 : 0} onClear={() => setFrom('')}>
+          <DateInput aria-label="Vence desde" value={from} onChange={(event) => setFrom(event.target.value)} />
+        </FilterSection>
+      </FilterPanel>
+    </div>
+  )
+}
 
 const NEUTRAL_RAMP: Array<{ token: string; role: string }> = [
   { token: '--n-0', role: 'Night bg / day inverse-fg' },
@@ -138,7 +175,10 @@ export function CatalogPage() {
       </header>
 
       <Section title="Tokens">
-        <Entry title="Neutral ramp" rule="One 11-step cool-neutral ramp supplies every tone in both modes.">
+        <Entry
+          title="Neutral ramp"
+          rule="One 11-step navy-tinted ramp supplies every tone in both modes; the INAC blue is the only brand accent."
+        >
           <div className={styles.swatchRow}>
             {NEUTRAL_RAMP.map((n) => (
               <RampSwatch key={`${n.token}-${theme}`} token={n.token} role={n.role} />
@@ -313,7 +353,19 @@ export function CatalogPage() {
           <Breadcrumb items={[{ label: 'Personal', href: '#' }, { label: 'Expediente' }]} />
         </Entry>
         <Entry title="Pagination" rule="Only the page figures use mono — the surrounding words stay in B612.">
-          <Pagination page={page} pageCount={7} onPageChange={setPage} />
+          <Pagination page={page} pageCount={13} total={312} pageSize={25} onPageChange={setPage} />
+        </Entry>
+        <Entry
+          title="Combobox"
+          rule="Searchable choice: accent-insensitive filter, check on the selected option, × to clear."
+        >
+          <ComboboxDemo />
+        </Entry>
+        <Entry
+          title="FilterPanel"
+          rule="The left filter column of every list; checkbox groups are multi-select, none = all."
+        >
+          <FilterPanelDemo />
         </Entry>
         <Entry title="ConfirmDialog" rule="Typed confirmation always resets on open, however the dialog last closed.">
           <Button variant="secondary" onClick={() => setConfirmOpen(true)}>

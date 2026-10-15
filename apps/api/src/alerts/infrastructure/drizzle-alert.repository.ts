@@ -66,7 +66,8 @@ const toAlert = ({ cedula, firstNames, lastNames, ...row }: AlertRow): Alert => 
   createdAt: row.createdAt.toISOString(),
 })
 
-const kindsOfArea = (area: string): CredentialKind[] => CREDENTIAL_KINDS.filter((k) => alertAreaOf(k) === area)
+const kindsOfAreas = (areas: readonly string[]): CredentialKind[] =>
+  CREDENTIAL_KINDS.filter((k) => areas.includes(alertAreaOf(k)))
 
 function chunks<T>(items: readonly T[]): T[][] {
   const result: T[][] = []
@@ -221,10 +222,10 @@ export class DrizzleAlertRepository implements AlertRepository {
 
   private where({ kind, acknowledged, area, credentialKind, personalId }: AlertFilters): SQL | undefined {
     return and(
-      kind ? eq(a.kind, kind) : undefined,
+      kind ? inArray(a.kind, kind) : undefined,
       acknowledged === undefined ? undefined : acknowledged ? isNotNull(a.acknowledgedAt) : isNull(a.acknowledgedAt),
-      area ? inArray(a.credentialKind, kindsOfArea(area)) : undefined,
-      credentialKind ? eq(a.credentialKind, credentialKind) : undefined,
+      area ? inArray(a.credentialKind, kindsOfAreas(area)) : undefined,
+      credentialKind ? inArray(a.credentialKind, credentialKind) : undefined,
       personalId ? eq(a.personalId, personalId) : undefined,
     )
   }

@@ -13,7 +13,12 @@ function parsePage(payload: unknown): Paginated<AuditEntryDto> {
 
 function toParams(filter: AuditFilter & { personId?: string }): URLSearchParams {
   const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(filter)) if (value) params.set(key, String(value))
+  for (const [key, value] of Object.entries(filter)) {
+    // Multi-value filters travel as one comma-joined param (`?action=crear,emitir`).
+    if (Array.isArray(value)) {
+      if (value.length) params.set(key, value.join(','))
+    } else if (value) params.set(key, String(value))
+  }
   return params
 }
 

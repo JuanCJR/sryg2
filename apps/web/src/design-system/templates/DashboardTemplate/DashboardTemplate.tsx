@@ -26,8 +26,10 @@ type DashboardCommon = {
   /** Header action (e.g. a link to reports), rendered only if the container's can() allows it. */
   primaryAction?: ReactNode
   banner?: ReactNode
-  /** Filters of the main region. */
+  /** Quick controls above the main region. */
   toolbar?: ReactNode
+  /** Left filter column of the main region (a FilterPanel), as in ListPageTemplate. */
+  filters?: ReactNode
   /** Counts of the main region (e.g. an annunciator); hidden on `error`, it has nothing to summarize. */
   summary?: ReactNode
   /** Accessible name of the main region (the region the status describes). */
@@ -56,7 +58,8 @@ export type DashboardTemplateProps = DashboardCommon &
  * page never reflows when the main region resolves and filters stay editable after an error.
  */
 export function DashboardTemplate(props: DashboardTemplateProps) {
-  const { title, breadcrumb, primaryAction, banner, toolbar, summary, mainLabel, panels, overlays, status } = props
+  const { title, breadcrumb, primaryAction, banner, toolbar, filters, summary, mainLabel, panels, overlays, status } =
+    props
   const mainId = useId()
 
   return (
@@ -70,49 +73,52 @@ export function DashboardTemplate(props: DashboardTemplateProps) {
         {primaryAction}
       </div>
 
-      <section className={styles.main} aria-labelledby={mainId}>
-        <h2 id={mainId} className="visually-hidden">
-          {mainLabel}
-        </h2>
-        {toolbar ? <div className={styles.toolbar}>{toolbar}</div> : null}
-        {summary && status !== 'error' ? <div className={styles.summary}>{summary}</div> : null}
+      <div className={filters ? styles.withFilters : undefined}>
+        {filters ? <div className={styles.filters}>{filters}</div> : null}
+        <section className={styles.main} aria-labelledby={mainId}>
+          <h2 id={mainId} className="visually-hidden">
+            {mainLabel}
+          </h2>
+          {toolbar ? <div className={styles.toolbar}>{toolbar}</div> : null}
+          {summary && status !== 'error' ? <div className={styles.summary}>{summary}</div> : null}
 
-        {status === 'loading' ? (
-          <div className={styles.loading} aria-busy="true">
-            <p role="status" className={styles.muted}>
-              {props.loadingLabel}
-            </p>
-          </div>
-        ) : null}
-        {status === 'error' ? (
-          <Notice
-            tone="caution"
-            title={props.error.title}
-            action={
-              props.error.onRetry ? (
-                <Button variant="secondary" onClick={props.error.onRetry}>
-                  {props.error.retryLabel ?? 'Reintentar'}
-                </Button>
-              ) : undefined
-            }
-          >
-            {props.error.message}
-          </Notice>
-        ) : null}
-        {status === 'empty' ? (
-          <div className={styles.empty}>
-            <p className={styles.emptyTitle}>{props.empty.title}</p>
-            <div className={styles.muted}>{props.empty.message}</div>
-            {props.empty.action ? <div>{props.empty.action}</div> : null}
-          </div>
-        ) : null}
-        {status === 'ready' ? (
-          <>
-            <div className={styles.results}>{props.children}</div>
-            {props.pagination ? <div className={styles.pagination}>{props.pagination}</div> : null}
-          </>
-        ) : null}
-      </section>
+          {status === 'loading' ? (
+            <div className={styles.loading} aria-busy="true">
+              <p role="status" className={styles.muted}>
+                {props.loadingLabel}
+              </p>
+            </div>
+          ) : null}
+          {status === 'error' ? (
+            <Notice
+              tone="caution"
+              title={props.error.title}
+              action={
+                props.error.onRetry ? (
+                  <Button variant="secondary" onClick={props.error.onRetry}>
+                    {props.error.retryLabel ?? 'Reintentar'}
+                  </Button>
+                ) : undefined
+              }
+            >
+              {props.error.message}
+            </Notice>
+          ) : null}
+          {status === 'empty' ? (
+            <div className={styles.empty}>
+              <p className={styles.emptyTitle}>{props.empty.title}</p>
+              <div className={styles.muted}>{props.empty.message}</div>
+              {props.empty.action ? <div>{props.empty.action}</div> : null}
+            </div>
+          ) : null}
+          {status === 'ready' ? (
+            <>
+              <div className={styles.results}>{props.children}</div>
+              {props.pagination ? <div className={styles.pagination}>{props.pagination}</div> : null}
+            </>
+          ) : null}
+        </section>
+      </div>
 
       {panels ? <div className={styles.panels}>{panels}</div> : null}
 

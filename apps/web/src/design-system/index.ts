@@ -53,6 +53,9 @@ export { Breadcrumb } from './molecules/Breadcrumb/Breadcrumb'
 export type { BreadcrumbProps, BreadcrumbItem } from './molecules/Breadcrumb/Breadcrumb'
 export { Pagination } from './molecules/Pagination/Pagination'
 export type { PaginationProps } from './molecules/Pagination/Pagination'
+export { Combobox } from './molecules/Combobox/Combobox'
+export { normalizeText } from './utils/normalizeText'
+export type { ComboboxProps, ComboboxOption } from './molecules/Combobox/Combobox'
 export { ConfirmDialog } from './molecules/ConfirmDialog/ConfirmDialog'
 export type { ConfirmDialogProps } from './molecules/ConfirmDialog/ConfirmDialog'
 export { ToastProvider } from './molecules/Toast/ToastProvider'
@@ -62,6 +65,14 @@ export type { ToastOptions, ToastTone, ToastContextValue } from './molecules/Toa
 // Organisms
 export { WarningStack } from './organisms/WarningStack/WarningStack'
 export type { WarningStackProps, WarningStackMessage } from './organisms/WarningStack/WarningStack'
+
+export { FilterPanel, FilterSection, CheckboxFilter } from './organisms/FilterPanel/FilterPanel'
+export type {
+  FilterPanelProps,
+  FilterSectionProps,
+  CheckboxFilterProps,
+  CheckboxFilterOption,
+} from './organisms/FilterPanel/FilterPanel'
 
 // Templates
 export { DashboardTemplate, DashboardPanel } from './templates/DashboardTemplate/DashboardTemplate'

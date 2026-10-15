@@ -23,17 +23,18 @@
   padding: var(--s-3) var(--s-4);
 }
 
-/* Estado is wide enough that "PRÓXIMA A VENCER" never wraps at desktop. */
+/* Número · Nombre · [Restricciones] · Emitida · Vence · Restante · Estado.
+   Estado is wide enough that "PRÓXIMA A VENCER" never wraps at desktop. */
 .gridFull {
-  grid-template-columns: 180px 1fr 140px 100px 100px 90px;
+  grid-template-columns: 140px 1fr 100px 100px 90px 180px;
 }
 
 .gridNoNumero {
-  grid-template-columns: 180px 1fr 100px 100px 90px;
+  grid-template-columns: 1fr 100px 100px 90px 180px;
 }
 
 .gridWithRestricciones {
-  grid-template-columns: 180px 1fr 200px 100px 100px 90px;
+  grid-template-columns: 1fr 200px 100px 100px 90px 180px;
 }
 
 .headerRow {
@@ -163,13 +164,14 @@
 }
 
 @media (min-width: 481px) and (max-width: 1024px) {
+  /* Número and Emitida hide here: Nombre · [Restricciones] · Vence · Restante · Estado. */
   .gridFull,
   .gridNoNumero {
-    grid-template-columns: 180px 1fr 100px 90px;
+    grid-template-columns: 1fr 100px 90px 180px;
   }
 
   .gridWithRestricciones {
-    grid-template-columns: 180px 1fr 180px 100px 90px;
+    grid-template-columns: 1fr 180px 100px 90px 180px;
   }
 
   .numero,

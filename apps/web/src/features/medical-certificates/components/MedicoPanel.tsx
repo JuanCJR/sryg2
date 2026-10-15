@@ -16,6 +16,8 @@ export type MedicoPanelState =
       thresholdDays: number
       thresholdIsPlaceholder: boolean
       hasActiveBlock: boolean
+      /** Client pagination of the certificates (the rows are already the current page). */
+      pagination?: ReactNode
       /** Per-certificate history (MED-07), only for whoever reads the audit. */
       history?: ReactNode
     }
@@ -74,6 +76,7 @@ export function MedicoPanel({ state, canWriteMedical, onRegisterOrRenew }: Medic
             restriccionesHeader="Observaciones y restricciones"
             emptyLabel="Sin certificados médicos registrados."
           />
+          {state.pagination}
           <p className={tableStyles.threshold}>
             Umbral de aviso: {state.thresholdDays} días
             {state.thresholdIsPlaceholder ? ` · ${PENDING_INAC_LABEL}` : ''}

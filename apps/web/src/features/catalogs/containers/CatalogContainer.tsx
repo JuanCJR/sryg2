@@ -15,7 +15,7 @@ import { CATALOG_META } from '../domain/catalog-meta'
 import { EMPTY_FORM, toCreateBody, toFormValues, toUpdateBody, type CatalogItemFormValues } from '../domain/item-form'
 import styles from './CatalogContainer.module.css'
 
-const PAGE_SIZE = 20
+const DEFAULT_PAGE_SIZE = 25
 const SEARCH_DEBOUNCE_MS = 300
 
 const LOAD_ERROR = {
@@ -45,6 +45,7 @@ export function CatalogContainer({ catalog }: { catalog: CatalogSlug }) {
 
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   // Bumped after every write so the list reloads with the server's view.
   const [version, setVersion] = useState(0)
   const [dialog, setDialog] = useState<DialogState>(null)
@@ -53,8 +54,8 @@ export function CatalogContainer({ catalog }: { catalog: CatalogSlug }) {
   const [busyId, setBusyId] = useState<string | null>(null)
   const term = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS)
 
-  const results = useApiResource(`catalog:${catalog}:${term}:${page}:${version}`, () =>
-    listCatalogItems(catalog, { q: term || undefined, page, pageSize: PAGE_SIZE }),
+  const results = useApiResource(`catalog:${catalog}:${term}:${page}:${pageSize}:${version}`, () =>
+    listCatalogItems(catalog, { q: term || undefined, page, pageSize }),
   )
 
   const reload = () => setVersion((v) => v + 1)
@@ -199,7 +200,7 @@ export function CatalogContainer({ catalog }: { catalog: CatalogSlug }) {
     )
   }
 
-  const pageCount = Math.max(1, Math.ceil(results.data.total / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(results.data.total / pageSize))
   return (
     <ListPageTemplate
       {...common}
@@ -209,7 +210,19 @@ export function CatalogContainer({ catalog }: { catalog: CatalogSlug }) {
           {results.data.total} {results.data.total === 1 ? 'ítem' : 'ítems'}
         </p>
       }
-      pagination={pageCount > 1 ? <Pagination page={page} pageCount={pageCount} onPageChange={setPage} /> : undefined}
+      pagination={
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={results.data.total}
+          pageSize={pageSize}
+          onPageSizeChange={(next) => {
+            setPageSize(next)
+            setPage(1)
+          }}
+        />
+      }
     >
       <CatalogItemsTable
         caption={meta.title}

@@ -27,7 +27,9 @@ class FakeBlocks implements BlockRepository {
   list({ status, type, personalId, page, pageSize }: ListBlocksQuery) {
     const all = [...this.rows.values()].filter(
       (b) =>
-        (!status || b.status === status) && (!type || b.type === type) && (!personalId || b.personalId === personalId),
+        (!status || status.includes(b.status)) &&
+        (!type || type.includes(b.type)) &&
+        (!personalId || b.personalId === personalId),
     )
     return Promise.resolve({
       items: all.slice((page - 1) * pageSize, page * pageSize),
@@ -201,8 +203,10 @@ describe('GetBlockUseCase / ListBlocksUseCase', () => {
     await register.execute(actor, { personalId: OTHER_PERSON, type: 'medico', reason: 'r' })
     await resolve.execute(resolver, first.id, { resolutionNote: 'n' })
     expect((await list.execute({ page: 1, pageSize: 10 })).total).toBe(3)
-    expect((await list.execute({ status: 'activo', page: 1, pageSize: 10 })).total).toBe(2)
-    expect((await list.execute({ type: 'medico', page: 1, pageSize: 10 })).total).toBe(2)
+    expect((await list.execute({ status: ['activo'], page: 1, pageSize: 10 })).total).toBe(2)
+    expect((await list.execute({ type: ['medico'], page: 1, pageSize: 10 })).total).toBe(2)
     expect((await list.execute({ personalId: OTHER_PERSON, page: 1, pageSize: 10 })).total).toBe(1)
+    expect((await list.execute({ type: ['medico', 'administrativo'], page: 1, pageSize: 10 })).total).toBe(3)
+    expect((await list.execute({ status: ['activo', 'resuelto'], page: 1, pageSize: 10 })).total).toBe(3)
   })
 })

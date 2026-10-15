@@ -1,3 +1,9 @@
+.paged {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
 .list {
   display: flex;
   flex-direction: column;

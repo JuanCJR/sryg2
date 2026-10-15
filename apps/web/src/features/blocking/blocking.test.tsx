@@ -68,14 +68,19 @@ function blocksServer(initial: BlockDto[]) {
     if (url.pathname === '/api/blocks' && (init.method ?? 'GET') === 'GET') {
       const p = url.searchParams
       const q = p.get('q')?.toLowerCase()
-      const items = rows.filter(
+      const statuses = p.get('status')?.split(',')
+      const types = p.get('type')?.split(',')
+      const matching = rows.filter(
         (b) =>
-          (!p.get('status') || b.status === p.get('status')) &&
-          (!p.get('type') || b.type === p.get('type')) &&
+          (!statuses || statuses.includes(b.status)) &&
+          (!types || types.includes(b.type)) &&
           (!p.get('personalId') || b.personalId === p.get('personalId')) &&
           (!q || `${b.person.firstNames} ${b.person.lastNames} ${b.person.cedula}`.toLowerCase().includes(q)),
       )
-      return { status: 200, body: { items, page: 1, pageSize: Number(p.get('pageSize') ?? 20), total: items.length } }
+      const page = Number(p.get('page') ?? 1)
+      const pageSize = Number(p.get('pageSize') ?? 20)
+      const items = matching.slice((page - 1) * pageSize, page * pageSize)
+      return { status: 200, body: { items, page, pageSize, total: matching.length } }
     }
     if (url.pathname === '/api/blocks' && init.method === 'POST') {
       const body = JSON.parse(String(init.body)) as { personalId: string; type: BlockDto['type']; reason: string }
@@ -130,7 +135,49 @@ describe('/bloqueos', () => {
         .getAttribute('href'),
     ).toBe(`/personal/${PERSON.id}`)
     expect(requests(api)[0]!.url.searchParams.get('status')).toBe('activo')
+    expect(screen.getByRole('checkbox', { name: 'Activos' })).toHaveProperty('checked', true)
     expect(screen.queryByRole('button', { name: /Resolver/ })).toBeNull()
+  })
+
+  it('orders the columns ID, Persona, Tipo, Detalle, Fechas, Estado, Acciones', async () => {
+    const { handler } = blocksServer([ACTIVE])
+    signIn(userWith('consulta', 'ambas'), handler)
+    renderApp('/bloqueos')
+
+    await screen.findByText('Impedimento médico ficticio')
+    const headers = screen.getAllByRole('columnheader').map((th) => th.textContent)
+    expect(headers).toEqual(['Referencia', 'Persona', 'Tipo', 'Motivo', 'Registro', 'Estado', 'Acciones'])
+    const cells = within(screen.getAllByRole('row')[1]!).getAllByRole('cell')
+    expect(cells[0]!.textContent).toBe('BLQ-AA000000')
+    expect(cells[5]!.textContent).toContain('Activo')
+  })
+
+  it('pages the list on the server with the range line and a rows-per-page choice', async () => {
+    const many = Array.from({ length: 30 }, (_, i) =>
+      block({ id: `dd000000-0000-4000-8000-0000000000${String(i).padStart(2, '0')}`, reason: `Motivo ficticio ${i}` }),
+    )
+    const { handler } = blocksServer(many)
+    const api = signIn(userWith('consulta', 'ambas'), handler)
+    const user = userEvent.setup()
+    renderApp('/bloqueos')
+
+    await screen.findByText('Motivo ficticio 0')
+    const nav = screen.getByRole('navigation', { name: 'Paginación' })
+    expect(nav.textContent).toContain('Mostrando 1–25 de 30')
+    await user.click(within(nav).getByRole('button', { name: 'Página 2' }))
+    expect(await screen.findByText('Motivo ficticio 29')).toBeTruthy()
+    expect(requests(api).at(-1)!.url.searchParams.get('page')).toBe('2')
+
+    await user.selectOptions(
+      within(screen.getByRole('navigation', { name: 'Paginación' })).getByLabelText('Filas por página'),
+      '50',
+    )
+    await waitFor(() => {
+      const last = requests(api).at(-1)!.url.searchParams
+      expect([last.get('page'), last.get('pageSize')]).toEqual(['1', '50'])
+    })
+    expect(await screen.findByText('Motivo ficticio 0')).toBeTruthy()
+    expect(screen.getByText('Motivo ficticio 29')).toBeTruthy()
   })
 
   it('filters by status, type and person on the server', async () => {
@@ -140,19 +187,33 @@ describe('/bloqueos', () => {
     renderApp('/bloqueos')
 
     await screen.findByText('Impedimento médico ficticio')
-    await user.selectOptions(screen.getByLabelText('Estado'), 'resuelto')
+    await user.click(screen.getByRole('checkbox', { name: 'Activos' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Resueltos' }))
     expect(await screen.findByText('Documento vencido ficticio')).toBeTruthy()
     expect(screen.getByText(/Documento consignado/)).toBeTruthy()
+    expect(screen.queryByText('Impedimento médico ficticio')).toBeNull()
 
-    await user.selectOptions(screen.getByLabelText('Tipo'), 'medico')
+    await user.click(screen.getByRole('checkbox', { name: 'Médico' }))
     expect(await screen.findByText('Ningún bloqueo coincide con los filtros')).toBeTruthy()
 
-    await user.selectOptions(screen.getByLabelText('Estado'), '')
+    // Several values of one group reach the API as one comma-joined parameter.
+    await user.click(screen.getByRole('checkbox', { name: 'Activos' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Administrativo' }))
+    expect(await screen.findByText('Impedimento médico ficticio')).toBeTruthy()
+    expect(screen.getByText('Documento vencido ficticio')).toBeTruthy()
+    let last = requests(api).at(-1)!.url.searchParams
+    expect([last.get('status'), last.get('type')]).toEqual(['activo,resuelto', 'administrativo,medico'])
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar Estado' }))
     await user.type(screen.getByLabelText('Persona'), '10000101')
-    await screen.findByText('Impedimento médico ficticio')
     await waitFor(() => {
-      const last = requests(api).at(-1)!.url.searchParams
-      expect([last.get('status'), last.get('type'), last.get('q')]).toEqual([null, 'medico', '10000101'])
+      last = requests(api).at(-1)!.url.searchParams
+      expect([last.get('status'), last.get('type'), last.get('q'), last.get('page')]).toEqual([
+        null,
+        'administrativo,medico',
+        '10000101',
+        '1',
+      ])
     })
   })
 
@@ -265,5 +326,32 @@ describe('Expediente — bloqueos', () => {
 
     await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
     expect(within(screen.getByRole('tabpanel')).getByText(/Alta médica ficticia/)).toBeTruthy()
+  })
+
+  it('pages a long block history on the client', async () => {
+    const many = Array.from({ length: 12 }, (_, i) =>
+      block({
+        id: `ee000000-0000-4000-8000-0000000000${String(i).padStart(2, '0')}`,
+        reason: `Historial ficticio ${i}`,
+        status: 'resuelto',
+        resolvedBy: REGISTRAR,
+        resolvedAt: '2026-10-06T09:00:00.000Z',
+        resolutionNote: 'Nota ficticia',
+      }),
+    )
+    const { handler } = blocksServer(many)
+    signIn(userWith('consulta', 'licencias'), handler)
+    const user = userEvent.setup()
+    renderApp(`/personal/${PERSON.id}?pagina=bloqueos`)
+
+    const panel = await screen.findByRole('tabpanel')
+    await user.click(await within(panel).findByRole('button', { name: 'Resueltos' }))
+    expect(within(panel).getByText(/Historial ficticio 9/)).toBeTruthy()
+    expect(within(panel).queryByText(/Historial ficticio 10/)).toBeNull()
+    const nav = within(panel).getByRole('navigation', { name: 'Paginación' })
+    expect(nav.textContent).toContain('Mostrando 1–10 de 12')
+    await user.click(within(nav).getByRole('button', { name: 'Página 2' }))
+    expect(within(panel).getByText(/Historial ficticio 11/)).toBeTruthy()
+    expect(within(panel).queryByText(/Historial ficticio 0/)).toBeNull()
   })
 })

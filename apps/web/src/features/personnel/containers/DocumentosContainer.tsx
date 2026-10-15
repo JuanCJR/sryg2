@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import type { CatalogOption, PersonnelAttachmentDto, PersonnelDto } from '@sryg/types'
-import { ConfirmDialog, Skeleton, useToast } from '../../../design-system'
+import { ConfirmDialog, Pagination, Skeleton, useToast } from '../../../design-system'
 import { useRole } from '../../../app/role/useRole'
 import { ApiError } from '../../../shared/api/fetch-json'
 import { useApiResource } from '../../../shared/api/useApiResource'
+import { useClientPagination } from '../../../shared/hooks/useClientPagination'
 import { AttachmentUploadForm, type AttachmentUploadErrors } from '../components/AttachmentUploadForm'
 import { DocumentsTable } from '../components/DocumentsTable'
 import { TabMessage } from '../components/TabMessage'
 import { deleteAttachment, downloadAttachment, listAttachments, uploadAttachment } from '../data/personnel-client'
 import { attachmentFileError, attachmentStatusMessage } from '../domain/attachments'
+import styles from './DocumentosContainer.module.css'
 
 /** Saves a downloaded blob under its original name. */
 function saveBlob(blob: Blob, filename: string) {
@@ -22,12 +24,16 @@ function saveBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+const NO_ATTACHMENTS: PersonnelAttachmentDto[] = []
+
 /** Documentos page key: the person's attached documents (D21). */
 export function DocumentosContainer({ person }: { person: PersonnelDto }) {
   const { can } = useRole()
   const toast = useToast()
   const canWrite = can('personnel', 'write')
   const resource = useApiResource(`personnel:${person.id}:attachments`, () => listAttachments(person.id))
+  // The API returns the whole list; it pages here, 10 rows at a time.
+  const pages = useClientPagination(resource.status === 'ready' ? resource.data : NO_ATTACHMENTS)
 
   const [type, setType] = useState<CatalogOption | null>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -116,12 +122,23 @@ export function DocumentosContainer({ person }: { person: PersonnelDto }) {
     )
   } else {
     list = (
-      <DocumentsTable
-        attachments={resource.data}
-        canDelete={canWrite}
-        onDownload={(attachment) => void download(attachment)}
-        onDelete={setToDelete}
-      />
+      <>
+        <DocumentsTable
+          attachments={pages.pageItems}
+          canDelete={canWrite}
+          onDownload={(attachment) => void download(attachment)}
+          onDelete={setToDelete}
+        />
+        <Pagination
+          className={styles.pagination}
+          page={pages.page}
+          pageCount={pages.pageCount}
+          onPageChange={pages.setPage}
+          total={pages.total}
+          pageSize={pages.pageSize}
+          onPageSizeChange={pages.setPageSize}
+        />
+      </>
     )
   }
 

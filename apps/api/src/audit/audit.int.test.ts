@@ -241,6 +241,36 @@ describe('audit viewer http (REP-04, REP-05)', () => {
       expect(byEntityId.body.items.map((e: { action: string }) => e.action)).toEqual(['actualizar', 'crear'])
     })
 
+    it('accepts several actions and entities, comma-separated or as repeated params', async () => {
+      const actions = async (query: string) => {
+        const res = await http().get(`/api/audit?${query}`).set(as(users.admin)).expect(200)
+        return res.body.items.map((e: { action: string }) => e.action)
+      }
+      expect(await actions(`entity=${ENTITY}&action=crear,eliminar`)).toEqual(['eliminar', 'crear'])
+      expect(await actions(`entity=${ENTITY}&action=autenticar&action=actualizar`)).toEqual([
+        'autenticar',
+        'actualizar',
+      ])
+      expect(await actions(`entity=${ENTITY}&action=`)).toHaveLength(4)
+
+      const entities = async (query: string) => {
+        const res = await http().get(`/api/audit?personId=${ids.person}&${query}`).set(as(users.admin)).expect(200)
+        return res.body.items.map((e: { entity: string }) => e.entity)
+      }
+      expect(await entities('entity=licencia,bloqueo')).toEqual(['bloqueo', 'licencia'])
+      expect(await entities('entity=certificado_medico&entity=personal_aeronautico')).toEqual([
+        'certificado_medico',
+        'personal_aeronautico',
+      ])
+
+      const csv = await http()
+        .get(`/api/audit/export.csv?entity=${ENTITY}&action=crear,actualizar`)
+        .set(as(users.admin))
+        .expect(200)
+      expect(csv.text.slice(1).split('\r\n')).toHaveLength(4)
+      await http().get('/api/audit?action=crear,borrar_todo').set(as(users.admin)).expect(400)
+    })
+
     it('treats the date range as whole UTC days, both ends included', async () => {
       const res = await list({ entity: ENTITY, from: '2026-10-02', to: '2026-10-03' }).expect(200)
       expect(res.body.items.map((e: { action: string }) => e.action)).toEqual(['autenticar', 'actualizar'])

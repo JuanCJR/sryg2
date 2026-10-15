@@ -122,6 +122,29 @@ describe('Médico page key of the Expediente (MED-05, MED-07)', () => {
     expect(screen.queryByRole('button', { name: /Historial/ })).toBeNull()
   })
 
+  it('orders the columns Nombre, detail, dates and Estado last, and pages a long list ten at a time', async () => {
+    const many = Array.from({ length: 12 }, (_, index) => ({
+      ...CERT,
+      id: `7c000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+      number: `M-${String(index + 1).padStart(2, '0')}`,
+    }))
+    signIn(userWith('consulta', 'ambas'), (url) => (url.pathname === certificatesPath ? listOf(many) : undefined))
+    const user = userEvent.setup()
+    renderApp(`/personal/${PERSON.id}?pagina=medico`)
+
+    const table = await screen.findByRole('table', { name: 'Certificados médicos' })
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['Nombre', 'Observaciones y restricciones', 'Emitida', 'Vence', 'Restante', 'Estado'])
+    expect(within(table).getAllByRole('row')).toHaveLength(11)
+    const nav = screen.getByRole('navigation', { name: 'Paginación' })
+    expect(nav.textContent).toMatch(/Mostrando\s*1–10\s*de\s*12/)
+    await user.click(within(nav).getByRole('button', { name: 'Página 2' }))
+    expect(within(screen.getByRole('table', { name: 'Certificados médicos' })).getAllByRole('row')).toHaveLength(3)
+  })
+
   it('shows the empty state, and opens the form for the Medicina Supervisor (D24)', async () => {
     signIn(userWith('supervisor', 'medicina'), (url) => (url.pathname === certificatesPath ? listOf([]) : undefined))
     const user = userEvent.setup()

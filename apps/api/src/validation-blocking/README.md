@@ -8,7 +8,7 @@ active (VAL-02).
 
 | Method | Path                      | Permission         | Notes                                                                    |
 | ------ | ------------------------- | ------------------ | ------------------------------------------------------------------------ |
-| GET    | `/api/blocks`             | `blocking` `read`  | Filters: `status`, `type`, `personalId`, `q` (name or cédula), paginated |
+| GET    | `/api/blocks`             | `blocking` `read`  | Filters: `status`, `type` (multi-value: `a,b` or repeated), `personalId`, `q` (name or cédula), paginated |
 | GET    | `/api/blocks/:id`         | `blocking` `read`  |                                                                          |
 | POST   | `/api/blocks`             | `blocking` `write` | `{ personalId, type, reason }`; always registered `activo`               |
 | POST   | `/api/blocks/:id/resolve` | `blocking` `write` | `{ resolutionNote }` (mandatory); 409 when the block is already resolved |

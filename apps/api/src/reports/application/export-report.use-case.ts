@@ -57,12 +57,15 @@ export class ExportReportUseCase {
   private async describeFilters(filters: ReportFilters): Promise<string[]> {
     const lines: string[] = []
     if (filters.q) lines.push(`Búsqueda: ${filters.q}`)
-    if (filters.licenseTypeId)
-      lines.push(
-        `Tipo de licencia: ${(await this.source.licenseTypeName(filters.licenseTypeId)) ?? filters.licenseTypeId}`,
+    if (filters.licenseTypeId) {
+      const names = await Promise.all(
+        filters.licenseTypeId.map(async (id) => (await this.source.licenseTypeName(id)) ?? id),
       )
-    if (filters.rav60Category) lines.push(`Categoría RAV 60: ${RAV60_LABELS[filters.rav60Category]}`)
-    if (filters.status) lines.push(`Estado: ${STATUS_LABELS[filters.status]}`)
+      lines.push(`Tipo de licencia: ${names.join(', ')}`)
+    }
+    if (filters.rav60Category)
+      lines.push(`Categoría RAV 60: ${filters.rav60Category.map((c) => RAV60_LABELS[c]).join(', ')}`)
+    if (filters.status) lines.push(`Estado: ${filters.status.map((s) => STATUS_LABELS[s]).join(', ')}`)
     if (filters.from || filters.to) lines.push(`Rango de fechas: ${filters.from ?? '…'} a ${filters.to ?? '…'}`)
     return lines
   }

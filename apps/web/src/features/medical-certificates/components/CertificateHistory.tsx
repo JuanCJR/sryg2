@@ -1,4 +1,6 @@
 import type { MedicalCertificateHistoryEntryDto } from '@sryg/types'
+import { Pagination } from '../../../design-system'
+import { useClientPagination } from '../../../shared/hooks/useClientPagination'
 import { formatDateTime } from '../domain/dates'
 import { historyActionLabel } from '../domain/labels'
 import styles from './CertificateHistory.module.css'
@@ -25,15 +27,30 @@ export function CertificateHistory({ state }: { state: CertificateHistoryState }
   if (state.entries.length === 0) {
     return <p className={styles.message}>Sin movimientos registrados.</p>
   }
+  return <HistoryEntries entries={state.entries} />
+}
+
+/** The audit trail grows with every renewal: it pages on the client, 10 entries at a time. */
+function HistoryEntries({ entries }: { entries: MedicalCertificateHistoryEntryDto[] }) {
+  const pagination = useClientPagination(entries)
   return (
-    <ul className={styles.list} aria-label="Historial del certificado">
-      {state.entries.map((entry) => (
-        <li key={entry.id} className={styles.entry}>
-          <span className={styles.action}>{historyActionLabel(entry.action)}</span>
-          <span className={styles.when}>{formatDateTime(entry.occurredAt)}</span>
-          <span className={styles.who}>{entry.actor?.fullName ?? 'Sistema'}</span>
-        </li>
-      ))}
-    </ul>
+    <div className={styles.paged}>
+      <ul className={styles.list} aria-label="Historial del certificado">
+        {pagination.pageItems.map((entry) => (
+          <li key={entry.id} className={styles.entry}>
+            <span className={styles.action}>{historyActionLabel(entry.action)}</span>
+            <span className={styles.when}>{formatDateTime(entry.occurredAt)}</span>
+            <span className={styles.who}>{entry.actor?.fullName ?? 'Sistema'}</span>
+          </li>
+        ))}
+      </ul>
+      <Pagination
+        page={pagination.page}
+        pageCount={pagination.pageCount}
+        onPageChange={pagination.setPage}
+        total={pagination.total}
+        pageSize={pagination.pageSize}
+      />
+    </div>
   )
 }

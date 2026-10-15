@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { csvEnum } from './common'
 import { ALERT_KINDS, CREDENTIAL_KINDS, type AlertKind, type CredentialKind, type UserArea } from './enums'
 
 // Contracts of the alerts module (W1-9).
@@ -19,11 +20,12 @@ export const alertAreaOf = (kind: CredentialKind): AlertArea => CREDENTIAL_KIND_
 // Query strings carry text: `z.coerce.boolean` would read "false" as true.
 const booleanQuery = z.enum(['true', 'false']).transform((value) => value === 'true')
 
+/** `kind`, `area` and `credentialKind` are multi-value: `?area=a,b` or repeated params. */
 const alertFilters = {
-  kind: alertKindSchema.optional(),
+  kind: csvEnum(ALERT_KINDS),
   acknowledged: booleanQuery.optional(),
-  area: z.enum(ALERT_AREAS).optional(),
-  credentialKind: credentialKindSchema.optional(),
+  area: csvEnum(ALERT_AREAS),
+  credentialKind: csvEnum(CREDENTIAL_KINDS),
   personalId: z.uuid().optional(),
 }
 

@@ -16,5 +16,4 @@ export const AREA_LABELS: Record<AlertArea, string> = {
 export const ACKNOWLEDGEMENT_LABELS: Record<Acknowledgement, string> = {
   pendientes: 'Pendientes',
   reconocidas: 'Reconocidas',
-  todas: 'Todas',
 }

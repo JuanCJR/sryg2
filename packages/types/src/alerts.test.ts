@@ -4,9 +4,9 @@ import { alertAreaOf, alertsQuerySchema, alertsSummaryQuerySchema } from './aler
 describe('alerts contracts', () => {
   it('parses the list filters, reading acknowledged as a real boolean', () => {
     expect(alertsQuerySchema.parse({ kind: 'vencida', acknowledged: 'false', area: 'medicina' })).toEqual({
-      kind: 'vencida',
+      kind: ['vencida'],
       acknowledged: false,
-      area: 'medicina',
+      area: ['medicina'],
       page: 1,
       pageSize: 20,
     })
@@ -24,8 +24,24 @@ describe('alerts contracts', () => {
   it('accepts the same filters for the summary, without pagination', () => {
     expect(alertsSummaryQuerySchema.parse({ acknowledged: 'false', area: 'licencias' })).toEqual({
       acknowledged: false,
-      area: 'licencias',
+      area: ['licencias'],
     })
+  })
+
+  it('accepts several kinds, areas and credential kinds, comma-separated or repeated', () => {
+    expect(
+      alertsQuerySchema.parse({
+        kind: 'vencida,proxima',
+        area: ['licencias', 'medicina'],
+        credentialKind: 'licencia, certificado_medico',
+      }),
+    ).toMatchObject({
+      kind: ['vencida', 'proxima'],
+      area: ['licencias', 'medicina'],
+      credentialKind: ['licencia', 'certificado_medico'],
+    })
+    expect(alertsSummaryQuerySchema.parse({ area: '', credentialKind: [] })).toEqual({})
+    expect(alertsSummaryQuerySchema.safeParse({ credentialKind: 'licencia,pasaporte' }).success).toBe(false)
   })
 
   it('maps each credential kind to the area that manages it (D24)', () => {

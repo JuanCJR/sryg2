@@ -1,5 +1,0 @@
-.toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-5);
-}

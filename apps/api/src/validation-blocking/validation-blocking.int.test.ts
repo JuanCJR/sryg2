@@ -224,4 +224,29 @@ describe('validation-blocking http (VAL-03..05, D2, D24)', () => {
     expect((await list({ q: `Luis Filtro ${LAST}` })).body.total).toBe(1)
     expect((await list({ pageSize: '1', page: '2' })).body).toMatchObject({ total: 3, items: [{ reason: 'a2' }] })
   })
+
+  it('accepts several statuses and types, comma-separated or as repeated params', async () => {
+    const eva = await newPerson('Eva Multifiltro')
+    const { body: resolved } = await register(users.admin, { personalId: eva, type: 'medico', reason: 'm1' }).expect(
+      201,
+    )
+    await register(users.admin, { personalId: eva, type: 'administrativo', reason: 'a1' }).expect(201)
+    await register(users.admin, { personalId: eva, type: 'regulatorio', reason: 'r1' }).expect(201)
+    await http()
+      .post(`/api/blocks/${resolved.id}/resolve`)
+      .set(as(users.admin))
+      .send({ resolutionNote: 'n' })
+      .expect(200)
+
+    const reasons = async (query: string) => {
+      const { body } = await http().get(`/api/blocks?personalId=${eva}&${query}`).set(as(users.consulta)).expect(200)
+      return body.items.map((b: { reason: string }) => b.reason).sort()
+    }
+    expect(await reasons('type=medico,administrativo')).toEqual(['a1', 'm1'])
+    expect(await reasons('type=medico&type=regulatorio')).toEqual(['m1', 'r1'])
+    expect(await reasons('status=activo,resuelto')).toEqual(['a1', 'm1', 'r1'])
+    expect(await reasons('status=activo&type=medico,administrativo')).toEqual(['a1'])
+    expect(await reasons('type=')).toEqual(['a1', 'm1', 'r1'])
+    await http().get('/api/blocks?type=medico,otro').set(as(users.admin)).expect(400)
+  })
 })
