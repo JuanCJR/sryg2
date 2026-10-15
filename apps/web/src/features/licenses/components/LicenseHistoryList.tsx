@@ -1,4 +1,5 @@
-import { Button } from '../../../design-system'
+import { Button, Pagination } from '../../../design-system'
+import { useClientPagination } from '../../../shared/hooks/useClientPagination'
 import styles from './LicenseHistoryList.module.css'
 
 export interface LicenseHistoryLine {
@@ -9,6 +10,30 @@ export interface LicenseHistoryLine {
 
 export type LicenseHistoryListProps =
   { status: 'loading' } | { status: 'error'; onRetry: () => void } | { status: 'ready'; lines: LicenseHistoryLine[] }
+
+/** The history grows with every trámite: it pages on the client, 10 lines at a time. */
+function HistoryLines({ lines }: { lines: LicenseHistoryLine[] }) {
+  const pagination = useClientPagination(lines)
+  return (
+    <>
+      <ol className={styles.list}>
+        {pagination.pageItems.map((line) => (
+          <li key={line.id} className={styles.item}>
+            <span className={styles.when}>{line.whenLabel}</span>
+            <span>{line.what}</span>
+          </li>
+        ))}
+      </ol>
+      <Pagination
+        page={pagination.page}
+        pageCount={pagination.pageCount}
+        onPageChange={pagination.setPage}
+        total={pagination.total}
+        pageSize={pagination.pageSize}
+      />
+    </>
+  )
+}
 
 /** History of one license and its ratings (LIC-06), newest first. */
 export function LicenseHistoryList(props: LicenseHistoryListProps) {
@@ -28,14 +53,7 @@ export function LicenseHistoryList(props: LicenseHistoryListProps) {
         props.lines.length === 0 ? (
           <p className={styles.muted}>Sin movimientos registrados.</p>
         ) : (
-          <ol className={styles.list}>
-            {props.lines.map((line) => (
-              <li key={line.id} className={styles.item}>
-                <span className={styles.when}>{line.whenLabel}</span>
-                <span>{line.what}</span>
-              </li>
-            ))}
-          </ol>
+          <HistoryLines lines={props.lines} />
         )
       ) : null}
     </div>

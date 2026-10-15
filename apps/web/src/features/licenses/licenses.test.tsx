@@ -173,6 +173,62 @@ describe('Consulta de licencias (/licencias)', () => {
     })
   })
 
+  it('orders the columns Número, Solicitante, Tipo, Emitida, Vence, Estado and keeps the filters in the left panel', async () => {
+    signIn(userWith('consulta', 'medicina'), (url) => (url.pathname === '/api/licenses' ? page([ITEM]) : undefined))
+    renderApp('/licencias')
+
+    const row = await screen.findByRole('link', { name: /Persona De Prueba Uno/ })
+    const text = row.textContent ?? ''
+    const order = [
+      'L-0001',
+      'Persona De Prueba Uno',
+      'Piloto Comercial - Avión',
+      '31 ene 2025',
+      'Sin vencimiento',
+      'Activa',
+    ]
+    const positions = order.map((part) => text.indexOf(part))
+    expect(positions.every((position) => position >= 0)).toBe(true)
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions)
+    expect(screen.getByRole('complementary', { name: 'Filtros de licencias' })).toBeTruthy()
+  })
+
+  it('paginates on the server with the range line, a page size selector, and back to page 1 on a filter change', async () => {
+    const api = signIn(userWith('consulta', 'ambas'), (url) =>
+      url.pathname === '/api/licenses'
+        ? {
+            status: 200,
+            body: {
+              items: [ITEM],
+              page: Number(url.searchParams.get('page')),
+              pageSize: Number(url.searchParams.get('pageSize')),
+              total: 60,
+            },
+          }
+        : undefined,
+    )
+    const user = userEvent.setup()
+    renderApp('/licencias')
+    await screen.findByRole('link', { name: /Persona De Prueba Uno/ })
+    const lastQuery = () =>
+      Object.fromEntries(
+        new URL(String(api.mock.calls.filter(([u]) => String(u).includes('/api/licenses?')).at(-1)![0])).searchParams,
+      )
+
+    const nav = screen.getByRole('navigation', { name: 'Paginación' })
+    expect(nav.textContent).toMatch(/Mostrando\s*1–25\s*de\s*60/)
+    await user.click(within(nav).getByRole('button', { name: 'Página 2' }))
+    await waitFor(() => expect(lastQuery()).toMatchObject({ page: '2', pageSize: '25' }))
+
+    await user.selectOptions(await screen.findByLabelText('Filas por página'), '50')
+    await waitFor(() => expect(lastQuery()).toMatchObject({ page: '1', pageSize: '50' }))
+
+    await user.click(await screen.findByRole('button', { name: 'Página 2' }))
+    await waitFor(() => expect(lastQuery()).toMatchObject({ page: '2' }))
+    await user.type(screen.getByLabelText('Número'), 'L')
+    await waitFor(() => expect(lastQuery()).toMatchObject({ number: 'L', page: '1' }))
+  })
+
   it('shows the empty registry and the error state with retry', async () => {
     let fail = true
     signIn(userWith('consulta', 'ambas'), () => (fail ? { status: 500, body: { message: 'x' } } : page([])))
@@ -233,6 +289,46 @@ describe('Licencias page key of the Expediente', () => {
     expect(renew.getAttribute('href')).toBe(`/personal/${PERSON.id}/licencia?licencia=${LICENSE.id}`)
     await user.click(screen.getByRole('button', { name: /Ver historial/ }))
     expect(await screen.findByText(/Renovación · Supervisora Ficticia/)).toBeTruthy()
+  })
+
+  it('puts Número first and Estado last in the expediente tables', async () => {
+    signIn(userWith('consulta', 'ambas'), api)
+    renderApp(`/personal/${PERSON.id}?pagina=licencias`)
+
+    const licenses = await screen.findByRole('table', { name: 'Licencias' })
+    expect(
+      within(licenses)
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['Número', 'Nombre', 'Emitida', 'Vence', 'Restante', 'Estado'])
+    const typeRatings = screen.getByRole('table', { name: 'Habilitaciones de tipo' })
+    expect(
+      within(typeRatings)
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['Nombre', 'Emitida', 'Vence', 'Restante', 'Estado'])
+  })
+
+  it('pages a long license history ten lines at a time', async () => {
+    const long: LicenseHistoryEntryDto[] = Array.from({ length: 12 }, (_, index) => ({
+      ...HISTORY[0]!,
+      id: index + 1,
+      actorName: `Operador ${index + 1}`,
+    }))
+    signIn(userWith('supervisor', 'licencias'), (url, init) =>
+      url.pathname === `/api/licenses/${LICENSE.id}/history` ? { status: 200, body: long } : api(url, init),
+    )
+    const user = userEvent.setup()
+    renderApp(`/personal/${PERSON.id}?pagina=licencias`)
+
+    await user.click(await screen.findByRole('button', { name: /Ver historial/ }))
+    expect(await screen.findByText(/Operador 10$/)).toBeTruthy()
+    expect(screen.queryByText(/Operador 11$/)).toBeNull()
+    const nav = screen.getByRole('navigation', { name: 'Paginación' })
+    expect(nav.textContent).toMatch(/Mostrando\s*1–10\s*de\s*12/)
+    await user.click(within(nav).getByRole('button', { name: 'Página 2' }))
+    expect(await screen.findByText(/Operador 12$/)).toBeTruthy()
+    expect(screen.queryByText(/Operador 1$/)).toBeNull()
   })
 
   it('says when the person holds no license, and the header action opens the trámite', async () => {
