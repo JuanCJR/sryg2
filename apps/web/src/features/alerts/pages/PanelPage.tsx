@@ -1,6 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
+import { PanelContainer } from '../containers/PanelContainer'
 
-/** Placeholder pre-registered by F0-B; W2-1 feat/dashboard replaces it. */
+/** /panel — open expiry alerts with acknowledgement and the user's access log (W2-1, ALR-03, D23). */
 export function PanelPage() {
-  return <PendingScreen title="Panel" plannedChange="W2-1 feat/dashboard" />
+  return <PanelContainer />
 }

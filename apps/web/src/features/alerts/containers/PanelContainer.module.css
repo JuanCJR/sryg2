@@ -1,0 +1,27 @@
+/* A navigation link with the secondary Button's look: it goes to another page, it is not an action. */
+.reportsLink {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-h);
+  padding: 0 var(--s-5);
+  border: var(--hair) solid var(--control-border);
+  border-radius: var(--r-1);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease-out-expo),
+    border-color var(--dur-fast) var(--ease-out-expo);
+}
+
+.reportsLink:hover {
+  background: var(--surface-raised);
+  border-color: var(--control-border-strong);
+}
+
+.reportsLink:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
