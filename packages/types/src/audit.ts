@@ -45,7 +45,7 @@ export const auditListQuerySchema = z
   .transform(dropUndefined)
 export type AuditListQuery = z.infer<typeof auditListQuerySchema>
 
-/** GET /api/audit/export.csv — the same filters, every matching entry. */
+/** GET /api/audit/export.xlsx — the same filters, every matching entry. */
 export const auditExportQuerySchema = z
   .object(auditFilterShape)
   .refine(validRange, RANGE_ERROR)

@@ -16,14 +16,14 @@ import { ReportGenerator } from './application/report-generator'
 import type { Clock } from './domain/clock'
 import type { ReportDataSource } from './domain/report-dataset'
 import { ReportsController } from './http/reports.controller'
-import { CsvReportRenderer } from './infrastructure/csv-report-renderer'
+import { XlsxReportRenderer } from './infrastructure/xlsx-report-renderer'
 import { DrizzleReportDataSource } from './infrastructure/drizzle-report-data-source'
 import { PdfKitReportRenderer } from './infrastructure/pdfkit-report-renderer'
 
 const REPORT_DATA_SOURCE = Symbol('REPORT_DATA_SOURCE')
 const CLOCK = Symbol('CLOCK')
 
-/** The three v1 reports of D10 with CSV and PDF export; see README.md. */
+/** The three v1 reports of D10 with Excel and PDF export; see README.md. */
 @Module({
   imports: [AuditModule, CredentialsCoreModule],
   controllers: [ReportsController],
@@ -49,7 +49,7 @@ const CLOCK = Symbol('CLOCK')
       provide: ExportReportUseCase,
       inject: [ReportGenerator, REPORT_DATA_SOURCE, AUDIT_LOG],
       useFactory: (generator: ReportGenerator, source: ReportDataSource, audit: AuditLog) =>
-        new ExportReportUseCase(generator, source, [new CsvReportRenderer(), new PdfKitReportRenderer()], audit),
+        new ExportReportUseCase(generator, source, [new XlsxReportRenderer(), new PdfKitReportRenderer()], audit),
     },
   ],
 })

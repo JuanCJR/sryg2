@@ -52,7 +52,7 @@ function ReportRows({ page }: { page: ReportPage }) {
 
 /**
  * Reportes (REP-01..03, REP-06): the three v1 reports of D10 on `GET /api/reports/:report`, with
- * their filters, and CSV/PDF export for the roles that may export. Consulta only sees report 1.
+ * their filters, and Excel/PDF export for the roles that may export. Consulta only sees report 1.
  */
 export function ReportesContainer() {
   const { role, area } = useRole()

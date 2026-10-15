@@ -24,7 +24,10 @@ import {
 import { and, eq, inArray } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { XLSX_CONTENT_TYPE } from '../shared/spreadsheet/xlsx'
+import { binary } from '../test/binary-response'
 import { createTestApp } from '../test/create-test-app'
+import { readXlsxRows } from '../test/read-xlsx'
 import { createTestUsers, deleteTestUsers, type TestUser } from '../test/test-users'
 
 const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://sryg:sryg@localhost:5432/sryg'
@@ -224,7 +227,7 @@ describe('reports http (D10)', () => {
 
   it('requires a token, a known report and a valid range', async () => {
     await http().get('/api/reports/vencimientos').expect(401)
-    await http().get('/api/reports/vencimientos/export').query({ format: 'csv' }).expect(401)
+    await http().get('/api/reports/vencimientos/export').query({ format: 'xlsx' }).expect(401)
     await http().get('/api/reports/inexistente').set(as(users.admin)).expect(400)
     await report(users.admin, 'vencimientos', { from: day(5), to: day(1) }).expect(400)
     await report(users.admin, 'vencimientos', { status: 'activa' }).expect(400)
@@ -395,7 +398,7 @@ describe('reports http (D10)', () => {
       await report(users.consulta, 'bloqueos_activos').expect(403)
       await http()
         .get('/api/reports/vencimientos/export')
-        .query({ format: 'csv', q: RUN })
+        .query({ format: 'xlsx', q: RUN })
         .set(as(users.consulta))
         .expect(403)
       expect(await exportsBy(users.consulta.id)).toHaveLength(0)
@@ -408,46 +411,41 @@ describe('reports http (D10)', () => {
   })
 
   describe('export', () => {
-    it('exports the filtered rows to CSV and audits the export', async () => {
+    it('exports the filtered rows to Excel and audits the export', async () => {
       const before = (await exportsBy(users.supMed.id)).length
-      const res = await http()
-        .get('/api/reports/bloqueos_activos/export')
-        .query({ format: 'csv', q: RUN })
-        .set(as(users.supMed))
-        .expect(200)
-      expect(res.headers['content-type']).toMatch(/^text\/csv; charset=utf-8/)
-      expect(res.text.charCodeAt(0)).toBe(0xfeff)
-      expect(res.headers['content-disposition']).toMatch(/^attachment; filename="bloqueos_activos-\d{8}\.csv"$/)
-      const lines = res.text.replace(String.fromCharCode(0xfeff), '').trimEnd().split('\r\n')
-      expect(lines[0]).toBe('Cédula,Nombre,Tipo,Motivo,Registrado,Registrado por')
-      expect(lines).toHaveLength(2)
-      // A cell that starts like a formula is neutralized for spreadsheets.
-      expect(lines[1]).toContain(
-        `${people.bloqueado.cedula},Prueba ${LAST_NAMES.bloqueado},Médico,'=Impedimento ficticio,`,
-      )
+      const res = await binary(
+        http().get('/api/reports/bloqueos_activos/export').query({ format: 'xlsx', q: RUN }).set(as(users.supMed)),
+      ).expect(200)
+      expect(res.headers['content-type']).toBe(XLSX_CONTENT_TYPE)
+      expect(res.headers['content-disposition']).toMatch(/^attachment; filename="bloqueos_activos-\d{8}\.xlsx"$/)
+      const rows = readXlsxRows(res.body as Buffer)
+      expect(rows[0]).toEqual(['Bloqueos activos'])
+      const header = rows.findIndex((row) => row[0] === 'Cédula')
+      expect(rows[header]).toEqual(['Cédula', 'Nombre', 'Tipo', 'Motivo', 'Registrado', 'Registrado por'])
+      const data = rows.slice(header + 1)
+      expect(data).toHaveLength(1)
+      // Text that looks like a formula is stored as text, never evaluated.
+      expect(data[0]!.slice(0, 4)).toEqual([
+        people.bloqueado.cedula,
+        `Prueba ${LAST_NAMES.bloqueado}`,
+        'Médico',
+        expect.stringMatching(/^=Impedimento ficticio/),
+      ])
 
       const audits = await exportsBy(users.supMed.id)
       expect(audits).toHaveLength(before + 1)
       expect(audits.at(-1)).toMatchObject({
         entity: 'reporte',
         entityId: null,
-        changes: { after: { report: 'bloqueos_activos', format: 'csv', rows: 1, filters: { q: RUN } } },
+        changes: { after: { report: 'bloqueos_activos', format: 'xlsx', rows: 1, filters: { q: RUN } } },
       })
     })
 
     it('exports to PDF and audits the export', async () => {
       const before = (await exportsBy(users.admin.id)).length
-      const res = await http()
-        .get('/api/reports/estado_consolidado/export')
-        .query({ format: 'pdf', q: RUN })
-        .set(as(users.admin))
-        .buffer(true)
-        .parse((response, callback) => {
-          const chunks: Buffer[] = []
-          response.on('data', (chunk: Buffer) => chunks.push(chunk))
-          response.on('end', () => callback(null, Buffer.concat(chunks)))
-        })
-        .expect(200)
+      const res = await binary(
+        http().get('/api/reports/estado_consolidado/export').query({ format: 'pdf', q: RUN }).set(as(users.admin)),
+      ).expect(200)
       expect(res.headers['content-type']).toBe('application/pdf')
       expect(res.headers['content-disposition']).toMatch(/^attachment; filename="estado_consolidado-\d{8}\.pdf"$/)
       const body = res.body as Buffer
@@ -461,11 +459,13 @@ describe('reports http (D10)', () => {
 
     it('exports with several values per filter and audits them as lists', async () => {
       const before = (await exportsBy(users.admin.id)).length
-      const res = await http()
-        .get(`/api/reports/estado_consolidado/export?format=csv&q=${RUN}&status=bloqueada,sin_credenciales`)
-        .set(as(users.admin))
-        .expect(200)
-      expect(res.text.trimEnd().split('\r\n')).toHaveLength(3)
+      const res = await binary(
+        http()
+          .get(`/api/reports/estado_consolidado/export?format=xlsx&q=${RUN}&status=bloqueada,sin_credenciales`)
+          .set(as(users.admin)),
+      ).expect(200)
+      const rows = readXlsxRows(res.body as Buffer)
+      expect(rows.length - rows.findIndex((row) => row[0] === 'Cédula') - 1).toBe(2)
       const audits = await exportsBy(users.admin.id)
       expect(audits).toHaveLength(before + 1)
       expect(audits.at(-1)).toMatchObject({

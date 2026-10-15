@@ -300,7 +300,7 @@ describe('Reportes (D10)', () => {
 
   it('downloads the export with the token and the current filters', async () => {
     const api = signIn(userWith('supervisor', 'medicina'), (url) => {
-      if (url.pathname === '/api/reports/vencimientos/export') return { status: 200, body: 'csv' }
+      if (url.pathname === '/api/reports/vencimientos/export') return { status: 200, body: 'xlsx' }
       return defaultApi(url)
     })
     const user = userEvent.setup()
@@ -309,13 +309,13 @@ describe('Reportes (D10)', () => {
 
     await user.click(screen.getByRole('checkbox', { name: 'Próxima a vencer' }))
     await user.click(screen.getByRole('checkbox', { name: 'Vencida' }))
-    await user.click(screen.getByRole('button', { name: 'Exportar CSV' }))
+    await user.click(screen.getByRole('button', { name: 'Exportar Excel' }))
 
     await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob)))
     expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledTimes(1)
     const call = api.mock.calls.find(([url]) => String(url).includes('/export'))!
     const url = new URL(String(call[0]))
-    expect(Object.fromEntries(url.searchParams)).toEqual({ format: 'csv', status: 'vencida,proxima_a_vencer' })
+    expect(Object.fromEntries(url.searchParams)).toEqual({ format: 'xlsx', status: 'vencida,proxima_a_vencer' })
     expect(authorizationOf(call[1])).toBe(`Bearer ${TOKEN}`)
     expect(screen.getByRole('button', { name: 'Exportar PDF' })).toBeTruthy()
   })

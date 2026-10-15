@@ -3,13 +3,14 @@ import { type AuditExportQuery, auditExportQuerySchema, type AuditListQuery, aud
 import type { Response } from 'express'
 import { RequirePermission } from '../../shared/http/require-permission.decorator'
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe'
-import { ExportAuditCsvUseCase } from '../application/export-audit-csv.use-case'
+import { XLSX_CONTENT_TYPE } from '../../shared/spreadsheet/xlsx'
+import { ExportAuditSheetUseCase } from '../application/export-audit-sheet.use-case'
 import { ListAuditEntriesUseCase } from '../application/list-audit-entries.use-case'
 
-/** "auditoria-20261014-153000.csv" (UTC). */
+/** "auditoria-20261014-153000.xlsx" (UTC). */
 function exportFilename(now: Date): string {
   const stamp = now.toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15)
-  return `auditoria-${stamp}.csv`
+  return `auditoria-${stamp}.xlsx`
 }
 
 /** Audit viewer (REP-04/REP-05): read-only, for the Admin and Supervisors of any area (D1). */
@@ -17,7 +18,7 @@ function exportFilename(now: Date): string {
 export class AuditController {
   constructor(
     private readonly listEntries: ListAuditEntriesUseCase,
-    private readonly exportCsv: ExportAuditCsvUseCase,
+    private readonly exportSheet: ExportAuditSheetUseCase,
   ) {}
 
   @Get()
@@ -26,15 +27,21 @@ export class AuditController {
     return this.listEntries.execute(query)
   }
 
-  @Get('export.csv')
+  @Get('export.xlsx')
   @RequirePermission('audit', 'read')
   async export(
     @Query(new ZodValidationPipe(auditExportQuerySchema)) query: AuditExportQuery,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<string> {
-    const csv = await this.exportCsv.execute(query)
-    response.setHeader('Content-Type', 'text/csv; charset=utf-8')
-    response.setHeader('Content-Disposition', `attachment; filename="${exportFilename(new Date())}"`)
-    return csv
+    @Res() response: Response,
+  ): Promise<void> {
+    const now = new Date()
+    const file = await this.exportSheet.execute(query, now)
+    response
+      .status(200)
+      .set({
+        'Content-Type': XLSX_CONTENT_TYPE,
+        'Content-Disposition': `attachment; filename="${exportFilename(now)}"`,
+        'Cache-Control': 'no-store',
+      })
+      .send(file)
   }
 }

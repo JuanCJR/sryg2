@@ -198,7 +198,7 @@ describe('/auditoria (REP-04)', () => {
     await user.type(screen.getByLabelText('Desde'), '14102026')
     await user.type(screen.getByLabelText('Hasta'), '01102026')
     expect(await screen.findByText('La fecha inicial no puede ser posterior a la final.')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Exportar CSV' }).hasAttribute('disabled')).toBe(true)
+    expect(screen.getByRole('button', { name: 'Exportar Excel' }).hasAttribute('disabled')).toBe(true)
     expect(auditCalls(api).every((url) => !url.searchParams.has('entityId') && !url.searchParams.has('to'))).toBe(true)
     expect(auditCalls(api).length).toBeGreaterThanOrEqual(before)
   })
@@ -229,14 +229,14 @@ describe('/auditoria (REP-04)', () => {
     await waitFor(() => expect(nav().textContent).toContain('Página 1 de 2'))
   })
 
-  it('exports the current filters as CSV with the session token (REP-05)', async () => {
+  it('exports the current filters as Excel with the session token (REP-05)', async () => {
     const createObjectURL = vi.fn(() => 'blob:auditoria')
     const revokeObjectURL = vi.fn()
     vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL }))
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     const api = signIn(userWith('supervisor', 'licencias'), (url) => {
       if (url.pathname === '/api/audit') return page(ENTRIES)
-      if (url.pathname === '/api/audit/export.csv') return { status: 200, body: 'fecha,actor' }
+      if (url.pathname === '/api/audit/export.xlsx') return { status: 200, body: 'fecha,actor' }
       return undefined
     })
     const user = userEvent.setup()
@@ -245,10 +245,10 @@ describe('/auditoria (REP-04)', () => {
 
     await user.click(screen.getByRole('checkbox', { name: 'Crear' }))
     await user.click(screen.getByRole('checkbox', { name: 'Eliminar' }))
-    await user.click(screen.getByRole('button', { name: 'Exportar CSV' }))
+    await user.click(screen.getByRole('button', { name: 'Exportar Excel' }))
 
     await waitFor(() => expect(click).toHaveBeenCalledOnce())
-    const exportCall = api.mock.calls.find(([url]) => new URL(String(url)).pathname === '/api/audit/export.csv')!
+    const exportCall = api.mock.calls.find(([url]) => new URL(String(url)).pathname === '/api/audit/export.xlsx')!
     expect(Object.fromEntries(new URL(String(exportCall[0])).searchParams)).toEqual({ action: 'crear,eliminar' })
     expect(authorizationOf(exportCall[1])).toBe(`Bearer ${TOKEN}`)
     expect(createObjectURL).toHaveBeenCalledOnce()
@@ -258,14 +258,14 @@ describe('/auditoria (REP-04)', () => {
   it('reports a failed export', async () => {
     signIn(userWith('supervisor', 'licencias'), (url) => {
       if (url.pathname === '/api/audit') return page(ENTRIES)
-      if (url.pathname === '/api/audit/export.csv') return { status: 500, body: { message: 'x' } }
+      if (url.pathname === '/api/audit/export.xlsx') return { status: 500, body: { message: 'x' } }
       return undefined
     })
     const user = userEvent.setup()
     renderApp('/auditoria')
     await screen.findByRole('table', { name: 'Registro de auditoría' })
 
-    await user.click(screen.getByRole('button', { name: 'Exportar CSV' }))
+    await user.click(screen.getByRole('button', { name: 'Exportar Excel' }))
     expect(await screen.findByText('No se pudo exportar la auditoría. Intente de nuevo.')).toBeTruthy()
   })
 })

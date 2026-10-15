@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import type { Db } from '@sryg/db'
 import { DB } from '../infrastructure/database/database.module'
-import { ExportAuditCsvUseCase } from './application/export-audit-csv.use-case'
+import { ExportAuditSheetUseCase } from './application/export-audit-sheet.use-case'
 import { ListAuditEntriesUseCase } from './application/list-audit-entries.use-case'
 import type { AuditTrailReader } from './domain/audit-trail'
 import { AuditController } from './http/audit.controller'
@@ -13,7 +13,7 @@ const AUDIT_TRAIL_READER = Symbol('AUDIT_TRAIL_READER')
 
 /**
  * The write port for events that are not part of an entity mutation (e.g. authentication), plus the
- * read-only viewer and CSV export of the trail (W1-7).
+ * read-only viewer and Excel export of the trail (W1-7).
  */
 @Module({
   controllers: [AuditController],
@@ -26,9 +26,9 @@ const AUDIT_TRAIL_READER = Symbol('AUDIT_TRAIL_READER')
       useFactory: (trail: AuditTrailReader) => new ListAuditEntriesUseCase(trail),
     },
     {
-      provide: ExportAuditCsvUseCase,
+      provide: ExportAuditSheetUseCase,
       inject: [AUDIT_TRAIL_READER],
-      useFactory: (trail: AuditTrailReader) => new ExportAuditCsvUseCase(trail),
+      useFactory: (trail: AuditTrailReader) => new ExportAuditSheetUseCase(trail),
     },
   ],
   exports: [AUDIT_LOG],

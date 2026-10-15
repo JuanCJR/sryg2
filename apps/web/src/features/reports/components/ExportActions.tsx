@@ -1,4 +1,4 @@
-import { Download } from 'lucide-react'
+import { FileSpreadsheet, FileText } from 'lucide-react'
 import type { ReportExportFormat } from '@sryg/types'
 import { Button } from '../../../design-system'
 import styles from './ExportActions.module.css'
@@ -10,22 +10,22 @@ export interface ExportActionsProps {
   onExport: (format: ReportExportFormat) => void
 }
 
-/** CSV and PDF of the whole filtered report; rendered only for roles that can export. */
+/** Excel and PDF of the whole filtered report; rendered only for roles that can export. */
 export function ExportActions({ pending, disabled = false, onExport }: ExportActionsProps) {
   return (
     <div className={styles.actions}>
       <Button
         variant="secondary"
-        icon={Download}
-        loading={pending === 'csv'}
+        icon={FileSpreadsheet}
+        loading={pending === 'xlsx'}
         disabled={disabled || pending !== null}
-        onClick={() => onExport('csv')}
+        onClick={() => onExport('xlsx')}
       >
-        Exportar CSV
+        Exportar Excel
       </Button>
       <Button
         variant="secondary"
-        icon={Download}
+        icon={FileText}
         loading={pending === 'pdf'}
         disabled={disabled || pending !== null}
         onClick={() => onExport('pdf')}
