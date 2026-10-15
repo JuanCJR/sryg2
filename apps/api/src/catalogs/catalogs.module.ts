@@ -1,64 +1,60 @@
 import { Module } from '@nestjs/common'
 import type { Db } from '@sryg/db'
-import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
-import { DB } from '../infrastructure/database/database.module'
-import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
-import { CreateCatalogItemUseCase } from './application/create-catalog-item.use-case'
-import { DeleteCatalogItemUseCase } from './application/delete-catalog-item.use-case'
-import { ListCatalogItemsUseCase } from './application/list-catalog-items.use-case'
-import { ListCatalogOptionsUseCase } from './application/list-catalog-options.use-case'
-import { UpdateCatalogItemUseCase } from './application/update-catalog-item.use-case'
-import type { CatalogItemRepository } from './domain/catalog-item-repository'
-import type { CatalogOptionsReader } from './domain/catalog-options-reader'
-import type { CatalogUnitOfWork } from './domain/catalog-unit-of-work'
-import { CatalogItemsController } from './http/catalog-items.controller'
-import { CatalogsController } from './http/catalogs.controller'
-import { DrizzleCatalogItemRepository } from './infrastructure/drizzle-catalog-item.repository'
-import { DrizzleCatalogOptionsReader } from './infrastructure/drizzle-catalog-options.reader'
+import { AuditLogRepository } from '../audit/repositories/audit-log.repository'
+import { DB } from '../common/database/database.module'
+import { TransactionRunner } from '../common/database/transaction-runner'
+import type { CatalogTransaction } from './catalogs.types'
+import { CatalogItemsController } from './controllers/catalog-items.controller'
+import { CatalogsController } from './controllers/catalogs.controller'
+import { CatalogItemRepository } from './repositories/catalog-item.repository'
+import { CatalogOptionsRepository } from './repositories/catalog-options.repository'
+import { CreateCatalogItemService } from './services/create-catalog-item.service'
+import { DeleteCatalogItemService } from './services/delete-catalog-item.service'
+import { ListCatalogItemsService } from './services/list-catalog-items.service'
+import { ListCatalogOptionsService } from './services/list-catalog-options.service'
+import { UpdateCatalogItemService } from './services/update-catalog-item.service'
 
-const CATALOG_OPTIONS_READER = Symbol('CATALOG_OPTIONS_READER')
-const CATALOG_ITEM_READER = Symbol('CATALOG_ITEM_READER')
-const CATALOG_UOW = Symbol('CATALOG_UOW')
+const CATALOG_TRANSACTION = Symbol('CATALOG_TRANSACTION')
 
 @Module({
   // The options controller goes first so `:catalog/options` never reaches the maintenance routes.
   controllers: [CatalogsController, CatalogItemsController],
   providers: [
-    { provide: CATALOG_OPTIONS_READER, inject: [DB], useFactory: (db: Db) => new DrizzleCatalogOptionsReader(db) },
+    { provide: CatalogOptionsRepository, inject: [DB], useFactory: (db: Db) => new CatalogOptionsRepository(db) },
     {
-      provide: ListCatalogOptionsUseCase,
-      inject: [CATALOG_OPTIONS_READER],
-      useFactory: (reader: CatalogOptionsReader) => new ListCatalogOptionsUseCase(reader),
+      provide: ListCatalogOptionsService,
+      inject: [CatalogOptionsRepository],
+      useFactory: (reader: CatalogOptionsRepository) => new ListCatalogOptionsService(reader),
     },
-    { provide: CATALOG_ITEM_READER, inject: [DB], useFactory: (db: Db) => new DrizzleCatalogItemRepository(db) },
+    { provide: CatalogItemRepository, inject: [DB], useFactory: (db: Db) => new CatalogItemRepository(db) },
     {
-      provide: CATALOG_UOW,
+      provide: CATALOG_TRANSACTION,
       inject: [DB],
       useFactory: (db: Db) =>
-        new DrizzleUnitOfWork(db, (tx) => ({
-          items: new DrizzleCatalogItemRepository(tx),
-          audit: new DrizzleAuditLog(tx),
+        new TransactionRunner(db, (tx) => ({
+          items: new CatalogItemRepository(tx),
+          audit: new AuditLogRepository(tx),
         })),
     },
     {
-      provide: ListCatalogItemsUseCase,
-      inject: [CATALOG_ITEM_READER],
-      useFactory: (repo: CatalogItemRepository) => new ListCatalogItemsUseCase(repo),
+      provide: ListCatalogItemsService,
+      inject: [CatalogItemRepository],
+      useFactory: (repo: CatalogItemRepository) => new ListCatalogItemsService(repo),
     },
     {
-      provide: CreateCatalogItemUseCase,
-      inject: [CATALOG_UOW],
-      useFactory: (uow: CatalogUnitOfWork) => new CreateCatalogItemUseCase(uow),
+      provide: CreateCatalogItemService,
+      inject: [CATALOG_TRANSACTION],
+      useFactory: (transaction: CatalogTransaction) => new CreateCatalogItemService(transaction),
     },
     {
-      provide: UpdateCatalogItemUseCase,
-      inject: [CATALOG_UOW],
-      useFactory: (uow: CatalogUnitOfWork) => new UpdateCatalogItemUseCase(uow),
+      provide: UpdateCatalogItemService,
+      inject: [CATALOG_TRANSACTION],
+      useFactory: (transaction: CatalogTransaction) => new UpdateCatalogItemService(transaction),
     },
     {
-      provide: DeleteCatalogItemUseCase,
-      inject: [CATALOG_UOW],
-      useFactory: (uow: CatalogUnitOfWork) => new DeleteCatalogItemUseCase(uow),
+      provide: DeleteCatalogItemService,
+      inject: [CATALOG_TRANSACTION],
+      useFactory: (transaction: CatalogTransaction) => new DeleteCatalogItemService(transaction),
     },
   ],
 })

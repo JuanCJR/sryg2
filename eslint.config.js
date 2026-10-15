@@ -11,23 +11,4 @@ export const baseConfig = defineConfig([
   },
 ])
 
-// Hexagonal boundary for apps/api feature modules (design D4): domain and application
-// layers must stay framework-free. Prepared here, activated by apps/api in PR3 by
-// spreading it into its own config.
-export const apiLayerBoundaries = {
-  files: ['src/*/{domain,application}/**/*.ts'],
-  rules: {
-    'no-restricted-imports': [
-      'error',
-      {
-        patterns: [
-          { group: ['@nestjs/*'], message: 'domain/application must not depend on NestJS.' },
-          { group: ['drizzle-orm', 'drizzle-orm/*'], message: 'domain/application must not depend on drizzle-orm.' },
-          { group: ['@sryg/db', '@sryg/db/*'], message: 'domain/application must not depend on @sryg/db.' },
-        ],
-      },
-    ],
-  },
-}
-
 export default baseConfig

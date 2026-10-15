@@ -1,59 +1,59 @@
 import { type MiddlewareConsumer, Module, type NestModule, RequestMethod } from '@nestjs/common'
 import type { Db } from '@sryg/db'
-import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
-import { DB } from '../infrastructure/database/database.module'
-import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
-import { GetGraphicResourceUseCase } from './application/get-graphic-resource.use-case'
-import { GetParametersUseCase } from './application/get-parameters.use-case'
-import { ListGraphicResourcesUseCase } from './application/list-graphic-resources.use-case'
-import { SaveGraphicResourceUseCase } from './application/save-graphic-resource.use-case'
-import { SaveParametersUseCase } from './application/save-parameters.use-case'
-import type { SettingsUnitOfWork } from './domain/settings-unit-of-work'
-import { RawImageBodyMiddleware } from './http/raw-image-body.middleware'
-import { SettingsController } from './http/settings.controller'
-import { DrizzleGraphicResourceRepository } from './infrastructure/drizzle-graphic-resource.repository'
-import { DrizzleSystemParameterRepository } from './infrastructure/drizzle-system-parameter.repository'
+import { AuditLogRepository } from '../audit/repositories/audit-log.repository'
+import { DB } from '../common/database/database.module'
+import { TransactionRunner } from '../common/database/transaction-runner'
+import { RawImageBodyMiddleware } from './controllers/raw-image-body.middleware'
+import { SettingsController } from './controllers/settings.controller'
+import { GraphicResourceRepository } from './repositories/graphic-resource.repository'
+import { SystemParameterRepository } from './repositories/system-parameter.repository'
+import { GetGraphicResourceService } from './services/get-graphic-resource.service'
+import { GetParametersService } from './services/get-parameters.service'
+import { ListGraphicResourcesService } from './services/list-graphic-resources.service'
+import { SaveGraphicResourceService } from './services/save-graphic-resource.service'
+import { SaveParametersService } from './services/save-parameters.service'
+import type { SettingsTransaction } from './settings.types'
 
-const SETTINGS_UOW = Symbol('SETTINGS_UOW')
+const SETTINGS_TRANSACTION = Symbol('SETTINGS_TRANSACTION')
 
 /** Parameters and credential images (W1-2, D3, D15, D18); see README.md. */
 @Module({
   controllers: [SettingsController],
   providers: [
     {
-      provide: SETTINGS_UOW,
+      provide: SETTINGS_TRANSACTION,
       inject: [DB],
       useFactory: (db: Db) =>
-        new DrizzleUnitOfWork(db, (tx) => ({
-          parameters: new DrizzleSystemParameterRepository(tx),
-          graphicResources: new DrizzleGraphicResourceRepository(tx),
-          audit: new DrizzleAuditLog(tx),
+        new TransactionRunner(db, (tx) => ({
+          parameters: new SystemParameterRepository(tx),
+          graphicResources: new GraphicResourceRepository(tx),
+          audit: new AuditLogRepository(tx),
         })),
     },
     {
-      provide: GetParametersUseCase,
+      provide: GetParametersService,
       inject: [DB],
-      useFactory: (db: Db) => new GetParametersUseCase(new DrizzleSystemParameterRepository(db)),
+      useFactory: (db: Db) => new GetParametersService(new SystemParameterRepository(db)),
     },
     {
-      provide: SaveParametersUseCase,
-      inject: [SETTINGS_UOW],
-      useFactory: (uow: SettingsUnitOfWork) => new SaveParametersUseCase(uow),
+      provide: SaveParametersService,
+      inject: [SETTINGS_TRANSACTION],
+      useFactory: (transaction: SettingsTransaction) => new SaveParametersService(transaction),
     },
     {
-      provide: ListGraphicResourcesUseCase,
+      provide: ListGraphicResourcesService,
       inject: [DB],
-      useFactory: (db: Db) => new ListGraphicResourcesUseCase(new DrizzleGraphicResourceRepository(db)),
+      useFactory: (db: Db) => new ListGraphicResourcesService(new GraphicResourceRepository(db)),
     },
     {
-      provide: GetGraphicResourceUseCase,
+      provide: GetGraphicResourceService,
       inject: [DB],
-      useFactory: (db: Db) => new GetGraphicResourceUseCase(new DrizzleGraphicResourceRepository(db)),
+      useFactory: (db: Db) => new GetGraphicResourceService(new GraphicResourceRepository(db)),
     },
     {
-      provide: SaveGraphicResourceUseCase,
-      inject: [SETTINGS_UOW],
-      useFactory: (uow: SettingsUnitOfWork) => new SaveGraphicResourceUseCase(uow),
+      provide: SaveGraphicResourceService,
+      inject: [SETTINGS_TRANSACTION],
+      useFactory: (transaction: SettingsTransaction) => new SaveGraphicResourceService(transaction),
     },
   ],
 })

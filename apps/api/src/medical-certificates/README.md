@@ -28,3 +28,12 @@ Register and renew RAV 67 medical certificates with observations and restriction
 - **Status:** derived on every read with `deriveCredentialStatus` (an active block shows as `bloqueada`); the stored
   `status` column is not used.
 - **Audit (BR-11):** registration writes `emitir`, renewal `renovar` (with before/after), in the same transaction.
+
+## Files
+
+- `controllers/`: HTTP routes and request validation, plus the exception filters or middleware only this module uses.
+- `services/`: business logic: one service per action (`*.service.ts`) plus the rules and helpers they share.
+- `repositories/`: Drizzle queries, built on the pool or on a transaction handle.
+- `dtos/`: data shapes passed between controllers, services and repositories.
+- `medical-certificates.types.ts`: the repositories a transaction hands to the services (`TransactionRunner`, BR-11).
+- `medical-certificates.module.ts`: wires the controllers, services and repositories together.
