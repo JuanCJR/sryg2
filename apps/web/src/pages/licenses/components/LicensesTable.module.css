@@ -1,11 +1,13 @@
 .table {
   border: var(--hair) solid var(--rule);
+  /* The columns follow the list's own width: beside the filter column it is much narrower than the viewport. */
+  container-type: inline-size;
 }
 
 .headerRow,
 .row {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1.4fr) minmax(0, 1.4fr) 110px 130px 180px;
+  grid-template-columns: 112px minmax(140px, 1.4fr) minmax(120px, 1.2fr) 104px 104px 168px;
   column-gap: var(--s-4);
   align-items: center;
   padding: var(--s-3) var(--s-4);
@@ -74,10 +76,11 @@
   font-size: var(--fs-sm);
 }
 
-@media (max-width: 1024px) {
+/* Narrow list (tablet, or beside the filters on a laptop): type and issue date go. */
+@container (max-width: 839px) {
   .headerRow,
   .row {
-    grid-template-columns: 120px minmax(0, 1fr) 120px 170px;
+    grid-template-columns: 112px minmax(0, 1fr) 104px 168px;
   }
 
   .colTipo,

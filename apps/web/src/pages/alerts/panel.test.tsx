@@ -227,6 +227,9 @@ describe('/panel (ALR-03)', () => {
     const user = userEvent.setup()
 
     await screen.findByRole('list', { name: 'Alertas de vencimiento' })
+    // Ratings are not offered as a credential filter.
+    expect(screen.queryByRole('checkbox', { name: 'Habilitación de tipo' })).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: 'Habilitación de clase' })).toBeNull()
     await user.click(screen.getByRole('checkbox', { name: 'Certificado médico' }))
     await waitFor(() =>
       expect(lastCall(api, '/api/alerts').searchParams.get('credentialKind')).toBe('certificado_medico'),

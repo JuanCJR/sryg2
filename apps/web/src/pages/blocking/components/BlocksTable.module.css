@@ -1,3 +1,8 @@
+/* The layout follows the table's own width: beside the filter column it is much narrower than the viewport. */
+.frame {
+  container-type: inline-size;
+}
+
 .table {
   width: 100%;
   border: var(--hair) solid var(--rule);
@@ -5,7 +10,7 @@
 }
 
 .table th {
-  padding: var(--s-3) var(--s-4);
+  padding: var(--s-3);
   border-bottom: var(--hair) solid var(--rule);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -16,7 +21,7 @@
 }
 
 .table td {
-  padding: var(--s-3) var(--s-4);
+  padding: var(--s-3);
   vertical-align: top;
 }
 
@@ -40,8 +45,9 @@
 
 .cedula {
   display: block;
-  font-family: var(--font-mono);
+  /* B612, not Mono: B612 Mono's punctuation cells split the cédula across lines (as in PersonnelTable). */
   font-variant-numeric: tabular-nums slashed-zero;
+  white-space: nowrap;
   font-size: var(--fs-sm);
   color: var(--fg-muted);
 }
@@ -86,8 +92,8 @@
   white-space: nowrap;
 }
 
-/* Phone: stacked rows, one labeled line per cell (same markup). */
-@media (max-width: 480px) {
+/* Too narrow for columns (phone, or beside the filters on a laptop): stacked rows, one labeled line per cell (same markup). */
+@container (max-width: 759px) {
   .table thead {
     display: none;
   }
