@@ -1,37 +1,24 @@
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig } from 'eslint/config'
 import { baseConfig } from '../../eslint.config.js'
 
-// Every folder under src/pages/. A page must never import a sibling page directly;
-// cross-page navigation goes through src/routes.ts, and code shared by several pages
-// lives in src/common/. Add a name here when a new page folder is created.
-const PAGE_NAMES = [
-  'alerts',
-  'audit',
-  'auth',
-  'blocking',
-  'catalog',
-  'catalogs',
-  'credentials',
-  'errors',
-  'licenses',
-  'medical-certificates',
-  'personnel',
-  'reports',
-  'settings',
-  'users',
-]
+// A page must never import a sibling page directly; cross-page navigation goes through
+// src/routes.ts, and code shared by several pages lives in src/common/.
+const PAGE_NAMES = readdirSync(join(import.meta.dirname, 'src/pages'), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+
+const RELATIVE_PREFIXES = ['../', '../../', '../../../', '../../../../']
 
 const siblingPagePatterns = (page) =>
   PAGE_NAMES.filter((name) => name !== page).flatMap((name) => [
     `**/pages/${name}`,
     `**/pages/${name}/**`,
-    `../${name}`,
-    `../${name}/**`,
-    `../../${name}`,
-    `../../${name}/**`,
+    ...RELATIVE_PREFIXES.flatMap((prefix) => [`${prefix}${name}`, `${prefix}${name}/**`]),
   ])
 
 export default defineConfig([
