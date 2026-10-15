@@ -224,20 +224,20 @@ stateDiagram-v2
 
 ## 9. Architecture overview
 
-This is the **proposed** direction (not sourced from the thesis, which only names the stack — TypeScript, Node.js, PostgreSQL, JWT — at source 1591–1749, 2578–2620). It applies the user's stated architectural preferences: Clean/Hexagonal/Screaming architecture, container-presentational pattern, atomic design.
+This is the **chosen** direction (not sourced from the thesis, which only names the stack — TypeScript, Node.js, PostgreSQL, JWT — at source 1591–1749, 2578–2620). The project started with a Clean/Hexagonal layout and was later reorganized into a conventional structure that is readable without that background.
 
 **Monorepo layout** (see `sryg-project-scaffold`):
 
 ```
-apps/web/        React + Vite, TypeScript — atomic design + container-presentational
-apps/api/        NestJS, TypeScript — hexagonal module boundaries
+apps/web/        React + Vite, TypeScript — pages/ + common/
+apps/api/        NestJS, TypeScript — controllers/services/dtos/repositories per module
 packages/db/     Drizzle ORM schema + drizzle-kit migrations, PostgreSQL
 packages/types/  Shared TypeScript types/contracts between web and api
 ```
 
-**Backend (`apps/api`)**: feature-first NestJS modules named after the domain — `personnel`, `licenses`, `medical-certificates`, `validation-blocking`, `alerts`, `reports`, `audit`, `users`, `settings`. Inside each module, domain logic (entities, use cases, business rules) is isolated in a pure-TypeScript core with no NestJS or Drizzle imports; NestJS controllers and Drizzle repositories are adapters implementing ports defined by the domain — Screaming/Hexagonal architecture, so opening the module tree shows the domain, not the framework.
+**Backend (`apps/api`)**: NestJS modules named after the domain — `personnel`, `licenses`, `medical-certificates`, `validation-blocking`, `alerts`, `reports`, `audit`, `users`, `settings`. Each module has `controllers/` (HTTP), `services/` (business logic and rules), `dtos/` (request/response shapes) and `repositories/` (Drizzle queries), plus its `<module>.module.ts`. Cross-cutting code (guards, filters, pipes, database, config, errors) lives in `src/common/`.
 
-**Frontend (`apps/web`)**: feature-first folders (`features/personnel`, `features/licenses`, …), each following atomic design internally (atoms → molecules → organisms → templates → pages) and the container-presentational split — container components own data-fetching and state, presentational components stay pure and framework-agnostic for the design system to drive.
+**Frontend (`apps/web`)**: one folder per page under `src/pages/<page>/`, with the page components at its root and page-local `components/`, `hooks/`, `services/` (API calls) and `utils/`. Anything used by more than one page lives in `src/common/` (`components/`, `hooks/`, `services/`, `styles/`, `utils/`, `types/`).
 
 **Data layer**: PostgreSQL, accessed only through `packages/db`'s Drizzle schema and repositories; migrations via drizzle-kit (to confirm — OD-01). No other package talks to the database directly.
 
