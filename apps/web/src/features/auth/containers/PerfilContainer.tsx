@@ -91,7 +91,8 @@ export function PerfilContainer() {
       <FormSection legend="Contraseña">
         {user.mustChangePassword ? (
           <Notice tone="caution" title="Debe cambiar su contraseña">
-            Su contraseña es temporal (primer ingreso o restablecida por el Administrador). Elija una nueva para seguir usando el sistema.
+            Su contraseña es temporal (primer ingreso o restablecida por el Administrador). Elija una nueva para seguir
+            usando el sistema.
           </Notice>
         ) : null}
         <PasswordChangeFields values={values} issues={issues} onChange={handleChange} />

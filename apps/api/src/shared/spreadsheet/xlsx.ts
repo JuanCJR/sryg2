@@ -74,7 +74,13 @@ function widths(sheet: XlsxSheet): number[] {
       ...sheet.rows.map((row) => {
         const value = row[i]
         // The longest line of a multi-line cell decides its width.
-        return value === null || value === undefined ? 0 : Math.max(...String(value).split('\n').map((l) => l.length))
+        return value === null || value === undefined
+          ? 0
+          : Math.max(
+              ...String(value)
+                .split('\n')
+                .map((l) => l.length),
+            )
       }),
     )
     return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, longest + 2))
