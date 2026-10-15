@@ -18,6 +18,7 @@ import {
   AIRCRAFT,
   ATTACHMENT_TYPES,
   CARGOS,
+  CLASS_RATING_GROUPS,
   CLASS_RATINGS,
   DEPENDENCIAS,
   DOCUMENT_TYPES,
@@ -28,7 +29,6 @@ import {
   LICENSE_TYPES,
   MEDICAL_OBSERVATIONS,
   NATIONALITIES,
-  PILOT_CLASS_RATINGS,
   SECTORS,
   STREETS,
   TYPE_RATINGS,
@@ -221,8 +221,12 @@ export function buildSeedData({ seed, today }: { seed: number; today: string }):
   const nextTypeRatingExpiry = expiryCycle(random, today)
   const nextClassRatingExpiry = expiryCycle(random, today)
   const nextMedicalExpiry = expiryCycle(random, today)
-  const pilotClasses = catalogs.classRatings.slice(0, PILOT_CLASS_RATINGS)
-  const technicianClasses = catalogs.classRatings.slice(PILOT_CLASS_RATINGS)
+  const classByName = new Map(catalogs.classRatings.map((item) => [item.nameEs, item]))
+  const classGroup = (group: keyof typeof CLASS_RATING_GROUPS) =>
+    CLASS_RATING_GROUPS[group].map(([nameEs]) => classByName.get(nameEs)!)
+  const pilotClasses = classGroup('pilot')
+  const rpaClasses = classGroup('rpa')
+  const technicianClasses = classGroup('technician')
   const [captain, copilot, notApplicable] = catalogs.functions
 
   const addLicense = (personalId: string, cedula: string, type: SeedLicenseType) => {
@@ -239,7 +243,9 @@ export function buildSeedData({ seed, today }: { seed: number; today: string }):
       verificationToken: random.uuid(),
       observationIds: random.sample(catalogs.licenseObservations, random.int(0, 2)).map((o) => o.id),
     })
-    const pilot = type.rav60Category.startsWith('piloto_')
+    // Remote pilots (RPA/UA) hold RPA class ratings and no aircraft type ratings.
+    const remote = /\b(RPA|UA)\b/.test(type.nameEs)
+    const pilot = type.rav60Category.startsWith('piloto_') && !remote
     const typeRatingCount = pilot ? (type.rav60Category === 'piloto_privado' ? random.int(0, 1) : random.int(1, 2)) : 0
     for (const model of random.sample(catalogs.typeRatings, typeRatingCount)) {
       const fn = type.rav60Category === 'piloto_privado' ? notApplicable! : random.pick([captain!, copilot!])
@@ -251,7 +257,13 @@ export function buildSeedData({ seed, today }: { seed: number; today: string }):
         expiryDate: nextTypeRatingExpiry(),
       })
     }
-    const classes = pilot ? pilotClasses : type.rav60Category === 'tecnico_mantenimiento' ? technicianClasses : []
+    const classes = remote
+      ? rpaClasses
+      : pilot
+        ? pilotClasses
+        : type.rav60Category === 'tecnico_mantenimiento'
+          ? technicianClasses
+          : []
     for (const cls of random.sample(classes, classes.length ? random.int(1, 2) : 0)) {
       data.classRatings.push({
         id: random.uuid(),

@@ -1,0 +1,43 @@
+# pagina	tipo de licencia	traduccion	aplica vencimiento (tal cual SLYM)
+1	Alumno Piloto	Student Pilot	true
+1	Piloto Privado - Avión	Private Pilot - Airplane	false
+1	Piloto Comercial - Avión	Commercial Pilot - Airplane	false
+1	Piloto Transporte De Línea Aérea - Avión	Airline Transport Pilot - Airplane	false
+1	Piloto Privado - Helicóptero	Private Pilot - Helicopter	false
+2	Piloto Comercial - Helicóptero	Commercial Pilot - Helicopter	false
+2	Piloto Transporte De Línea Aérea - Helicóptero	Airline Transport Pilot - Helicopter	false
+2	Piloto Ultraligero	Ultralight Pilot	false
+2	Piloto Comercial De Ultraligero	Ultralight Commercial Pilot	false
+2	Piloto De Globo Libre	Balloon Pilot	false
+3	Piloto Comercial De Globo Libre	Balloon Commercial Pilot	false
+3	Piloto De Planeador	Glider Pilot	false
+3	Piloto De Dirigible	Airship Pilot	false
+3	Piloto RPA Ala Fija	Fixed Wing RPA Pilot	false
+3	Piloto RPA Ala Rotativa	Rotary Wing RPA Pilot	false
+4	Provisional Para Entrenamiento	Provisional For Training	false
+4	Instructor De Vuelo Avión	Airplane Flight Instructor	false
+4	Instructor De Vuelo Helicóptero	Helicopter Flight Instructor	false
+4	Instructor De Globo Libre	Free Balloon Instructor	false
+4	Instructor De Vuelo Ultraligero	Ultralight Flight Instructor	false
+5	Instructor De Vuelo De Planeador	Glider Flight Instructor	false
+5	Instructor De Vuelo De Dirigible	Airship Flight Instructor	false
+5	Instructor De Vuelo RPA Ala Fija	Fixed Wing RPA Flight Instructor	false
+5	Instructor De Vuelo RPA Ala Rotativa	Rotary Wing RPA Flight Instructor	false
+5	Instructor De Vuelo [texto posiblemente truncado en SLYM]	Simulated Instrument Flight	false
+6	Tripulante De Cabina	Flight Attendant	false
+6	Mecánico Abordo	Mechanic On Board	false
+6	Alumno Controlador De Tránsito Aéreo	Student Air Traffic Controller	true
+6	Controlador De Tránsito Aéreo	Air Traffic Controller	false
+6	Alumno Operador De Estación Aeronáutica	Student Aeronautical Station Operator	true
+7	Operador De Estaciones Aeronáuticas	Aeronautical Station Operator	false
+7	Técnico Mantenimiento Aeronáutico	Aircraft Maintenance Technician	false
+7	Despachador De Vuelo	Flight Dispatcher	true
+7	Examinador de Vuelo	Flight Examiner	false
+7	Examinador TMA	Aircraft Maintenance Technician Examiner	false
+8	Examinador RPA	RPA Examiner	false
+8	Examinador CTA	Air Traffic Control Examiner	false
+8	Examinador UA	UA Examiner	false
+8	Instructor De Vuelo UA Ala Rotativa	Rotary Wing UA Flight Instructor	false
+8	Instructor De Vuelo UA Ala Fija	Fixed Wing UA Flight Instructor	false
+9	Piloto UA Ala Fija	Fixed Wing UA Pilot	false
+9	Piloto UA Ala Rotativa	Rotary Wing UA Pilot	false

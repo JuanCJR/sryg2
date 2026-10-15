@@ -1,6 +1,7 @@
 import { deriveCredentialStatus, RAV67_CLASSES, ROLES, USER_AREAS } from '@sryg/types'
 import { describe, expect, it } from 'vitest'
 import { buildSeedData } from './build-seed-data'
+import { AIRCRAFT, CLASS_RATINGS, LICENSE_OBSERVATIONS, TYPE_RATINGS } from './catalog-data'
 
 const TODAY = '2026-10-14'
 const data = buildSeedData({ seed: 2026, today: TODAY })
@@ -12,12 +13,15 @@ describe('buildSeedData (D25)', () => {
     expect(buildSeedData({ seed: 7, today: TODAY }).personnel).not.toEqual(data.personnel)
   })
 
-  it('builds SLYM-sized bilingual catalogs', () => {
+  it('builds the bilingual catalogs transcribed from SLYM', () => {
     const { catalogs } = data
-    expect(catalogs.licenseTypes.length).toBeGreaterThanOrEqual(40)
-    expect(catalogs.typeRatings).toHaveLength(60)
-    expect(catalogs.classRatings).toHaveLength(30)
-    expect(catalogs.licenseObservations.length).toBeGreaterThanOrEqual(40)
+    expect(catalogs.licenseTypes).toHaveLength(42)
+    expect(catalogs.typeRatings).toHaveLength(TYPE_RATINGS.length)
+    expect(catalogs.classRatings).toHaveLength(CLASS_RATINGS.length)
+    expect(catalogs.aircraft).toHaveLength(AIRCRAFT.length)
+    expect(catalogs.licenseObservations).toHaveLength(LICENSE_OBSERVATIONS.length)
+    expect(catalogs.typeRatings.length).toBeGreaterThan(250)
+    expect(catalogs.licenseObservations.length).toBeGreaterThan(150)
     const bilingual = [
       catalogs.licenseTypes,
       catalogs.classRatings,
