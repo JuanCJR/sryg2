@@ -20,7 +20,8 @@
     "db:migrate": "pnpm --filter @sryg/db migrate",
     "db:seed": "pnpm build:packages && pnpm --filter @sryg/api build && pnpm --filter @sryg/api seed:dev",
     "db:seed:admin": "pnpm build:packages && pnpm --filter @sryg/api build && pnpm --filter @sryg/api seed:admin",
-    "dev": "pnpm --filter @sryg/web dev"
+    "dev": "pnpm --filter @sryg/web dev",
+    "dev:herdr": "bash scripts/dev-herdr.sh"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
