@@ -1,0 +1,23 @@
+.frame {
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--r-1);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+/* The header row reads as the frame's title bar, in a soft tint of the brand blue. */
+.frame :global(thead) {
+  background: var(--accent-soft);
+}
+
+.frame :global(thead th) {
+  border-bottom-color: var(--rule);
+}
+
+.frame [data-table-head] {
+  background: var(--accent-soft);
+}

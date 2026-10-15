@@ -1,3 +1,4 @@
+import { TableFrame } from '../../../design-system'
 import { Link } from 'react-router'
 import type { ExpiryReportRow } from '@sryg/types'
 import { personnelDetail } from '../../../app/routes'
@@ -11,7 +12,7 @@ import styles from './ReportTable.module.css'
  */
 export function ExpiryReportTable({ rows }: { rows: ExpiryReportRow[] }) {
   return (
-    <div className={styles.scroller}>
+    <TableFrame>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -53,6 +54,6 @@ export function ExpiryReportTable({ rows }: { rows: ExpiryReportRow[] }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
   )
 }

@@ -1,3 +1,4 @@
+import { TableFrame } from '../../../design-system'
 import { Link } from 'react-router'
 import type { ConsolidatedReportRow } from '@sryg/types'
 import { personnelDetail } from '../../../app/routes'
@@ -11,7 +12,7 @@ import styles from './ReportTable.module.css'
  */
 export function ConsolidatedReportTable({ rows }: { rows: ConsolidatedReportRow[] }) {
   return (
-    <div className={styles.scroller}>
+    <TableFrame>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -81,6 +82,6 @@ export function ConsolidatedReportTable({ rows }: { rows: ConsolidatedReportRow[
           ))}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
   )
 }

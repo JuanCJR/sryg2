@@ -175,6 +175,30 @@
   --dur-slow: 600ms;
 }
 
+/* Large and very large screens: the type and controls grow a step so the density stays readable. */
+@media (min-width: 1920px) {
+  :root {
+    --fs-xs: 12.5px;
+    --fs-sm: 13.5px;
+    --fs-base: 15px;
+    --fs-md: 17px;
+    --control-h: 40px;
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --fs-xs: 13.5px;
+    --fs-sm: 14.5px;
+    --fs-base: 16px;
+    --fs-md: 18px;
+    --fs-lg: 22px;
+    --fs-xl: 30px;
+    --fs-2xl: 44px;
+    --control-h: 44px;
+  }
+}
+
 @media (max-width: 1024px) {
   :root {
     --fs-base: 15px;

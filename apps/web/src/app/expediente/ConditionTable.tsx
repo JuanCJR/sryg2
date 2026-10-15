@@ -1,5 +1,5 @@
 import { Lock } from 'lucide-react'
-import { Icon, StatusBadge, type CredentialStatus } from '../../design-system'
+import { Icon, StatusBadge, TableFrame, type CredentialStatus } from '../../design-system'
 import clsx from '../../lib/clsx'
 import styles from './ConditionTable.module.css'
 
@@ -68,104 +68,106 @@ export function ConditionTable({
       : styles.gridFull
 
   return (
-    <div className={styles.table} role="table" aria-label={caption}>
-      {groupLabel ? <div className={styles.groupHeader}>{groupLabel}</div> : null}
-      <div className={clsx(styles.headerRow, gridClass)} role="row">
-        {hideNumero ? null : (
-          <span className={clsx(styles.headerCell, styles.colNumero)} role="columnheader">
-            Número
-          </span>
-        )}
-        <span className={styles.headerCell} role="columnheader">
-          Nombre
-        </span>
-        {showRestricciones ? (
+    <TableFrame>
+      <div className={styles.table} role="table" aria-label={caption}>
+        {groupLabel ? <div className={styles.groupHeader}>{groupLabel}</div> : null}
+        <div className={clsx(styles.headerRow, gridClass)} role="row">
+          {hideNumero ? null : (
+            <span className={clsx(styles.headerCell, styles.colNumero)} role="columnheader">
+              Número
+            </span>
+          )}
           <span className={styles.headerCell} role="columnheader">
-            {restriccionesHeader}
+            Nombre
           </span>
-        ) : null}
-        <span className={clsx(styles.headerCell, styles.colEmitida)} role="columnheader">
-          Emitida
-        </span>
-        <span className={styles.headerCell} role="columnheader">
-          Vence
-        </span>
-        <span className={clsx(styles.headerCell, styles.headerRestante)} role="columnheader">
-          Restante
-        </span>
-        <span className={styles.headerCell} role="columnheader">
-          Estado
-        </span>
-      </div>
-      {rows.length === 0 ? (
-        <p className={styles.empty}>{emptyLabel}</p>
-      ) : (
-        rows.map((row) => {
-          const isHighlighted = highlightedId === row.id
-          return (
-            <div
-              key={row.id}
-              id={`row-${row.id}`}
-              data-row-id={row.id}
-              tabIndex={-1}
-              role="row"
-              className={clsx(
-                styles.row,
-                gridClass,
-                row.blockedMarker && styles.blocked,
-                isHighlighted && styles.rowHighlighted,
-              )}
-            >
-              {/* Keyed by nonce, not just row id, so re-selecting the same row remounts and restarts the animation. */}
-              {isHighlighted && highlightNonce != null ? (
-                <span key={`sweep-${row.id}-${highlightNonce}`} className={styles.sweepOverlay} aria-hidden="true" />
-              ) : null}
-              <div className={styles.gridRow}>
-                {hideNumero ? null : (
-                  <span role="cell" className={styles.numero}>
-                    {row.numero}
-                  </span>
+          {showRestricciones ? (
+            <span className={styles.headerCell} role="columnheader">
+              {restriccionesHeader}
+            </span>
+          ) : null}
+          <span className={clsx(styles.headerCell, styles.colEmitida)} role="columnheader">
+            Emitida
+          </span>
+          <span className={styles.headerCell} role="columnheader">
+            Vence
+          </span>
+          <span className={clsx(styles.headerCell, styles.headerRestante)} role="columnheader">
+            Restante
+          </span>
+          <span className={styles.headerCell} role="columnheader">
+            Estado
+          </span>
+        </div>
+        {rows.length === 0 ? (
+          <p className={styles.empty}>{emptyLabel}</p>
+        ) : (
+          rows.map((row) => {
+            const isHighlighted = highlightedId === row.id
+            return (
+              <div
+                key={row.id}
+                id={`row-${row.id}`}
+                data-row-id={row.id}
+                tabIndex={-1}
+                role="row"
+                className={clsx(
+                  styles.row,
+                  gridClass,
+                  row.blockedMarker && styles.blocked,
+                  isHighlighted && styles.rowHighlighted,
                 )}
-                <span role="cell">
-                  <NombreCell row={row} />
-                </span>
-                {showRestricciones ? (
-                  <span role="cell" className={styles.restriccion}>
-                    {row.restriccionLabel}
-                  </span>
+              >
+                {/* Keyed by nonce, not just row id, so re-selecting the same row remounts and restarts the animation. */}
+                {isHighlighted && highlightNonce != null ? (
+                  <span key={`sweep-${row.id}-${highlightNonce}`} className={styles.sweepOverlay} aria-hidden="true" />
                 ) : null}
-                <span role="cell" className={styles.emitida}>
-                  {row.emitidaLabel}
-                </span>
-                <span role="cell" className={styles.vence}>
-                  {row.venceLabel}
-                </span>
-                <span role="cell" className={styles.restante}>
-                  {row.restanteLabel}
-                </span>
-                <span role="cell">
-                  <StatusBadge status={row.status} />
-                </span>
-              </div>
-              <div className={styles.phoneRow}>
-                <div className={styles.phoneTop}>
-                  <StatusBadge status={row.status} />
-                  <NombreCell row={row} />
-                </div>
-                {row.restriccionLabel ? (
-                  <span className={styles.phoneRestriccion}>
-                    {restriccionesHeader}: {row.restriccionLabel}
+                <div className={styles.gridRow}>
+                  {hideNumero ? null : (
+                    <span role="cell" className={styles.numero}>
+                      {row.numero}
+                    </span>
+                  )}
+                  <span role="cell">
+                    <NombreCell row={row} />
                   </span>
-                ) : null}
-                <div className={styles.phoneBottom}>
-                  <span className={styles.vence}>Vence {row.venceLabel}</span>
-                  <span className={styles.restante}>{row.restanteLabel}</span>
+                  {showRestricciones ? (
+                    <span role="cell" className={styles.restriccion}>
+                      {row.restriccionLabel}
+                    </span>
+                  ) : null}
+                  <span role="cell" className={styles.emitida}>
+                    {row.emitidaLabel}
+                  </span>
+                  <span role="cell" className={styles.vence}>
+                    {row.venceLabel}
+                  </span>
+                  <span role="cell" className={styles.restante}>
+                    {row.restanteLabel}
+                  </span>
+                  <span role="cell">
+                    <StatusBadge status={row.status} />
+                  </span>
+                </div>
+                <div className={styles.phoneRow}>
+                  <div className={styles.phoneTop}>
+                    <StatusBadge status={row.status} />
+                    <NombreCell row={row} />
+                  </div>
+                  {row.restriccionLabel ? (
+                    <span className={styles.phoneRestriccion}>
+                      {restriccionesHeader}: {row.restriccionLabel}
+                    </span>
+                  ) : null}
+                  <div className={styles.phoneBottom}>
+                    <span className={styles.vence}>Vence {row.venceLabel}</span>
+                    <span className={styles.restante}>{row.restanteLabel}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-        })
-      )}
-    </div>
+            )
+          })
+        )}
+      </div>
+    </TableFrame>
   )
 }

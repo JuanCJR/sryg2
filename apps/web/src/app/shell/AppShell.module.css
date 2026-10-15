@@ -22,14 +22,19 @@
 }
 
 .content {
+  display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
   min-width: 0;
 }
 
+/* Fluid on every width: the content fills the screen, and the gutter grows with it. */
 .main {
-  --shell-main-pad: var(--s-6);
-  max-width: 1280px;
-  padding: var(--s-6);
+  --shell-main-pad: clamp(var(--s-6), 1.6vw, var(--s-8));
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 3200px;
+  padding: var(--shell-main-pad);
 }
 
 @media (max-width: 480px) {

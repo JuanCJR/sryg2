@@ -1,6 +1,5 @@
 .table {
   width: 100%;
-  border: var(--hair) solid var(--rule);
   border-collapse: collapse;
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { Outlet } from 'react-router'
 import { NavDrawer } from './NavDrawer'
 import { NavRail } from './NavRail'
+import { AppFooter } from './AppFooter'
 import { TopStrip } from './TopStrip'
 import styles from './AppShell.module.css'
 
@@ -25,6 +26,7 @@ export function AppShell() {
           <main id="contenido" className={styles.main}>
             <Outlet />
           </main>
+          <AppFooter />
         </div>
       </div>
       <NavDrawer open={drawerOpen} onClose={closeDrawer} />

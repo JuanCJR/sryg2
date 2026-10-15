@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import type { AccessLog, Alert, AlertsSummary, AuthUser } from '@sryg/types'
 import { sessionStore } from '../../shared/session/session'
 import { authorizationOf, mockApi, type MockHandler } from '../../test/api-mock'
+import { chooseRowAction, rowActionLabels } from '../../test/row-actions'
 import { TOKEN, currentLocation, renderApp, userWith } from '../../test/render-app'
 
 const PERSON_A = '0b6f1c3e-1f7a-4c1e-9d5e-2a6b8c9d0e11'
@@ -270,7 +271,11 @@ describe('/panel (ALR-03)', () => {
     const list = await screen.findByRole('list', { name: 'Alertas de vencimiento' })
     const listCalls = callsTo(api, '/api/alerts').length
     const summaryCalls = callsTo(api, '/api/alerts/summary').length
-    await user.click(within(list).getAllByRole('button', { name: /Reconocer/ })[0]!)
+    await chooseRowAction(
+      user,
+      within(list).getAllByRole('button', { name: /^Acciones de la alerta/ })[0]!,
+      'Reconocer alerta',
+    )
 
     expect(await screen.findByText('Alerta reconocida.')).toBeTruthy()
     const ack = callsTo(api, `/api/alerts/${ALERT_A}/acknowledge`)
@@ -284,14 +289,15 @@ describe('/panel (ALR-03)', () => {
     expect(callsTo(api, '/api/alerts/summary').length).toBeGreaterThan(summaryCalls)
   })
 
-  it('names the alert on its acknowledge button', async () => {
+  it('names the alert on its actions menu, which offers to acknowledge it or open the file', async () => {
     signIn(userWith('administrador', 'ambas'))
     renderApp('/panel')
 
     const list = await screen.findByRole('list', { name: 'Alertas de vencimiento' })
-    expect(
-      within(list).getByRole('button', { name: 'Reconocer alerta de Licencia de Persona De Prueba Uno' }),
-    ).toBeTruthy()
+    const trigger = within(list).getByRole('button', {
+      name: 'Acciones de la alerta de Licencia de Persona De Prueba Uno',
+    })
+    expect(await rowActionLabels(userEvent.setup(), trigger)).toEqual(['Reconocer alerta', 'Ver expediente'])
   })
 
   it('explains a 409 (already acknowledged) and reloads', async () => {
@@ -304,7 +310,11 @@ describe('/panel (ALR-03)', () => {
 
     const list = await screen.findByRole('list', { name: 'Alertas de vencimiento' })
     const before = callsTo(api, '/api/alerts').length
-    await userEvent.setup().click(within(list).getAllByRole('button', { name: /Reconocer/ })[0]!)
+    await chooseRowAction(
+      userEvent.setup(),
+      within(list).getAllByRole('button', { name: /^Acciones de la alerta/ })[0]!,
+      'Reconocer alerta',
+    )
 
     expect(await screen.findByText('Otra persona ya había reconocido esta alerta.')).toBeTruthy()
     await waitFor(() => expect(callsTo(api, '/api/alerts').length).toBeGreaterThan(before))
@@ -326,7 +336,7 @@ describe('/panel (ALR-03)', () => {
 
     const list = await screen.findByRole('list', { name: 'Alertas de vencimiento' })
     expect(within(list).getByText('Reconocida el 14/10/2026 · 09:30')).toBeTruthy()
-    expect(within(list).queryByRole('button', { name: /Reconocer/ })).toBeNull()
+    expect(within(list).queryByRole('button', { name: /^Acciones de la alerta/ })).toBeNull()
   })
 
   it('shows an empty state when there are no pending alerts', async () => {

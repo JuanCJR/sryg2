@@ -4,6 +4,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AuthUser, CatalogItemDto, LicenseTypeItemDto } from '@sryg/types'
 import { sessionStore } from '../../shared/session/session'
+import { chooseRowAction } from '../../test/row-actions'
 import { mockApi, type MockHandler } from '../../test/api-mock'
 import { TOKEN, renderApp, userWith } from '../../test/render-app'
 
@@ -104,7 +105,7 @@ describe('/catalogos/:catalogo (D19)', () => {
     ])
     // Consulta only reads.
     expect(screen.queryByRole('button', { name: 'Nuevo ítem' })).toBeNull()
-    expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /^Acciones de/ })).toBeNull()
 
     await user.type(screen.getByLabelText('Buscar en el catálogo'), 'ven')
     await waitFor(() => expect(screen.queryByText('Antigua')).toBeNull())
@@ -216,7 +217,7 @@ describe('/catalogos/:catalogo (D19)', () => {
     const user = userEvent.setup()
     renderApp('/catalogos/nationalities')
 
-    await user.click(await screen.findByRole('button', { name: 'Editar Venezolana' }))
+    await chooseRowAction(user, await screen.findByRole('button', { name: 'Acciones de Venezolana' }), 'Editar')
     const dialog = screen.getByRole('dialog', { name: 'Editar ítem' })
     const nameEn = within(dialog).getByLabelText(/Nombre en inglés/) as HTMLInputElement
     expect(nameEn.value).toBe('Venezuelan')
@@ -235,8 +236,8 @@ describe('/catalogos/:catalogo (D19)', () => {
     const user = userEvent.setup()
     renderApp('/catalogos/nationalities')
 
-    await user.click(await screen.findByRole('button', { name: 'Desactivar Venezolana' }))
-    await user.click(await screen.findByRole('button', { name: 'Activar Antigua' }))
+    await chooseRowAction(user, await screen.findByRole('button', { name: 'Acciones de Venezolana' }), 'Desactivar')
+    await chooseRowAction(user, await screen.findByRole('button', { name: 'Acciones de Antigua' }), 'Activar')
 
     await waitFor(() => expect(requests(api, 'PATCH')).toHaveLength(2))
     expect(requests(api, 'PATCH').map(({ url, body }) => [url.pathname.split('/').pop(), body])).toEqual([
@@ -257,7 +258,7 @@ describe('/catalogos/:catalogo (D19)', () => {
     const user = userEvent.setup()
     renderApp('/catalogos/nationalities')
 
-    await user.click(await screen.findByRole('button', { name: 'Eliminar Venezolana' }))
+    await chooseRowAction(user, await screen.findByRole('button', { name: 'Acciones de Venezolana' }), 'Eliminar')
     const confirm = screen.getByRole('dialog', { name: 'Eliminar ítem' })
     await user.click(within(confirm).getByRole('button', { name: 'Eliminar' }))
     await waitFor(() => expect(requests(api, 'DELETE')).toHaveLength(1))
@@ -265,7 +266,7 @@ describe('/catalogos/:catalogo (D19)', () => {
     expect(await screen.findByText('Ítem eliminado.')).toBeTruthy()
 
     inUse = true
-    await user.click(await screen.findByRole('button', { name: 'Eliminar Venezolana' }))
+    await chooseRowAction(user, await screen.findByRole('button', { name: 'Acciones de Venezolana' }), 'Eliminar')
     await user.click(
       within(screen.getByRole('dialog', { name: 'Eliminar ítem' })).getByRole('button', { name: 'Eliminar' }),
     )
@@ -291,7 +292,7 @@ describe('/catalogos/:catalogo (D19)', () => {
     expect(row.textContent).toContain('12 meses')
     expect(row.textContent).toContain('PENDIENTE INAC')
 
-    await user.click(within(row).getByRole('button', { name: /Editar/ }))
+    await chooseRowAction(user, within(row).getByRole('button', { name: /^Acciones de/ }), 'Editar')
     const dialog = screen.getByRole('dialog', { name: 'Editar ítem' })
     expect((within(dialog).getByLabelText(/Categoría RAV 60/) as HTMLSelectElement).value).toBe('piloto_comercial')
     expect((within(dialog).getByLabelText('Clase médica exigida') as HTMLSelectElement).value).toBe('clase_1')
@@ -314,7 +315,7 @@ describe('/catalogos/:catalogo (D19)', () => {
     const user = userEvent.setup()
     renderApp('/catalogos/license-types')
 
-    await user.click(await screen.findByRole('button', { name: /Editar/ }))
+    await chooseRowAction(user, await screen.findByRole('button', { name: /^Acciones de/ }), 'Editar')
     await user.click(
       within(screen.getByRole('dialog', { name: 'Editar ítem' })).getByRole('button', { name: 'Guardar' }),
     )

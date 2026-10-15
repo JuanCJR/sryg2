@@ -1,7 +1,6 @@
 .table {
   display: flex;
   flex-direction: column;
-  border: var(--hair) solid var(--rule);
 }
 
 .headerRow,

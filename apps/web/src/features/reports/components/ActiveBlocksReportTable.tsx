@@ -1,3 +1,4 @@
+import { TableFrame } from '../../../design-system'
 import { Link } from 'react-router'
 import type { ActiveBlockReportRow } from '@sryg/types'
 import { personnelDetail } from '../../../app/routes'
@@ -7,7 +8,7 @@ import styles from './ReportTable.module.css'
 /** Report 3: one row per unresolved block, newest first; the registration date closes the row. */
 export function ActiveBlocksReportTable({ rows }: { rows: ActiveBlockReportRow[] }) {
   return (
-    <div className={styles.scroller}>
+    <TableFrame>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -36,6 +37,6 @@ export function ActiveBlocksReportTable({ rows }: { rows: ActiveBlockReportRow[]
           ))}
         </tbody>
       </table>
-    </div>
+    </TableFrame>
   )
 }

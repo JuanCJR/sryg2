@@ -1,12 +1,15 @@
 /* Same table rhythm as PersonnelTable (Listado direction); the Dashboard has no approved direction yet. */
 .table {
-  border: var(--hair) solid var(--rule);
+  min-width: 720px;
 }
 
+/* Proportional columns: they share the width on any screen; below the minimum the frame scrolls. */
 .headerRow,
 .row {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr) 160px 100px 150px 160px 170px;
+  grid-template-columns:
+    minmax(0, 0.9fr) minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.1fr)
+    minmax(0, 1.1fr);
   column-gap: var(--s-4);
   align-items: center;
   padding: var(--s-3) var(--s-4);
@@ -93,20 +96,31 @@
   text-align: right;
 }
 
-/* Tablet: the area column goes; the filter already names it. */
-@media (min-width: 481px) and (max-width: 1024px) {
+/* Laptop and tablet: the area column goes; the filter already names it. */
+@media (min-width: 481px) and (max-width: 1440px) {
+  .table {
+    min-width: 640px;
+  }
+
   .colArea {
     display: none;
   }
 
   .headerRow,
   .row {
-    grid-template-columns: 120px minmax(0, 1fr) 140px 140px 150px 160px;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(
+        0,
+        1.1fr
+      );
   }
 }
 
 /* Phone: stacked rows. */
 @media (max-width: 480px) {
+  .table {
+    min-width: 0;
+  }
+
   .headerRow {
     display: none;
   }

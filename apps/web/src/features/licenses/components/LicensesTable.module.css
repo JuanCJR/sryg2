@@ -1,7 +1,3 @@
-.table {
-  border: var(--hair) solid var(--rule);
-}
-
 .headerRow,
 .row {
   display: grid;
