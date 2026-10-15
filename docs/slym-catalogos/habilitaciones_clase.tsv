@@ -1,0 +1,82 @@
+# pagina	habilitacion de clase	traduccion (tal cual SLYM)
+1	Control De Aeródromo	Aerodrome Control
+1	Control De Aproximación	Approach Control
+1	Control De Aproximación Por Vigilancia	Surveillance Approach Control
+1	Control De Área Por Vigilancia	Surveillance Area Control
+1	Control De Área	Area Control
+2	Servicio Fijo Aeronáutico	Fixed Service
+2	Servicio Móvil Aeronáutico	Mobil Service
+2	Centro Conmutador Automático Der Mensajes	Message Automatic Switchboard Center
+2	Monomotores Terrestres	Single Engine Land
+2	Multimotores Terrestres	Multi Engine Land
+3	Vuelo Instrumental	Instrumental Flight
+3	Aviónica I	Avionics I
+3	Aviónica II	Avionics II
+3	Componentes I	Components I
+3	Componentes II	Components II
+4	Fuselaje De Ala Fija I	Fixed Wing Fuselage I
+4	Fuselaje De Ala Fija II	Fixed Wing Fuselage II
+4	Fuselaje De Ala Rotativa I	RWF I
+4	Fuselaje De Ala Rotativa II	RWF II
+4	Hélices I	Propellers I
+5	Motores A Turbina Y Accesorios I	TEA I
+5	Motores A Turbina Y Accesorios II	TEA II
+5	Motores Recíprocos Y Accesorios I	Reciprocal Engines And Accessories I
+5	Motores Recíprocos Y Accesorios II	Reciprocal Engines And Accessories II
+5	Fumigación Aérea	Crop Spraying Airplane
+6	Hidroaviones Multimotores	Multi Engine Hydroplanes
+6	Hidroaviones Monomotores	Single Engine Hydroplanes
+6	NO APLICA	NO APLICA
+6	Nivel 5 Competencia Lingüística	Level 5 English Proficiency
+6	Válida solo para Entrenamiento.	Valid only for Training.
+7	Nivel 4-Competencia Lingüística	Level 4 English Proficiency
+7	Nivel 6-Competencia Lingüística	Level 6 English Proficiency
+7	Clase 1 (Mini RPA Menor a 3Kg)	Class 1 (Mini RPA less than 3Kg)
+7	Clase 2 (Ligeros RPA Peso de 3 a 25Kg)	Class 2 (Light RPA Weight from 3 to 25Kg)
+7	Hélices II	Propellers II
+8	BATD	BATD
+8	Clase 3 (Liviano RPA Peso de 25 a 150Kg)	Class 3 (Medium RPA Weight from 25 to 150Kg)
+8	Clase 4 (Pesado RPA Peso Mayor a 150Kg)	Class 4 (Heavy RPA Weight heigher than 150Kg)
+8	-	-
+8	(vacío)	(vacío)
+9	BE20	BE20
+9	FPC	FPC
+9	G164B	G164B
+9	-	-
+9	MI8	MI8
+10	GF-30	GF-30
+10	Aviónica II / Avionics II	Avionics II
+10	G164B	MONOMOTORES TERRESTRES
+10	G164B	G164B
+10	RV-14A	RV-14A
+11	GA-7	MULTIMOTORES TERRESTRES
+11	Aviónica I	avionics I
+11	Aviónica I / Avionics I	avionics I
+11	Hélices I / Propellers I	Propellers
+11	Hélices II / Propellers II	Propellers
+12	G164B	G164B
+12	FP300	FP300
+12	C441	MULTI
+12	-/-	.
+12	-/-	-/-
+13	M20J	M20J
+13	M20J	LICENCIA
+13	FSTD-B738	SIMULADOR
+13	FSTD-B738	.
+13	PAY2	habilitacion
+14	PAY2	habilitacion
+14	PAY2	habilitacion clase
+14	AC95	AC95
+14	AC95	AC95
+14	C441	C441
+15	PAY3	PAY3
+15	GLOBO AEROSTATICO LIBRE	GLOBO AEROSTATICO LIBRE
+15	C560	C560
+15	RV-10	RV-10
+15	RV-10	RV-10
+16	RV-10	RV-10
+16	P100 PRO	P100 PRO
+16	c425	c425
+16	PAY4	PAY4
+16	P28S	P28S
+17	Nivel 5 Competencia Lingüística	Level 5 English Proficiency
