@@ -38,8 +38,11 @@ const USERS_TRANSACTION = Symbol('USERS_TRANSACTION')
     {
       provide: CreateUserService,
       inject: [USERS_TRANSACTION, Argon2PasswordHasher, CryptoTemporaryPasswordGenerator],
-      useFactory: (transaction: UsersTransaction, hasher: Argon2PasswordHasher, passwords: CryptoTemporaryPasswordGenerator) =>
-        new CreateUserService(transaction, hasher, passwords),
+      useFactory: (
+        transaction: UsersTransaction,
+        hasher: Argon2PasswordHasher,
+        passwords: CryptoTemporaryPasswordGenerator,
+      ) => new CreateUserService(transaction, hasher, passwords),
     },
     {
       provide: UpdateUserService,
@@ -49,8 +52,11 @@ const USERS_TRANSACTION = Symbol('USERS_TRANSACTION')
     {
       provide: ResetUserPasswordService,
       inject: [USERS_TRANSACTION, Argon2PasswordHasher, CryptoTemporaryPasswordGenerator],
-      useFactory: (transaction: UsersTransaction, hasher: Argon2PasswordHasher, passwords: CryptoTemporaryPasswordGenerator) =>
-        new ResetUserPasswordService(transaction, hasher, passwords),
+      useFactory: (
+        transaction: UsersTransaction,
+        hasher: Argon2PasswordHasher,
+        passwords: CryptoTemporaryPasswordGenerator,
+      ) => new ResetUserPasswordService(transaction, hasher, passwords),
     },
   ],
 })

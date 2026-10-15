@@ -55,7 +55,8 @@ const PERSONNEL_TRANSACTION = Symbol('PERSONNEL_TRANSACTION')
     {
       provide: SetPersonnelImageService,
       inject: [PERSONNEL_TRANSACTION],
-      useFactory: (transaction: PersonnelTransaction) => new SetPersonnelImageService(transaction, new SharpImageCompressor()),
+      useFactory: (transaction: PersonnelTransaction) =>
+        new SetPersonnelImageService(transaction, new SharpImageCompressor()),
     },
     {
       provide: GetPersonnelImageService,
