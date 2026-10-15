@@ -97,13 +97,15 @@ function put(
   return height
 }
 
-/** "Label: value" with the label in the muted tone. */
+/** "Label: value" with the label in the muted tone, clipped to `lines` lines. */
 function field(doc: Doc, label: string, value: string, x: number, y: number, width: number, lines = 1): number {
-  doc.font(REGULAR).fontSize(4.3)
-  const lineHeight = doc.currentLineHeight(true)
   const text = `${label}: ${value}`
+  // Measured in bold, the wider of the two fonts, so the clip box never cuts a line that fits.
+  doc.font(BOLD).fontSize(4.3)
+  const lineHeight = doc.currentLineHeight(true)
   const height = Math.min(doc.heightOfString(text, { width, lineGap: 0 }), lineHeight * lines)
   doc
+    .font(REGULAR)
     .fillColor(MUTED)
     .text(`${label}: `, x, y, { width, height: height + 0.1, lineGap: 0, ellipsis: true, continued: true })
     .font(BOLD)
@@ -194,15 +196,16 @@ function licenseFront(doc: Doc, card: LicenseCard) {
 
   const left = M
   const leftWidth = 116
-  let fy = 93
-  fy += field(doc, 'V Dirección (Adress)', holder.address ?? '—', left, fy, leftWidth, 2) + 1
-  fy += field(doc, 'VI Nacionalidad (Nationality)', holder.nationality ? bilingual(holder.nationality) : '—', left, fy, leftWidth) + 1
+  let fy = 92
+  fy += field(doc, 'V Dirección (Adress)', holder.address ?? '—', left, fy, leftWidth, 2) + 0.8
+  const nationality = holder.nationality ? bilingual(holder.nationality) : '—'
+  fy += field(doc, 'VI Nacionalidad (Nationality)', nationality, left, fy, leftWidth, 2) + 0.8
   field(doc, 'IVa Fecha Nac. (Date of Birth)', formatCardDate(holder.birthDate), left, fy, leftWidth)
 
   const right = 126
   const rightWidth = W - M - right
-  field(doc, 'III Licencia # (License)', card.number, right, 93, rightWidth)
-  field(doc, 'X Fecha de Emisión (Date of issue)', formatCardDate(card.issueDate), right, 99, rightWidth)
+  field(doc, 'III Licencia # (License)', card.number, right, 92, rightWidth)
+  field(doc, 'X Fecha de Emisión (Date of issue)', formatCardDate(card.issueDate), right, 98, rightWidth)
 }
 
 function medicalFront(doc: Doc, card: MedicalCard) {
@@ -240,7 +243,7 @@ function medicalFront(doc: Doc, card: MedicalCard) {
 }
 
 function signatureBlock(doc: Doc, img: CardImage | null, label: string, x: number, width: number) {
-  const top = 117
+  const top = 119
   image(doc, img, 'SIN FIRMA', x + width / 2 - 30, top, 60, 21)
   doc.save().lineWidth(0.4).strokeColor(INK).moveTo(x, top + 23).lineTo(x + width, top + 23).stroke().restore()
   put(doc, label, x, top + 24.5, width, { size: 3.9, color: MUTED, align: 'center', lines: 2 })
