@@ -19,7 +19,7 @@ export function TopStrip({ onOpenMenu, menuButtonRef }: TopStripProps) {
       <div className={styles.brand}>
         <BrandMark size={20} />
         <span className={styles.brandName}>SRYG</span>
-        <span className={styles.brandSub}>INAC Maracay</span>
+        <span className={styles.brandSub}>INAC</span>
       </div>
       <div className={styles.right}>
         <span className={styles.clock}>{clock}</span>

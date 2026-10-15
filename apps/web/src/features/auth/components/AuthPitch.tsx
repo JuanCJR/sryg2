@@ -17,8 +17,8 @@ export function AuthPitch() {
         Un expediente electrónico por persona.
       </h2>
       <p className={styles.support} style={stagger(1.15)}>
-        Licencias, habilitaciones y certificados médicos del personal aeronáutico de INAC Maracay, con control de
-        vigencia y trazabilidad.
+        Licencias, habilitaciones y certificados médicos del personal aeronáutico del INAC, con control de vigencia y
+        trazabilidad.
       </p>
       <ul className={styles.list}>
         {COVERAGE.map((item, index) => (
