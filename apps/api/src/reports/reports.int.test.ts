@@ -21,10 +21,10 @@ import {
   parametroSistema,
   personalAeronautico,
 } from '@sryg/db'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, asc, eq, inArray } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { XLSX_CONTENT_TYPE } from '../shared/spreadsheet/xlsx'
+import { XLSX_CONTENT_TYPE } from '../common/spreadsheet/xlsx'
 import { binary } from '../test/binary-response'
 import { createTestApp } from '../test/create-test-app'
 import { readXlsxRows } from '../test/read-xlsx'
@@ -80,6 +80,8 @@ describe('reports http (D10)', () => {
       .select()
       .from(auditoria)
       .where(and(eq(auditoria.actorId, actorId), eq(auditoria.action, 'exportar')))
+      // Oldest first, so `.at(-1)` is the export the test just made.
+      .orderBy(asc(auditoria.id))
 
   beforeAll(async () => {
     app = await createTestApp()

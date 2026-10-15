@@ -1,60 +1,62 @@
 import { Module } from '@nestjs/common'
 import type { Db } from '@sryg/db'
-import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
-import type { PasswordHasher } from '../auth/domain/password-hasher'
-import { Argon2PasswordHasher } from '../auth/infrastructure/argon2-password-hasher'
-import { DB } from '../infrastructure/database/database.module'
-import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
-import { CreateUserUseCase } from './application/create-user.use-case'
-import { ListUsersUseCase } from './application/list-users.use-case'
-import { ResetUserPasswordUseCase } from './application/reset-user-password.use-case'
-import { UpdateUserUseCase } from './application/update-user.use-case'
-import type { TemporaryPasswordGenerator } from './domain/temporary-password-generator'
-import type { UserAdminRepository } from './domain/user-admin-repository'
-import type { UsersUnitOfWork } from './domain/users-unit-of-work'
-import { UsersController } from './http/users.controller'
-import { CryptoTemporaryPasswordGenerator } from './infrastructure/crypto-temporary-password-generator'
-import { DrizzleUserAdminRepository } from './infrastructure/drizzle-user-admin.repository'
+import { AuditLogRepository } from '../audit/repositories/audit-log.repository'
+import { Argon2PasswordHasher } from '../auth/services/argon2-password-hasher'
+import { DB } from '../common/database/database.module'
+import { TransactionRunner } from '../common/database/transaction-runner'
+import { UsersController } from './controllers/users.controller'
+import { UserAdminRepository } from './repositories/user-admin.repository'
+import { CreateUserService } from './services/create-user.service'
+import { CryptoTemporaryPasswordGenerator } from './services/crypto-temporary-password-generator'
+import { ListUsersService } from './services/list-users.service'
+import { ResetUserPasswordService } from './services/reset-user-password.service'
+import { UpdateUserService } from './services/update-user.service'
+import type { UsersTransaction } from './users.types'
 
-const USERS_READER = Symbol('USERS_READER')
-const USERS_UOW = Symbol('USERS_UOW')
+const USERS_TRANSACTION = Symbol('USERS_TRANSACTION')
 
 @Module({
   controllers: [UsersController],
   providers: [
     Argon2PasswordHasher,
     CryptoTemporaryPasswordGenerator,
-    { provide: USERS_READER, inject: [DB], useFactory: (db: Db) => new DrizzleUserAdminRepository(db) },
+    { provide: UserAdminRepository, inject: [DB], useFactory: (db: Db) => new UserAdminRepository(db) },
     {
-      provide: USERS_UOW,
+      provide: USERS_TRANSACTION,
       inject: [DB],
       useFactory: (db: Db) =>
-        new DrizzleUnitOfWork(db, (tx) => ({
-          users: new DrizzleUserAdminRepository(tx),
-          audit: new DrizzleAuditLog(tx),
+        new TransactionRunner(db, (tx) => ({
+          users: new UserAdminRepository(tx),
+          audit: new AuditLogRepository(tx),
         })),
     },
     {
-      provide: ListUsersUseCase,
-      inject: [USERS_READER],
-      useFactory: (users: UserAdminRepository) => new ListUsersUseCase(users),
+      provide: ListUsersService,
+      inject: [UserAdminRepository],
+      useFactory: (users: UserAdminRepository) => new ListUsersService(users),
     },
     {
-      provide: CreateUserUseCase,
-      inject: [USERS_UOW, Argon2PasswordHasher, CryptoTemporaryPasswordGenerator],
-      useFactory: (uow: UsersUnitOfWork, hasher: PasswordHasher, passwords: TemporaryPasswordGenerator) =>
-        new CreateUserUseCase(uow, hasher, passwords),
+      provide: CreateUserService,
+      inject: [USERS_TRANSACTION, Argon2PasswordHasher, CryptoTemporaryPasswordGenerator],
+      useFactory: (
+        transaction: UsersTransaction,
+        hasher: Argon2PasswordHasher,
+        passwords: CryptoTemporaryPasswordGenerator,
+      ) => new CreateUserService(transaction, hasher, passwords),
     },
     {
-      provide: UpdateUserUseCase,
-      inject: [USERS_UOW],
-      useFactory: (uow: UsersUnitOfWork) => new UpdateUserUseCase(uow),
+      provide: UpdateUserService,
+      inject: [USERS_TRANSACTION],
+      useFactory: (transaction: UsersTransaction) => new UpdateUserService(transaction),
     },
     {
-      provide: ResetUserPasswordUseCase,
-      inject: [USERS_UOW, Argon2PasswordHasher, CryptoTemporaryPasswordGenerator],
-      useFactory: (uow: UsersUnitOfWork, hasher: PasswordHasher, passwords: TemporaryPasswordGenerator) =>
-        new ResetUserPasswordUseCase(uow, hasher, passwords),
+      provide: ResetUserPasswordService,
+      inject: [USERS_TRANSACTION, Argon2PasswordHasher, CryptoTemporaryPasswordGenerator],
+      useFactory: (
+        transaction: UsersTransaction,
+        hasher: Argon2PasswordHasher,
+        passwords: CryptoTemporaryPasswordGenerator,
+      ) => new ResetUserPasswordService(transaction, hasher, passwords),
     },
   ],
 })

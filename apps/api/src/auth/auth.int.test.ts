@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createTestApp } from '../test/create-test-app'
-import { Argon2PasswordHasher } from './infrastructure/argon2-password-hasher'
+import { Argon2PasswordHasher } from './services/argon2-password-hasher'
 
 const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://sryg:sryg@localhost:5432/sryg'
 const PASSWORD = 'correct horse battery staple'

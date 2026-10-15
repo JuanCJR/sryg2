@@ -1,67 +1,60 @@
 import { Module } from '@nestjs/common'
 import type { Db } from '@sryg/db'
-import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
-import { DB } from '../infrastructure/database/database.module'
-import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
-import {
-  ACTIVE_BLOCK_QUERY,
-  CredentialsCoreModule,
-  VALIDITY_PARAMETERS_READER,
-} from '../shared/credentials/credentials-core.module'
-import type { ActiveBlockQuery } from '../shared/credentials/domain/active-block-query'
-import type { ValidityParametersReader } from '../shared/credentials/domain/validity-parameters-reader'
-import { DrizzleActiveBlockQuery } from '../shared/credentials/infrastructure/drizzle-active-block-query'
-import { DrizzleValidityParametersReader } from '../shared/credentials/infrastructure/drizzle-validity-parameters-reader'
-import { IssueLicenseUseCase } from './application/issue-license.use-case'
-import { LicenseQueriesUseCase } from './application/license-queries.use-case'
-import { ManageRatingsUseCase } from './application/manage-ratings.use-case'
-import { RenewLicenseUseCase } from './application/renew-license.use-case'
-import { type Clock, SystemClock } from './domain/clock'
-import type { LicensesUnitOfWork } from './domain/licenses-unit-of-work'
-import { LicensesController, PersonLicensesController } from './http/licenses.controller'
-import { DrizzleLicenseReader } from './infrastructure/drizzle-license.reader'
-import { DrizzleLicenseStore } from './infrastructure/drizzle-license.store'
+import { AuditLogRepository } from '../audit/repositories/audit-log.repository'
+import { Clock } from '../common/clock'
+import { CredentialsCoreModule } from '../common/credentials/credentials-core.module'
+import { ActiveBlocksRepository } from '../common/credentials/repositories/active-blocks.repository'
+import { ValidityParametersRepository } from '../common/credentials/repositories/validity-parameters.repository'
+import { DB } from '../common/database/database.module'
+import { TransactionRunner } from '../common/database/transaction-runner'
+import { LicensesController, PersonLicensesController } from './controllers/licenses.controller'
+import type { LicensesTransaction } from './licenses.types'
+import { LicenseQueryRepository } from './repositories/license-query.repository'
+import { LicenseRepository } from './repositories/license.repository'
+import { IssueLicenseService } from './services/issue-license.service'
+import { LicenseQueriesService } from './services/license-queries.service'
+import { ManageRatingsService } from './services/manage-ratings.service'
+import { RenewLicenseService } from './services/renew-license.service'
 
-const LICENSES_UOW = Symbol('LICENSES_UOW')
-const CLOCK = Symbol('CLOCK')
+const LICENSES_TRANSACTION = Symbol('LICENSES_TRANSACTION')
 
 @Module({
   imports: [CredentialsCoreModule],
   controllers: [LicensesController, PersonLicensesController],
   providers: [
-    { provide: CLOCK, useValue: new SystemClock() },
+    Clock,
     {
-      provide: LICENSES_UOW,
+      provide: LICENSES_TRANSACTION,
       inject: [DB],
       useFactory: (db: Db) =>
-        new DrizzleUnitOfWork(db, (tx) => ({
-          store: new DrizzleLicenseStore(tx),
-          reader: new DrizzleLicenseReader(tx),
-          audit: new DrizzleAuditLog(tx),
-          blocks: new DrizzleActiveBlockQuery(tx),
-          validity: new DrizzleValidityParametersReader(tx),
+        new TransactionRunner(db, (tx) => ({
+          store: new LicenseRepository(tx),
+          reader: new LicenseQueryRepository(tx),
+          audit: new AuditLogRepository(tx),
+          blocks: new ActiveBlocksRepository(tx),
+          validity: new ValidityParametersRepository(tx),
         })),
     },
     {
-      provide: IssueLicenseUseCase,
-      inject: [LICENSES_UOW, CLOCK],
-      useFactory: (uow: LicensesUnitOfWork, clock: Clock) => new IssueLicenseUseCase(uow, clock),
+      provide: IssueLicenseService,
+      inject: [LICENSES_TRANSACTION, Clock],
+      useFactory: (transaction: LicensesTransaction, clock: Clock) => new IssueLicenseService(transaction, clock),
     },
     {
-      provide: RenewLicenseUseCase,
-      inject: [LICENSES_UOW, CLOCK],
-      useFactory: (uow: LicensesUnitOfWork, clock: Clock) => new RenewLicenseUseCase(uow, clock),
+      provide: RenewLicenseService,
+      inject: [LICENSES_TRANSACTION, Clock],
+      useFactory: (transaction: LicensesTransaction, clock: Clock) => new RenewLicenseService(transaction, clock),
     },
     {
-      provide: ManageRatingsUseCase,
-      inject: [LICENSES_UOW, CLOCK],
-      useFactory: (uow: LicensesUnitOfWork, clock: Clock) => new ManageRatingsUseCase(uow, clock),
+      provide: ManageRatingsService,
+      inject: [LICENSES_TRANSACTION, Clock],
+      useFactory: (transaction: LicensesTransaction, clock: Clock) => new ManageRatingsService(transaction, clock),
     },
     {
-      provide: LicenseQueriesUseCase,
-      inject: [DB, VALIDITY_PARAMETERS_READER, ACTIVE_BLOCK_QUERY, CLOCK],
-      useFactory: (db: Db, validity: ValidityParametersReader, blocks: ActiveBlockQuery, clock: Clock) =>
-        new LicenseQueriesUseCase(new DrizzleLicenseReader(db), new DrizzleLicenseStore(db), validity, blocks, clock),
+      provide: LicenseQueriesService,
+      inject: [DB, ValidityParametersRepository, ActiveBlocksRepository, Clock],
+      useFactory: (db: Db, validity: ValidityParametersRepository, blocks: ActiveBlocksRepository, clock: Clock) =>
+        new LicenseQueriesService(new LicenseQueryRepository(db), new LicenseRepository(db), validity, blocks, clock),
     },
   ],
 })

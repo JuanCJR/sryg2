@@ -26,6 +26,14 @@ License-type validity is edited in its catalog (W1-11), not here.
 
 ## Audit (BR-11)
 
-Every write records its `auditoria` row in the same transaction through `SettingsUnitOfWork`:
+Every write records its `auditoria` row in the same transaction through `SettingsTransaction`:
 `actualizar` on `parametro_sistema` with the before/after of each changed key, and `crear` / `actualizar`
 on `recurso_grafico` with kind, MIME and size (never the bytes). Both keys are text, so `entity_id` is null.
+
+## Files
+
+- `controllers/`: HTTP routes and request validation, plus the exception filters or middleware only this module uses.
+- `services/`: business logic: one service per action (`*.service.ts`) plus the rules and helpers they share.
+- `repositories/`: Drizzle queries, built on the pool or on a transaction handle.
+- `settings.types.ts`: the repositories a transaction hands to the services (`TransactionRunner`, BR-11).
+- `settings.module.ts`: wires the controllers, services and repositories together.

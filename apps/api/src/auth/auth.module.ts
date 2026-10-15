@@ -3,34 +3,28 @@ import { ConfigService } from '@nestjs/config'
 import { APP_GUARD } from '@nestjs/core'
 import { JwtModule } from '@nestjs/jwt'
 import { ThrottlerModule } from '@nestjs/throttler'
-import { AUDIT_LOG, AuditModule } from '../audit/audit.module'
-import type { AuditLog } from '../audit/domain/audit-log'
-import type { Env } from '../config/env.schema'
 import type { Db } from '@sryg/db'
-import { DB } from '../infrastructure/database/database.module'
-import { ChangePasswordUseCase } from './application/change-password.use-case'
-import { GetAccessLogUseCase } from './application/get-access-log.use-case'
-import { GetCurrentUserUseCase } from './application/get-current-user.use-case'
-import { LoginUseCase } from './application/login.use-case'
-import type { AccessLog, AccessLogReader } from './domain/access-log'
-import type { AccountUnitOfWork } from './domain/account-unit-of-work'
-import type { PasswordHasher } from './domain/password-hasher'
-import type { TokenIssuer } from './domain/token-issuer'
-import type { UserRepository } from './domain/user-repository'
-import { AuthController } from './http/auth.controller'
-import { JwtAuthGuard } from './http/jwt-auth.guard'
-import { Argon2PasswordHasher } from './infrastructure/argon2-password-hasher'
-import { DrizzleAccessLog } from './infrastructure/drizzle-access-log'
-import { DrizzlePasswordWriter } from './infrastructure/drizzle-password-writer'
-import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
-import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
-import { DrizzleUserRepository } from './infrastructure/drizzle-user.repository'
-import { JwtTokenIssuer } from './infrastructure/jwt-token-issuer'
-import { PermissionGuard } from '../shared/http/permission.guard'
+import { AuditModule } from '../audit/audit.module'
+import { AuditLogRepository } from '../audit/repositories/audit-log.repository'
+import type { Env } from '../common/config/env.schema'
+import { DB } from '../common/database/database.module'
+import { TransactionRunner } from '../common/database/transaction-runner'
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
+import { PermissionGuard } from '../common/guards/permission.guard'
+import type { AccountTransaction } from './auth.types'
+import { AuthController } from './controllers/auth.controller'
+import { AccessLogRepository } from './repositories/access-log.repository'
+import { PasswordRepository } from './repositories/password.repository'
+import { UserRepository } from './repositories/user.repository'
+import { Argon2PasswordHasher } from './services/argon2-password-hasher'
+import { ChangePasswordService } from './services/change-password.service'
+import { GetAccessLogService } from './services/get-access-log.service'
+import { GetCurrentUserService } from './services/get-current-user.service'
+import { JwtTokenIssuer } from './services/jwt-token-issuer'
+import { LoginService } from './services/login.service'
 
 type Config = ConfigService<Env, true>
-const ACCESS_LOG = Symbol('ACCESS_LOG')
-const ACCOUNT_UOW = Symbol('ACCOUNT_UOW')
+const ACCOUNT_TRANSACTION = Symbol('ACCOUNT_TRANSACTION')
 
 @Module({
   imports: [
@@ -58,47 +52,47 @@ const ACCOUNT_UOW = Symbol('ACCOUNT_UOW')
     // Order matters: authenticate first, then check the permission matrix.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
-    DrizzleUserRepository,
+    UserRepository,
     JwtTokenIssuer,
     Argon2PasswordHasher,
-    { provide: ACCESS_LOG, inject: [DB], useFactory: (db: Db) => new DrizzleAccessLog(db) },
+    { provide: AccessLogRepository, inject: [DB], useFactory: (db: Db) => new AccessLogRepository(db) },
     {
-      provide: LoginUseCase,
-      inject: [DrizzleUserRepository, Argon2PasswordHasher, JwtTokenIssuer, AUDIT_LOG, ACCESS_LOG],
+      provide: LoginService,
+      inject: [UserRepository, Argon2PasswordHasher, JwtTokenIssuer, AuditLogRepository, AccessLogRepository],
       // The dummy hash uses the real parameters so unknown-email logins cost the same as real ones.
       useFactory: async (
         users: UserRepository,
-        hasher: PasswordHasher,
-        tokens: TokenIssuer,
-        audit: AuditLog,
-        access: AccessLog,
+        hasher: Argon2PasswordHasher,
+        tokens: JwtTokenIssuer,
+        audit: AuditLogRepository,
+        access: AccessLogRepository,
       ) =>
-        new LoginUseCase(users, hasher, tokens, await hasher.hash('dummy-password-for-timing-parity'), audit, access),
+        new LoginService(users, hasher, tokens, await hasher.hash('dummy-password-for-timing-parity'), audit, access),
     },
     {
-      provide: GetCurrentUserUseCase,
-      inject: [DrizzleUserRepository],
-      useFactory: (users: UserRepository) => new GetCurrentUserUseCase(users),
+      provide: GetCurrentUserService,
+      inject: [UserRepository],
+      useFactory: (users: UserRepository) => new GetCurrentUserService(users),
     },
     {
-      provide: ACCOUNT_UOW,
+      provide: ACCOUNT_TRANSACTION,
       inject: [DB],
       useFactory: (db: Db) =>
-        new DrizzleUnitOfWork(db, (tx) => ({
-          passwords: new DrizzlePasswordWriter(tx),
-          audit: new DrizzleAuditLog(tx),
+        new TransactionRunner(db, (tx) => ({
+          passwords: new PasswordRepository(tx),
+          audit: new AuditLogRepository(tx),
         })),
     },
     {
-      provide: ChangePasswordUseCase,
-      inject: [DrizzleUserRepository, Argon2PasswordHasher, ACCOUNT_UOW],
-      useFactory: (users: UserRepository, hasher: PasswordHasher, uow: AccountUnitOfWork) =>
-        new ChangePasswordUseCase(users, hasher, uow),
+      provide: ChangePasswordService,
+      inject: [UserRepository, Argon2PasswordHasher, ACCOUNT_TRANSACTION],
+      useFactory: (users: UserRepository, hasher: Argon2PasswordHasher, transaction: AccountTransaction) =>
+        new ChangePasswordService(users, hasher, transaction),
     },
     {
-      provide: GetAccessLogUseCase,
-      inject: [ACCESS_LOG],
-      useFactory: (reader: AccessLogReader) => new GetAccessLogUseCase(reader),
+      provide: GetAccessLogService,
+      inject: [AccessLogRepository],
+      useFactory: (reader: AccessLogRepository) => new GetAccessLogService(reader),
     },
   ],
 })

@@ -1,7 +1,7 @@
 import type { INestApplication } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import type { Env } from './config/env.schema'
-import { DomainExceptionFilter } from './shared/http/domain-exception.filter'
+import type { Env } from './common/config/env.schema'
+import { DomainExceptionFilter } from './common/filters/domain-exception.filter'
 
 /** Shared by main.ts and integration tests so both exercise the same HTTP behavior. */
 export function configureApp(app: INestApplication) {

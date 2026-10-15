@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router'
 import type { AuthUser, Role, UserArea } from '@sryg/types'
-import { AppRoutes } from '../app/AppRoutes'
-import { RoleProvider } from '../app/role/RoleProvider'
-import { ThemeProvider, ToastProvider } from '../design-system'
+import { AppRoutes } from '../AppRoutes'
+import { RoleProvider } from '../common/components/RoleProvider/RoleProvider'
+import { ThemeProvider, ToastProvider } from '../common/components'
 
 export const TOKEN = 'token-ficticio'
 

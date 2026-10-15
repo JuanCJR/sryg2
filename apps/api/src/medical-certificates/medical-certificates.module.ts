@@ -1,111 +1,104 @@
 import { Module } from '@nestjs/common'
 import type { Db } from '@sryg/db'
-import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
-import { DB } from '../infrastructure/database/database.module'
-import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
-import {
-  ACTIVE_BLOCK_QUERY,
-  CredentialsCoreModule,
-  VALIDITY_PARAMETERS_READER,
-} from '../shared/credentials/credentials-core.module'
-import type { ActiveBlockQuery } from '../shared/credentials/domain/active-block-query'
-import type { ValidityParametersReader } from '../shared/credentials/domain/validity-parameters-reader'
-import { DrizzleActiveBlockQuery } from '../shared/credentials/infrastructure/drizzle-active-block-query'
-import { DrizzleValidityParametersReader } from '../shared/credentials/infrastructure/drizzle-validity-parameters-reader'
-import {
-  GetMedicalCertificateHistoryUseCase,
-  GetMedicalCertificateUseCase,
-  GetMedicalValidityUseCase,
-  ListPersonMedicalCertificatesUseCase,
-  type MedicalCertificateReaders,
-} from './application/read-medical-certificates.use-cases'
-import { RegisterMedicalCertificateUseCase } from './application/register-medical-certificate.use-case'
-import { RenewMedicalCertificateUseCase } from './application/renew-medical-certificate.use-case'
-import type { Clock } from './domain/clock'
-import type { MedicalCertificatesUnitOfWork } from './domain/medical-certificates-unit-of-work'
+import { AuditLogRepository } from '../audit/repositories/audit-log.repository'
+import { Clock } from '../common/clock'
+import { CredentialsCoreModule } from '../common/credentials/credentials-core.module'
+import { ActiveBlocksRepository } from '../common/credentials/repositories/active-blocks.repository'
+import { ValidityParametersRepository } from '../common/credentials/repositories/validity-parameters.repository'
+import { DB } from '../common/database/database.module'
+import { TransactionRunner } from '../common/database/transaction-runner'
 import {
   MedicalCertificatesController,
   PersonMedicalCertificatesController,
-} from './http/medical-certificates.controller'
-import { DrizzleMedicalCertificateHistoryReader } from './infrastructure/drizzle-medical-certificate-history.reader'
+} from './controllers/medical-certificates.controller'
+import type { MedicalCertificatesTransaction } from './medical-certificates.types'
+import { MedicalCertificateHistoryRepository } from './repositories/medical-certificate-history.repository'
 import {
-  DrizzleHolderLookup,
-  DrizzleMedicalCertificateRepository,
-  DrizzleMedicalObservationCatalog,
-} from './infrastructure/drizzle-medical-certificate.repository'
-import { SystemClock } from './infrastructure/system-clock'
+  HolderLookup,
+  MedicalCertificateRepository,
+  MedicalObservationCatalog,
+} from './repositories/medical-certificate.repository'
+import {
+  GetMedicalCertificateHistoryService,
+  GetMedicalCertificateService,
+  GetMedicalValidityService,
+  ListPersonMedicalCertificatesService,
+  type MedicalCertificateReaders,
+} from './services/read-medical-certificates.service'
+import { RegisterMedicalCertificateService } from './services/register-medical-certificate.service'
+import { RenewMedicalCertificateService } from './services/renew-medical-certificate.service'
 
 const READERS = Symbol('MEDICAL_CERTIFICATE_READERS')
-const UOW = Symbol('MEDICAL_CERTIFICATES_UOW')
-const CLOCK = Symbol('CLOCK')
+const MEDICAL_CERTIFICATES_TRANSACTION = Symbol('MEDICAL_CERTIFICATES_TRANSACTION')
 
 @Module({
   imports: [CredentialsCoreModule],
   controllers: [PersonMedicalCertificatesController, MedicalCertificatesController],
   providers: [
-    { provide: CLOCK, useValue: new SystemClock() },
+    Clock,
     {
       provide: READERS,
-      inject: [DB, ACTIVE_BLOCK_QUERY, VALIDITY_PARAMETERS_READER, CLOCK],
+      inject: [DB, ActiveBlocksRepository, ValidityParametersRepository, Clock],
       useFactory: (
         db: Db,
-        blocks: ActiveBlockQuery,
-        validity: ValidityParametersReader,
+        blocks: ActiveBlocksRepository,
+        validity: ValidityParametersRepository,
         clock: Clock,
       ): MedicalCertificateReaders => ({
-        certificates: new DrizzleMedicalCertificateRepository(db),
-        holders: new DrizzleHolderLookup(db),
+        certificates: new MedicalCertificateRepository(db),
+        holders: new HolderLookup(db),
         blocks,
         validity,
         clock,
       }),
     },
     {
-      provide: UOW,
+      provide: MEDICAL_CERTIFICATES_TRANSACTION,
       inject: [DB],
       useFactory: (db: Db) =>
-        new DrizzleUnitOfWork(db, (tx) => ({
-          certificates: new DrizzleMedicalCertificateRepository(tx),
-          observations: new DrizzleMedicalObservationCatalog(tx),
-          holders: new DrizzleHolderLookup(tx),
-          blocks: new DrizzleActiveBlockQuery(tx),
-          validity: new DrizzleValidityParametersReader(tx),
-          audit: new DrizzleAuditLog(tx),
+        new TransactionRunner(db, (tx) => ({
+          certificates: new MedicalCertificateRepository(tx),
+          observations: new MedicalObservationCatalog(tx),
+          holders: new HolderLookup(tx),
+          blocks: new ActiveBlocksRepository(tx),
+          validity: new ValidityParametersRepository(tx),
+          audit: new AuditLogRepository(tx),
         })),
     },
     {
-      provide: RegisterMedicalCertificateUseCase,
-      inject: [UOW, CLOCK],
-      useFactory: (uow: MedicalCertificatesUnitOfWork, clock: Clock) =>
-        new RegisterMedicalCertificateUseCase(uow, clock),
+      provide: RegisterMedicalCertificateService,
+      inject: [MEDICAL_CERTIFICATES_TRANSACTION, Clock],
+      useFactory: (transaction: MedicalCertificatesTransaction, clock: Clock) =>
+        new RegisterMedicalCertificateService(transaction, clock),
     },
     {
-      provide: RenewMedicalCertificateUseCase,
-      inject: [UOW, CLOCK],
-      useFactory: (uow: MedicalCertificatesUnitOfWork, clock: Clock) => new RenewMedicalCertificateUseCase(uow, clock),
+      provide: RenewMedicalCertificateService,
+      inject: [MEDICAL_CERTIFICATES_TRANSACTION, Clock],
+      useFactory: (transaction: MedicalCertificatesTransaction, clock: Clock) =>
+        new RenewMedicalCertificateService(transaction, clock),
     },
     {
-      provide: ListPersonMedicalCertificatesUseCase,
+      provide: ListPersonMedicalCertificatesService,
       inject: [READERS],
-      useFactory: (readers: MedicalCertificateReaders) => new ListPersonMedicalCertificatesUseCase(readers),
+      useFactory: (readers: MedicalCertificateReaders) => new ListPersonMedicalCertificatesService(readers),
     },
     {
-      provide: GetMedicalCertificateUseCase,
+      provide: GetMedicalCertificateService,
       inject: [READERS],
-      useFactory: (readers: MedicalCertificateReaders) => new GetMedicalCertificateUseCase(readers),
+      useFactory: (readers: MedicalCertificateReaders) => new GetMedicalCertificateService(readers),
     },
     {
-      provide: GetMedicalValidityUseCase,
-      inject: [VALIDITY_PARAMETERS_READER],
-      useFactory: (validity: ValidityParametersReader) => new GetMedicalValidityUseCase(validity),
+      provide: GetMedicalValidityService,
+      inject: [ValidityParametersRepository],
+      useFactory: (validity: ValidityParametersRepository) => new GetMedicalValidityService(validity),
     },
     {
-      provide: GetMedicalCertificateHistoryUseCase,
+      provide: GetMedicalCertificateHistoryService,
       inject: [DB],
       useFactory: (db: Db) =>
-        new GetMedicalCertificateHistoryUseCase(
-          new DrizzleMedicalCertificateRepository(db),
-          new DrizzleMedicalCertificateHistoryReader(db),
+        new GetMedicalCertificateHistoryService(
+          new MedicalCertificateRepository(db),
+          new MedicalCertificateHistoryRepository(db),
         ),
     },
   ],

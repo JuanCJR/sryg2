@@ -4,7 +4,7 @@ import { auditoria, catalogDocumentType, catalogNationality, createDb, personalA
 import { and, eq, inArray } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { Argon2PasswordHasher } from '../auth/infrastructure/argon2-password-hasher'
+import { Argon2PasswordHasher } from '../auth/services/argon2-password-hasher'
 import { createTestApp } from '../test/create-test-app'
 
 const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://sryg:sryg@localhost:5432/sryg'

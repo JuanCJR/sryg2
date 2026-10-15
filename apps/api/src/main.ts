@@ -2,8 +2,8 @@ import 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
 import { ConfigService } from '@nestjs/config'
 import { AppModule } from './app.module'
+import type { Env } from './common/config/env.schema'
 import { configureApp } from './configure-app'
-import type { Env } from './config/env.schema'
 
 async function bootstrap() {
   // abortOnError false: surface config errors as a normal non-zero exit instead of process.abort().

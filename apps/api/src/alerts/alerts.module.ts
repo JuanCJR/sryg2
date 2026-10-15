@@ -1,62 +1,58 @@
 import { Module } from '@nestjs/common'
 import { ScheduleModule } from '@nestjs/schedule'
 import type { Db } from '@sryg/db'
-import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
-import { DB } from '../infrastructure/database/database.module'
-import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
-import { CredentialsCoreModule, VALIDITY_PARAMETERS_READER } from '../shared/credentials/credentials-core.module'
-import type { ValidityParametersReader } from '../shared/credentials/domain/validity-parameters-reader'
-import { AcknowledgeAlertUseCase } from './application/acknowledge-alert.use-case'
-import { GetAlertsSummaryUseCase } from './application/get-alerts-summary.use-case'
-import { ListAlertsUseCase } from './application/list-alerts.use-case'
-import { RecalculateAlertsUseCase } from './application/recalculate-alerts.use-case'
-import type { AlertRepository } from './domain/alert-repository'
-import type { AlertsUnitOfWork } from './domain/alerts-unit-of-work'
-import type { Clock } from './domain/clock'
-import { AlertsController } from './http/alerts.controller'
-import { AlertsDailyJob } from './infrastructure/alerts-daily-job'
-import { DrizzleAlertRepository } from './infrastructure/drizzle-alert.repository'
-import { SystemClock } from './infrastructure/system-clock'
+import { AuditLogRepository } from '../audit/repositories/audit-log.repository'
+import { Clock } from '../common/clock'
+import { CredentialsCoreModule } from '../common/credentials/credentials-core.module'
+import { ValidityParametersRepository } from '../common/credentials/repositories/validity-parameters.repository'
+import { DB } from '../common/database/database.module'
+import { TransactionRunner } from '../common/database/transaction-runner'
+import type { AlertsTransaction } from './alerts.types'
+import { AlertsController } from './controllers/alerts.controller'
+import { AlertRepository } from './repositories/alert.repository'
+import { AcknowledgeAlertService } from './services/acknowledge-alert.service'
+import { AlertsDailyJob } from './services/alerts-daily-job'
+import { GetAlertsSummaryService } from './services/get-alerts-summary.service'
+import { ListAlertsService } from './services/list-alerts.service'
+import { RecalculateAlertsService } from './services/recalculate-alerts.service'
 
-const ALERT_READER = Symbol('ALERT_READER')
-const ALERTS_UOW = Symbol('ALERTS_UOW')
-const CLOCK = Symbol('CLOCK')
+const ALERTS_TRANSACTION = Symbol('ALERTS_TRANSACTION')
 
 /** Expiry alerts (W1-9): see README.md. Only module using @nestjs/schedule, so it registers it. */
 @Module({
   imports: [CredentialsCoreModule, ScheduleModule.forRoot()],
   controllers: [AlertsController],
   providers: [
-    { provide: CLOCK, useClass: SystemClock },
-    { provide: ALERT_READER, inject: [DB], useFactory: (db: Db) => new DrizzleAlertRepository(db) },
+    Clock,
+    { provide: AlertRepository, inject: [DB], useFactory: (db: Db) => new AlertRepository(db) },
     {
-      provide: ALERTS_UOW,
+      provide: ALERTS_TRANSACTION,
       inject: [DB],
       useFactory: (db: Db) =>
-        new DrizzleUnitOfWork(db, (tx) => ({ alerts: new DrizzleAlertRepository(tx), audit: new DrizzleAuditLog(tx) })),
+        new TransactionRunner(db, (tx) => ({ alerts: new AlertRepository(tx), audit: new AuditLogRepository(tx) })),
     },
     {
-      provide: RecalculateAlertsUseCase,
-      inject: [ALERTS_UOW, VALIDITY_PARAMETERS_READER, CLOCK],
-      useFactory: (uow: AlertsUnitOfWork, parameters: ValidityParametersReader, clock: Clock) =>
-        new RecalculateAlertsUseCase(uow, parameters, clock),
+      provide: RecalculateAlertsService,
+      inject: [ALERTS_TRANSACTION, ValidityParametersRepository, Clock],
+      useFactory: (transaction: AlertsTransaction, parameters: ValidityParametersRepository, clock: Clock) =>
+        new RecalculateAlertsService(transaction, parameters, clock),
     },
     {
-      provide: ListAlertsUseCase,
-      inject: [RecalculateAlertsUseCase, ALERT_READER],
-      useFactory: (recalculate: RecalculateAlertsUseCase, alerts: AlertRepository) =>
-        new ListAlertsUseCase(recalculate, alerts),
+      provide: ListAlertsService,
+      inject: [RecalculateAlertsService, AlertRepository],
+      useFactory: (recalculate: RecalculateAlertsService, alerts: AlertRepository) =>
+        new ListAlertsService(recalculate, alerts),
     },
     {
-      provide: GetAlertsSummaryUseCase,
-      inject: [RecalculateAlertsUseCase, ALERT_READER],
-      useFactory: (recalculate: RecalculateAlertsUseCase, alerts: AlertRepository) =>
-        new GetAlertsSummaryUseCase(recalculate, alerts),
+      provide: GetAlertsSummaryService,
+      inject: [RecalculateAlertsService, AlertRepository],
+      useFactory: (recalculate: RecalculateAlertsService, alerts: AlertRepository) =>
+        new GetAlertsSummaryService(recalculate, alerts),
     },
     {
-      provide: AcknowledgeAlertUseCase,
-      inject: [ALERTS_UOW, CLOCK],
-      useFactory: (uow: AlertsUnitOfWork, clock: Clock) => new AcknowledgeAlertUseCase(uow, clock),
+      provide: AcknowledgeAlertService,
+      inject: [ALERTS_TRANSACTION, Clock],
+      useFactory: (transaction: AlertsTransaction, clock: Clock) => new AcknowledgeAlertService(transaction, clock),
     },
     AlertsDailyJob,
   ],

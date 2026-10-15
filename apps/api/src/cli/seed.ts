@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createDb } from '@sryg/db'
 import { PASSWORD_MIN_LENGTH } from '@sryg/types'
-import { Argon2PasswordHasher } from '../auth/infrastructure/argon2-password-hasher'
+import { Argon2PasswordHasher } from '../auth/services/argon2-password-hasher'
 import { applySeed } from './seed/apply-seed'
 import { buildSeedData } from './seed/build-seed-data'
 

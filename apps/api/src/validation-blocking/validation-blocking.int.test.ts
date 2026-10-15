@@ -4,7 +4,7 @@ import { auditoria, bloqueo, createDb, personalAeronautico } from '@sryg/db'
 import { and, eq, inArray } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { DrizzleActiveBlockQuery } from '../shared/credentials/infrastructure/drizzle-active-block-query'
+import { ActiveBlocksRepository } from '../common/credentials/repositories/active-blocks.repository'
 import { createTestApp } from '../test/create-test-app'
 import { createTestUsers, deleteTestUsers, type TestUser } from '../test/test-users'
 
@@ -163,7 +163,7 @@ describe('validation-blocking http (VAL-03..05, D2, D24)', () => {
       type: 'medico',
       reason: 'Impedimento médico ficticio',
     }).expect(201)
-    const activeBlocks = new DrizzleActiveBlockQuery(db)
+    const activeBlocks = new ActiveBlocksRepository(db)
     expect(await activeBlocks.hasActiveBlock(personalId)).toBe(true)
 
     await http().post(`/api/blocks/${block.id}/resolve`).set(as(users.supMedicina)).send({}).expect(400)

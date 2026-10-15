@@ -8,7 +8,7 @@ context: |
   with reports, audit trail, and role-based access (admin, supervisor,
   read-only/"consulta"). Client-server web app.
   Stack (scaffolded): pnpm monorepo with apps/web (React 19 + Vite),
-  apps/api (NestJS, hexagonal modules), packages/db (Drizzle ORM +
+  apps/api (NestJS, controllers/services/dtos/repositories modules), packages/db (Drizzle ORM +
   drizzle-kit migrations, PostgreSQL) and packages/types (zod contracts,
   permission matrix). Source of truth: docs/thesis.docx; current scope and
   decisions D1-D25 in docs/plan-ejecucion-paralela.md.
@@ -55,7 +55,7 @@ rules:
   apply:
     guidelines:
       - Follow existing code patterns (reference modules apps/api/src/personnel
-        and apps/web/src/features/personnel).
+        and apps/web/src/pages/personnel).
       - One failing test per rule before implementing it.
     tdd: true
     test_command: "pnpm test"

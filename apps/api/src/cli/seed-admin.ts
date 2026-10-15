@@ -1,13 +1,9 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createDb } from '@sryg/db'
-import {
-  MissingSeedVariablesError,
-  readSeedAdminInput,
-  SeedAdminUseCase,
-} from '../auth/application/seed-admin.use-case'
-import { Argon2PasswordHasher } from '../auth/infrastructure/argon2-password-hasher'
-import { DrizzleUserRepository } from '../auth/infrastructure/drizzle-user.repository'
+import { UserRepository } from '../auth/repositories/user.repository'
+import { Argon2PasswordHasher } from '../auth/services/argon2-password-hasher'
+import { MissingSeedVariablesError, readSeedAdminInput, SeedAdminService } from '../auth/services/seed-admin.service'
 
 /**
  * Seeds the initial administrator. Run from the operator machine (also against Neon, using the
@@ -24,7 +20,7 @@ async function main() {
 
   const { db, pool } = createDb(databaseUrl)
   try {
-    const outcome = await new SeedAdminUseCase(new DrizzleUserRepository(db), new Argon2PasswordHasher()).execute(input)
+    const outcome = await new SeedAdminService(new UserRepository(db), new Argon2PasswordHasher()).execute(input)
     console.log(outcome === 'created' ? `Admin created: ${input.email}` : `Admin already exists: ${input.email}`)
   } finally {
     await pool.end()
