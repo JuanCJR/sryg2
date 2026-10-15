@@ -27,13 +27,6 @@
   object-fit: contain;
 }
 
-.caps {
-  font-weight: 700;
-  font-size: var(--fs-sm);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-}
-
 .stage {
   flex: 1;
   min-height: 0;
