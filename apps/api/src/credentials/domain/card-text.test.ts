@@ -3,7 +3,9 @@ import {
   bilingual,
   BLOOD_TYPE_CARD_LABEL,
   formatCardDate,
+  licenseTypeSentence,
   MEDICAL_CLASS_CARD_LABEL,
+  MEDICAL_CLASS_CARD_LABEL_EN,
   verificationUrl,
 } from './card-text'
 
@@ -27,8 +29,22 @@ describe('card text (§4 of the parallel plan)', () => {
       clase_2: 'SEGUNDA CLASE',
       clase_3: 'TERCERA CLASE',
     })
-    expect(BLOOD_TYPE_CARD_LABEL.o_pos).toBe('O Rh+')
-    expect(BLOOD_TYPE_CARD_LABEL.ab_neg).toBe('AB Rh-')
+    expect(MEDICAL_CLASS_CARD_LABEL_EN.clase_3).toBe('THIRD CLASS')
+    expect(BLOOD_TYPE_CARD_LABEL.o_pos).toBe('O Rh (+)')
+    expect(BLOOD_TYPE_CARD_LABEL.ab_neg).toBe('AB Rh (-)')
+  })
+
+  it('lists the license types a medical certificate covers as one sentence', () => {
+    const types = [
+      { es: 'Controlador de tránsito aéreo', en: 'Air Traffic Controller' },
+      { es: 'Alumno controlador de tránsito aéreo', en: null },
+      { es: 'Operador de estaciones aeronáuticas', en: null },
+    ]
+    expect(licenseTypeSentence(types)).toBe(
+      'Controlador de tránsito aéreo, alumno controlador de tránsito aéreo y operador de estaciones aeronáuticas',
+    )
+    expect(licenseTypeSentence(types.slice(0, 1))).toBe('Controlador de tránsito aéreo')
+    expect(licenseTypeSentence([])).toBe('')
   })
 
   it('points the QR at the public verification page of the web app (D9)', () => {
