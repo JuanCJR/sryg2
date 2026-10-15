@@ -1,0 +1,137 @@
+/* Same table rhythm as PersonnelTable (Listado direction); the Dashboard has no approved direction yet. */
+.table {
+  border: var(--hair) solid var(--rule);
+}
+
+.headerRow,
+.row {
+  display: grid;
+  grid-template-columns: 170px 170px minmax(0, 1fr) 100px 170px 190px;
+  column-gap: var(--s-4);
+  align-items: center;
+  padding: var(--s-3) var(--s-4);
+}
+
+.headerRow {
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.headerCell {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row:not(:last-child) {
+  border-bottom: var(--hair) solid var(--rule);
+}
+
+.credencial,
+.area {
+  min-width: 0;
+  color: var(--fg-muted);
+}
+
+.titular {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nombre {
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nombre:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.cedula {
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.vencimiento {
+  display: flex;
+  flex-direction: column;
+}
+
+.fecha,
+.restante {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-sm);
+}
+
+.restante {
+  color: var(--fg-muted);
+}
+
+.accion {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.reconocida {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  text-align: right;
+}
+
+/* Tablet: the area column goes; the filter already names it. */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .colArea {
+    display: none;
+  }
+
+  .headerRow,
+  .row {
+    grid-template-columns: 150px 150px minmax(0, 1fr) 150px 170px;
+  }
+}
+
+/* Phone: stacked rows. */
+@media (max-width: 480px) {
+  .headerRow {
+    display: none;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-2) var(--s-3);
+    padding: var(--s-4);
+  }
+
+  .estado,
+  .titular {
+    flex-basis: 100%;
+  }
+
+  .nombre {
+    white-space: normal;
+  }
+
+  .accion {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  .accion :global(button) {
+    min-height: 44px;
+  }
+}

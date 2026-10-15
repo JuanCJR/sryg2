@@ -62,3 +62,12 @@ export type { ToastOptions, ToastTone, ToastContextValue } from './molecules/Toa
 // Organisms
 export { WarningStack } from './organisms/WarningStack/WarningStack'
 export type { WarningStackProps, WarningStackMessage } from './organisms/WarningStack/WarningStack'
+
+// Templates
+export { DashboardTemplate, DashboardPanel } from './templates/DashboardTemplate/DashboardTemplate'
+export type {
+  DashboardTemplateProps,
+  DashboardPanelProps,
+  DashboardErrorContent,
+  DashboardEmptyContent,
+} from './templates/DashboardTemplate/DashboardTemplate'
