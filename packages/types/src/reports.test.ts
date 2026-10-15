@@ -38,7 +38,31 @@ describe('reportQuerySchema', () => {
       page: '2',
       pageSize: '10',
     }
-    expect(reportQuerySchema.parse(query)).toEqual({ ...query, page: 2, pageSize: 10 })
+    expect(reportQuerySchema.parse(query)).toEqual({
+      ...query,
+      licenseTypeId: [query.licenseTypeId],
+      rav60Category: [query.rav60Category],
+      status: [query.status],
+      page: 2,
+      pageSize: 10,
+    })
+  })
+
+  it('accepts several license types, categories and statuses, comma-separated or repeated', () => {
+    const a = '0b6f1c3e-1f7a-4c1e-9d5e-2a6b8c9d0e11'
+    const b = '6f1d6c0e-2b8a-4a41-9c3e-0d4a3a8f6b11'
+    expect(
+      reportQuerySchema.parse({
+        licenseTypeId: `${a},${b}`,
+        rav60Category: ['piloto_comercial', 'piloto_privado'],
+        status: 'vencida,proxima_a_vencer,vencida',
+      }),
+    ).toMatchObject({
+      licenseTypeId: [a, b],
+      rav60Category: ['piloto_comercial', 'piloto_privado'],
+      status: ['vencida', 'proxima_a_vencer'],
+    })
+    expect(reportQuerySchema.safeParse({ licenseTypeId: `${a},x` }).success).toBe(false)
   })
 
   it('rejects an unknown category or status, a malformed date and an inverted range', () => {

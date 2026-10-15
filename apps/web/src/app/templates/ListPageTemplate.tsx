@@ -8,7 +8,8 @@ type ListCommon = {
   breadcrumb?: ReactNode
   summary?: ReactNode // count or context line (e.g. an annunciator panel)
   primaryAction?: ReactNode // rendered only if the container's can() allows it
-  toolbar?: ReactNode // search bar and filters
+  toolbar?: ReactNode // search bar and quick actions above the results
+  filters?: ReactNode // left filter column (a FilterPanel); the results sit to its right
   banner?: ReactNode
   overlays?: ReactNode
 }
@@ -28,6 +29,9 @@ export type ListPageTemplateProps = ListCommon &
  * with annunciator panel"); the template stays generic and content-agnostic — the annunciator
  * itself is content the container supplies through `summary`, never template logic.
  *
+ * `filters` (a `FilterPanel`) opens a left column beside the results — the same place on every
+ * list page, so staff always look left to narrow a list. It renders in every status too.
+ *
  * `title`, `breadcrumb`, `primaryAction`, and `toolbar` render in EVERY status, including
  * `error` and `loading` — so the page never reflows on resolve, an error keeps the query field
  * reachable (the container may pass a disabled toolbar), and a "no-results" state keeps the
@@ -36,19 +40,10 @@ export type ListPageTemplateProps = ListCommon &
  * container's own placeholder content (e.g. unlit lamps), not template logic.
  */
 export function ListPageTemplate(props: ListPageTemplateProps) {
-  const { title, breadcrumb, summary, primaryAction, toolbar, banner, overlays, status } = props
+  const { title, breadcrumb, summary, primaryAction, toolbar, filters, banner, overlays, status } = props
 
-  return (
-    <div className={styles.page}>
-      {banner}
-
-      {breadcrumb ? <div className={styles.breadcrumbRow}>{breadcrumb}</div> : null}
-
-      <div className={styles.headerRow}>
-        <h1 className={styles.title}>{title}</h1>
-        {primaryAction}
-      </div>
-
+  const content = (
+    <>
       {toolbar ? <div className={styles.toolbar}>{toolbar}</div> : null}
 
       {summary && status !== 'error' ? <div className={styles.summary}>{summary}</div> : null}
@@ -62,6 +57,28 @@ export function ListPageTemplate(props: ListPageTemplateProps) {
           {props.pagination ? <div className={styles.pagination}>{props.pagination}</div> : null}
         </>
       ) : null}
+    </>
+  )
+
+  return (
+    <div className={styles.page}>
+      {banner}
+
+      {breadcrumb ? <div className={styles.breadcrumbRow}>{breadcrumb}</div> : null}
+
+      <div className={styles.headerRow}>
+        <h1 className={styles.title}>{title}</h1>
+        {primaryAction}
+      </div>
+
+      {filters ? (
+        <div className={styles.withFilters}>
+          <div className={styles.filters}>{filters}</div>
+          <div className={styles.main}>{content}</div>
+        </div>
+      ) : (
+        content
+      )}
 
       {overlays}
     </div>

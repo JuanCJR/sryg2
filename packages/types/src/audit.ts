@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { csvEnum, csvList } from './common'
 import { AUDIT_ACTIONS } from './enums'
 
 // Contracts of the audit viewer (W1-7, REP-04/REP-05).
@@ -15,9 +16,10 @@ const textFilter = z
 const auditFilterShape = {
   /** Matches the actor's full name or email (case-insensitive, substring). */
   actor: textFilter,
-  action: auditActionSchema.optional(),
-  /** Entity name as written by the trail (the table name, e.g. `personal_aeronautico`). */
-  entity: textFilter,
+  /** Multi-value: `?action=create,update` or repeated params. */
+  action: csvEnum(AUDIT_ACTIONS),
+  /** Entity names as written by the trail (table names, e.g. `personal_aeronautico`); multi-value. */
+  entity: csvList(z.string().max(200)),
   entityId: z.uuid().optional(),
   /**
    * The person's whole trail: their record plus the entities that hang from it (attachments,

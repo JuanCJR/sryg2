@@ -4,3 +4,8 @@
   font-size: var(--fs-sm);
   color: var(--fg-muted);
 }
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}

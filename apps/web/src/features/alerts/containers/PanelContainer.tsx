@@ -11,7 +11,8 @@ import { AlertFilters } from '../components/AlertFilters'
 import { AlertList } from '../components/AlertList'
 import { AlertsAnnunciator } from '../components/AlertsAnnunciator'
 import { acknowledgeAlert, getAccessLog } from '../data/alerts-client'
-import { ALERTS_PAGE_SIZE, useAlertsPanel } from '../hooks/useAlertsPanel'
+import { isDefaultView } from '../domain/alert-view'
+import { ALERTS_PAGE_SIZES, useAlertsPanel } from '../hooks/useAlertsPanel'
 import styles from './PanelContainer.module.css'
 
 const LOAD_ERROR = {
@@ -28,7 +29,19 @@ const LOAD_ERROR = {
 export function PanelContainer() {
   const { user, area, can } = useRole()
   const toast = useToast()
-  const { filters, setFilter, toggleKind, page, setPage, alerts, summary, reload } = useAlertsPanel(area)
+  const {
+    filters,
+    setFilter,
+    clearFilters,
+    toggleKind,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    alerts,
+    summary,
+    reload,
+  } = useAlertsPanel(area)
   const log = useApiResource(user ? `access-log:${user.id}` : null, getAccessLog)
   const [pendingId, setPendingId] = useState<string | null>(null)
   // Computed once per render: the "vence en N días" text of every row uses the same day.
@@ -63,7 +76,7 @@ export function PanelContainer() {
         Ver reportes
       </Link>
     ) : undefined,
-    toolbar: <AlertFilters values={filters} onChange={setFilter} />,
+    filters: <AlertFilters values={filters} onChange={setFilter} onClearAll={clearFilters} />,
     summary: <AlertsAnnunciator counts={counts} selected={filters.kind} onToggle={toggleKind} />,
     panels: (
       <DashboardPanel title="Registro de accesos">
@@ -81,7 +94,7 @@ export function PanelContainer() {
 
   const { items, total } = alerts.data
   if (total === 0) {
-    const filtered = filters.kind !== null || filters.credentialKind !== '' || filters.acknowledgement !== 'pendientes'
+    const filtered = !isDefaultView(filters, area)
     return (
       <DashboardTemplate
         {...common}
@@ -103,12 +116,22 @@ export function PanelContainer() {
     )
   }
 
-  const pageCount = Math.max(1, Math.ceil(total / ALERTS_PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
   return (
     <DashboardTemplate
       {...common}
       status="ready"
-      pagination={pageCount > 1 ? <Pagination page={page} pageCount={pageCount} onPageChange={setPage} /> : undefined}
+      pagination={
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={total}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
+          pageSizeOptions={ALERTS_PAGE_SIZES}
+        />
+      }
     >
       <AlertList
         alerts={items}

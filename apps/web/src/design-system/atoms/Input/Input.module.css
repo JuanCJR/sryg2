@@ -9,7 +9,9 @@
   color: var(--fg);
   font-family: var(--font-sans);
   font-size: var(--fs-base);
-  transition: border-color var(--dur-fast) var(--ease-out-expo);
+  transition:
+    border-color var(--dur-fast) var(--ease-out-expo),
+    box-shadow var(--dur-fast) var(--ease-out-expo);
 }
 
 .control::placeholder {
@@ -18,6 +20,17 @@
 
 .control:hover:not(:disabled) {
   border-color: var(--control-border-strong);
+}
+
+.control:focus {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 0 4px var(--accent-soft);
+}
+
+.control:focus-visible {
+  outline: none;
 }
 
 .control:disabled {

@@ -10,14 +10,17 @@ export interface UsersTableProps {
   onToggleActive: (user: ManagedUser) => void
 }
 
-/** Users with their role, area and state, and the Admin's actions on each row (AUTH-06). */
+/**
+ * Users with their role, area and state, and the Admin's actions on each row (AUTH-06). Columns follow
+ * the UI conventions: Correo (ID), Nombre (persona), Rol (tipo), Área, Estado, actions.
+ */
 export function UsersTable({ users, onEdit, onResetPassword, onToggleActive }: UsersTableProps) {
   return (
     <table className={styles.table}>
       <thead>
         <tr>
-          <th scope="col">Nombre</th>
           <th scope="col">Correo</th>
+          <th scope="col">Nombre</th>
           <th scope="col">Rol</th>
           <th scope="col">Área</th>
           <th scope="col">Estado</th>
@@ -29,8 +32,8 @@ export function UsersTable({ users, onEdit, onResetPassword, onToggleActive }: U
       <tbody>
         {users.map((user) => (
           <tr key={user.id} className={user.isActive ? undefined : styles.inactive}>
-            <td className={styles.name}>{user.fullName}</td>
             <td className={styles.email}>{user.email}</td>
+            <td className={styles.name}>{user.fullName}</td>
             <td>{ROLE_LABEL[user.role]}</td>
             <td>{AREA_LABEL[user.area]}</td>
             <td>

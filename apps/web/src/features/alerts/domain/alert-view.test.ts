@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { defaultFilters, formatDueDate, formatRemaining, toAlertsParams, toSummaryParams } from './alert-view'
+import {
+  defaultFilters,
+  formatDueDate,
+  formatRemaining,
+  isDefaultView,
+  toAlertsParams,
+  toSummaryParams,
+  type AlertFilterValues,
+} from './alert-view'
 
 const TODAY = new Date('2026-10-15T12:00:00.000Z')
 
@@ -23,40 +31,51 @@ describe('alert view', () => {
   })
 
   it.each([
-    ['licencias', 'licencias'],
-    ['medicina', 'medicina'],
-    ['ambas', ''],
-  ] as const)('starts a user of area %s on %j', (area, expected) => {
+    ['licencias', ['licencias']],
+    ['medicina', ['medicina']],
+    ['ambas', []],
+  ] as const)('starts a user of area %s on %j, pending only', (area, expected) => {
     expect(defaultFilters(area)).toEqual({
       kind: null,
-      credentialKind: '',
+      credentialKind: [],
       area: expected,
-      acknowledgement: 'pendientes',
+      acknowledgement: ['pendientes'],
     })
+    expect(isDefaultView(defaultFilters(area), area)).toBe(true)
   })
 
   it('maps the filters to the list and summary query strings', () => {
-    const filters = {
+    const filters: AlertFilterValues = {
       kind: 'vencida',
-      credentialKind: 'licencia',
-      area: 'medicina',
-      acknowledgement: 'reconocidas',
-    } as const
+      credentialKind: ['licencia', 'certificado_medico'],
+      area: ['medicina'],
+      acknowledgement: ['reconocidas'],
+    }
     expect(Object.fromEntries(toAlertsParams(filters, 2, 20))).toEqual({
       kind: 'vencida',
-      credentialKind: 'licencia',
+      credentialKind: 'licencia,certificado_medico',
       area: 'medicina',
       acknowledged: 'true',
       page: '2',
       pageSize: '20',
     })
     expect(Object.fromEntries(toSummaryParams(filters))).toEqual({
-      credentialKind: 'licencia',
+      credentialKind: 'licencia,certificado_medico',
       area: 'medicina',
       acknowledged: 'true',
     })
     expect(
-      Object.fromEntries(toSummaryParams({ ...filters, credentialKind: '', area: '', acknowledgement: 'todas' })),
+      Object.fromEntries(toSummaryParams({ ...filters, credentialKind: [], area: [], acknowledgement: [] })),
     ).toEqual({})
+  })
+
+  it('reads both acknowledgement boxes, or none, as no filter', () => {
+    const base = defaultFilters(null)
+    const ack = (acknowledgement: AlertFilterValues['acknowledgement']) =>
+      toSummaryParams({ ...base, acknowledgement }).get('acknowledged')
+    expect(ack(['pendientes'])).toBe('false')
+    expect(ack(['reconocidas'])).toBe('true')
+    expect(ack(['pendientes', 'reconocidas'])).toBeNull()
+    expect(ack([])).toBeNull()
   })
 })

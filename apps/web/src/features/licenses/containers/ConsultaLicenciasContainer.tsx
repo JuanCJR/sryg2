@@ -8,12 +8,12 @@ import { useDebouncedValue } from '../../../shared/hooks/useDebouncedValue'
 import { listLicenses, type LicenseListFilters } from '../data/licenses-client'
 import { formatDate, formatExpiry } from '../domain/format'
 import { toCredentialStatus } from '../domain/status'
-import { LicenseFilters, type LicenseFilterValues } from '../components/LicenseFilters'
+import { LicenseFilters } from '../components/LicenseFilters'
+import { EMPTY_LICENSE_FILTERS, type LicenseFilterValues } from '../domain/filters'
 import { LicensesTable, type LicenseListRow } from '../components/LicensesTable'
 
-const PAGE_SIZE = 25
+const DEFAULT_PAGE_SIZE = 25
 const SEARCH_DEBOUNCE_MS = 300
-const EMPTY_FILTERS: LicenseFilterValues = { solicitante: '', numero: '', tipo: null, venceDesde: '', venceHasta: '' }
 
 const LOAD_ERROR = {
   title: 'No se pudieron cargar las licencias',
@@ -40,8 +40,9 @@ function toRow(item: LicenseListItemDto): LicenseListRow {
  * expiry so the ones about to lapse come first.
  */
 export function ConsultaLicenciasContainer() {
-  const [values, setValues] = useState<LicenseFilterValues>(EMPTY_FILTERS)
+  const [values, setValues] = useState<LicenseFilterValues>(EMPTY_LICENSE_FILTERS)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const solicitante = useDebouncedValue(values.solicitante.trim(), SEARCH_DEBOUNCE_MS)
   const numero = useDebouncedValue(values.numero.trim(), SEARCH_DEBOUNCE_MS)
 
@@ -55,8 +56,8 @@ export function ConsultaLicenciasContainer() {
   const invalidRange = Boolean(filters.expiryFrom && filters.expiryTo && filters.expiryFrom > filters.expiryTo)
   const filtered = Object.values(filters).some(Boolean)
   // An inverted range is not sent: the API would refuse it (400).
-  const results = useApiResource(invalidRange ? null : `licenses:${JSON.stringify(filters)}:${page}`, () =>
-    listLicenses({ ...filters, page, pageSize: PAGE_SIZE }),
+  const results = useApiResource(invalidRange ? null : `licenses:${JSON.stringify(filters)}:${page}:${pageSize}`, () =>
+    listLicenses({ ...filters, page, pageSize }),
   )
 
   const handleChange = (patch: Partial<LicenseFilterValues>) => {
@@ -68,7 +69,7 @@ export function ConsultaLicenciasContainer() {
   const common = {
     title: 'Consulta de licencias',
     breadcrumb,
-    toolbar: <LicenseFilters values={values} onChange={handleChange} />,
+    filters: <LicenseFilters values={values} onChange={handleChange} />,
   }
 
   if (invalidRange) {
@@ -114,7 +115,11 @@ export function ConsultaLicenciasContainer() {
     )
   }
 
-  const pageCount = Math.max(1, Math.ceil(data.total / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(data.total / pageSize))
+  const handlePageSizeChange = (next: number) => {
+    setPageSize(next)
+    setPage(1)
+  }
   return (
     <ListPageTemplate
       {...common}
@@ -124,7 +129,16 @@ export function ConsultaLicenciasContainer() {
           {data.total} {data.total === 1 ? 'licencia' : 'licencias'}
         </p>
       }
-      pagination={pageCount > 1 ? <Pagination page={page} pageCount={pageCount} onPageChange={setPage} /> : undefined}
+      pagination={
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={data.total}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      }
     >
       <LicensesTable rows={data.items.map(toRow)} />
     </ListPageTemplate>

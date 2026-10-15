@@ -46,10 +46,23 @@ describe('listBlocksQuerySchema', () => {
         q: 'ana',
         page: '2',
       }),
-    ).toEqual({ status: 'activo', type: 'regulatorio', personalId: PERSON_ID, q: 'ana', page: 2, pageSize: 20 })
+    ).toEqual({ status: ['activo'], type: ['regulatorio'], personalId: PERSON_ID, q: 'ana', page: 2, pageSize: 20 })
     expect(listBlocksQuerySchema.safeParse({ status: 'bloqueada' }).success).toBe(false)
     expect(listBlocksQuerySchema.safeParse({ type: 'x' }).success).toBe(false)
     expect(listBlocksQuerySchema.safeParse({ personalId: 'x' }).success).toBe(false)
+  })
+
+  it('accepts several statuses and types, comma-separated or repeated', () => {
+    expect(listBlocksQuerySchema.parse({ status: 'activo,resuelto', type: ['medico', 'regulatorio'] })).toMatchObject({
+      status: ['activo', 'resuelto'],
+      type: ['medico', 'regulatorio'],
+    })
+    expect(listBlocksQuerySchema.parse({ type: ['medico,administrativo', 'medico'] }).type).toEqual([
+      'medico',
+      'administrativo',
+    ])
+    expect(listBlocksQuerySchema.parse({ status: '', type: ' , ' })).toEqual({ page: 1, pageSize: 20 })
+    expect(listBlocksQuerySchema.safeParse({ type: 'medico,otro' }).success).toBe(false)
   })
 })
 

@@ -9,6 +9,7 @@ import {
   type Role,
   type UserArea,
 } from './enums'
+import { csvEnum, csvUuid } from './common'
 import { can } from './permissions'
 
 // Contracts of the reports module (W1-8). The three v1 reports of D10.
@@ -56,10 +57,11 @@ const optional = <T extends z.ZodType>(schema: T) =>
 const reportFiltersShape = {
   /** Name or document number of the holder. */
   q: optional(z.string().trim().max(100)),
-  licenseTypeId: optional(z.uuid()),
-  rav60Category: optional(z.enum(RAV60_CATEGORIES)),
+  /** `licenseTypeId`, `rav60Category` and `status` are multi-value: `?status=a,b` or repeated params. */
+  licenseTypeId: csvUuid(),
+  rav60Category: csvEnum(RAV60_CATEGORIES),
   /** Report 1: the credential status; report 2: the consolidated status. Report 3 has no status. */
-  status: optional(z.enum(REPORT_STATUSES)),
+  status: csvEnum(REPORT_STATUSES),
   /** Inclusive date range: expiry (reports 1 and 2) or registration of the block (report 3). */
   from: optional(z.iso.date()),
   to: optional(z.iso.date()),

@@ -16,10 +16,10 @@ import {
   resolutionLabel,
 } from '../domain/block-view'
 
-const PAGE_SIZE = 25
+const DEFAULT_PAGE_SIZE = 25
 const SEARCH_DEBOUNCE_MS = 300
 // The working view: what is stopping credentials right now.
-const DEFAULT_FILTERS: BlocksFilterValues = { status: 'activo', type: '', person: '' }
+const DEFAULT_FILTERS: BlocksFilterValues = { status: ['activo'], type: [], person: '' }
 
 const LOAD_ERROR = {
   title: 'No se pudieron cargar los bloqueos',
@@ -36,15 +36,16 @@ export function BloqueosListContainer() {
   const canWrite = can('blocking', 'write')
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const person = useDebouncedValue(filters.person.trim(), SEARCH_DEBOUNCE_MS)
   const resolveFlow = useResolveBlock()
 
   const blocks = useBlocks({
-    status: filters.status || undefined,
-    type: filters.type || undefined,
+    status: filters.status,
+    type: filters.type,
     q: person || undefined,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize,
   })
 
   const handleFilters = (next: BlocksFilterValues) => {
@@ -63,26 +64,27 @@ export function BloqueosListContainer() {
       <ListPageTemplate
         {...common}
         status="error"
-        toolbar={<BlocksFilters values={filters} onChange={handleFilters} disabled />}
+        filters={<BlocksFilters values={filters} onChange={handleFilters} disabled />}
         error={{ ...LOAD_ERROR, onRetry: blocks.retry }}
       />
     )
   }
 
-  const toolbar = <BlocksFilters values={filters} onChange={handleFilters} />
+  const filterPanel = <BlocksFilters values={filters} onChange={handleFilters} />
 
   if (blocks.status === 'loading') {
-    return <ListPageTemplate {...common} status="loading" toolbar={toolbar} loadingLabel="Cargando bloqueos" />
+    return <ListPageTemplate {...common} status="loading" filters={filterPanel} loadingLabel="Cargando bloqueos" />
   }
 
   const { items, total } = blocks.data
   if (total === 0) {
-    const unfiltered = filters.status === 'activo' && !filters.type && !person
+    const unfiltered =
+      filters.status.length === 1 && filters.status[0] === 'activo' && filters.type.length === 0 && !person
     return (
       <ListPageTemplate
         {...common}
         status="empty"
-        toolbar={toolbar}
+        filters={filterPanel}
         empty={
           unfiltered
             ? {
@@ -114,19 +116,31 @@ export function BloqueosListContainer() {
     resolutionLabel: resolutionLabel(block),
     canResolve: canWrite && block.status === 'activo',
   }))
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
 
   return (
     <ListPageTemplate
       {...common}
       status="ready"
-      toolbar={toolbar}
+      filters={filterPanel}
       summary={
         <p>
           {total} {total === 1 ? 'bloqueo' : 'bloqueos'}
         </p>
       }
-      pagination={pageCount > 1 ? <Pagination page={page} pageCount={pageCount} onPageChange={setPage} /> : undefined}
+      pagination={
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={total}
+          pageSize={pageSize}
+          onPageSizeChange={(next) => {
+            setPageSize(next)
+            setPage(1)
+          }}
+        />
+      }
     >
       <BlocksTable
         rows={rows}

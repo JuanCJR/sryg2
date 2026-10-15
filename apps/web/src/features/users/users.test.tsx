@@ -92,6 +92,47 @@ describe('Usuarios (AUTH-06, D1, D14, D24)', () => {
     )
   })
 
+  it('orders the columns Correo, Nombre, Rol, Área, Estado and pages on the server', async () => {
+    const api = signIn(ADMIN, (url) =>
+      url.pathname === '/api/users'
+        ? {
+            status: 200,
+            body: {
+              items: [ANA],
+              page: Number(url.searchParams.get('page')),
+              pageSize: Number(url.searchParams.get('pageSize')),
+              total: 60,
+            },
+          }
+        : undefined,
+    )
+    const user = userEvent.setup()
+    renderApp('/usuarios')
+
+    await rowOf('Ana Prueba')
+    expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
+      'Correo',
+      'Nombre',
+      'Rol',
+      'Área',
+      'Estado',
+      'Acciones',
+    ])
+    const pagination = screen.getByRole('navigation', { name: 'Paginación' })
+    expect(pagination.textContent).toContain('Mostrando 1–25 de 60')
+
+    await user.click(within(pagination).getByRole('button', { name: 'Página 3' }))
+    await waitFor(() =>
+      expect(screen.getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Mostrando 51–60 de 60'),
+    )
+    await user.selectOptions(screen.getByLabelText('Filas por página'), '50')
+    await waitFor(() =>
+      expect(screen.getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Mostrando 1–50 de 60'),
+    )
+    const last = new URL(String(calls(api, 'GET', '/api/users').at(-1)?.[0]))
+    expect([last.searchParams.get('page'), last.searchParams.get('pageSize')]).toEqual(['1', '50'])
+  })
+
   it('keeps non-Admins out (D1)', async () => {
     signIn(userWith('supervisor', 'ambas'), () => undefined)
     renderApp('/usuarios')

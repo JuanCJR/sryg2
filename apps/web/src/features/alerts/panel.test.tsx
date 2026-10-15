@@ -54,7 +54,10 @@ const LOG: AccessLog = {
   failed: [{ at: '2026-10-11T02:30:00.000Z', ip: '203.0.113.9' }],
 }
 
-const page = (items: Alert[], total = items.length) => ({ status: 200, body: { items, page: 1, pageSize: 20, total } })
+const page = (items: Alert[], total = items.length, pageNumber = 1, pageSize = 20) => ({
+  status: 200,
+  body: { items, page: pageNumber, pageSize, total },
+})
 
 /** Routes /me, the alerts list, its summary and the access log; `api` may override any of them. */
 function signIn(user: AuthUser, api: MockHandler = () => undefined) {
@@ -113,6 +116,53 @@ describe('/panel (ALR-03)', () => {
     expect(second.getByText('Vence en 10 días')).toBeTruthy()
   })
 
+  it('orders the columns ID, Titular, Credencial, Área, Vencimiento, Estado, Reconocimiento', async () => {
+    signIn(userWith('administrador', 'ambas'))
+    renderApp('/panel')
+
+    const list = await screen.findByRole('list', { name: 'Alertas de vencimiento' })
+    const header = list.previousElementSibling!
+    expect(Array.from(header.children).map((cell) => cell.textContent)).toEqual([
+      'Cédula',
+      'Titular',
+      'Credencial',
+      'Área',
+      'Vencimiento',
+      'Estado',
+      'Reconocimiento',
+    ])
+    const cells = Array.from(within(list).getAllByRole('listitem')[0]!.children).map((cell) => cell.textContent)
+    expect(cells[0]).toBe('V-00.000.101')
+    expect(cells[1]).toBe('Persona De Prueba Uno')
+    expect(cells[2]).toBe('Licencia')
+    expect(cells[5]).toContain('Vencida')
+  })
+
+  it('pages the alerts on the server with the range line and a rows-per-page choice', async () => {
+    const api = signIn(userWith('administrador', 'ambas'), (url) => {
+      if (url.pathname !== '/api/alerts') return undefined
+      const p = url.searchParams
+      return page(ALERTS, 45, Number(p.get('page')), Number(p.get('pageSize')))
+    })
+    renderApp('/panel')
+    const user = userEvent.setup()
+
+    await screen.findByRole('list', { name: 'Alertas de vencimiento' })
+    const nav = screen.getByRole('navigation', { name: 'Paginación' })
+    expect(nav.textContent).toContain('Mostrando 1–20 de 45')
+    await user.click(within(nav).getByRole('button', { name: 'Página 3' }))
+    await waitFor(() => expect(lastCall(api, '/api/alerts').searchParams.get('page')).toBe('3'))
+    expect((await screen.findByRole('navigation', { name: 'Paginación' })).textContent).toContain(
+      'Mostrando 41–45 de 45',
+    )
+
+    await user.selectOptions(
+      within(screen.getByRole('navigation', { name: 'Paginación' })).getByLabelText('Filas por página'),
+      '50',
+    )
+    await waitFor(() => expect(paramsOf(lastCall(api, '/api/alerts'))).toMatchObject({ page: '1', pageSize: '50' }))
+  })
+
   it('shows the pending counts per kind on the annunciator', async () => {
     signIn(userWith('administrador', 'ambas'))
     renderApp('/panel')
@@ -146,7 +196,9 @@ describe('/panel (ALR-03)', () => {
       expect(lastCall(api, '/api/alerts').searchParams.get('area')).toBe(area)
       expect(lastCall(api, '/api/alerts/summary').searchParams.get('area')).toBe(area)
 
-      await userEvent.setup().selectOptions(screen.getByLabelText('Área'), '')
+      const own = screen.getByRole('checkbox', { name: area === 'licencias' ? 'Licencias' : 'Medicina' })
+      expect(own).toHaveProperty('checked', true)
+      await userEvent.setup().click(own)
       await waitFor(() => expect(lastCall(api, '/api/alerts').searchParams.has('area')).toBe(false))
       expect(lastCall(api, '/api/alerts/summary').searchParams.has('area')).toBe(false)
     },
@@ -175,16 +227,31 @@ describe('/panel (ALR-03)', () => {
     const user = userEvent.setup()
 
     await screen.findByRole('list', { name: 'Alertas de vencimiento' })
-    await user.selectOptions(screen.getByLabelText('Tipo de credencial'), 'certificado_medico')
+    await user.click(screen.getByRole('checkbox', { name: 'Certificado médico' }))
     await waitFor(() =>
       expect(lastCall(api, '/api/alerts').searchParams.get('credentialKind')).toBe('certificado_medico'),
     )
     expect(lastCall(api, '/api/alerts/summary').searchParams.get('credentialKind')).toBe('certificado_medico')
 
-    await user.selectOptions(screen.getByLabelText('Reconocimiento'), 'todas')
+    // Several values reach the API as one comma-joined parameter, in the options' order.
+    await user.click(screen.getByRole('checkbox', { name: 'Licencia' }))
+    await waitFor(() =>
+      expect(lastCall(api, '/api/alerts').searchParams.get('credentialKind')).toBe('licencia,certificado_medico'),
+    )
+    await user.click(screen.getByRole('checkbox', { name: 'Medicina' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Licencias' }))
+    await waitFor(() => expect(lastCall(api, '/api/alerts').searchParams.get('area')).toBe('licencias,medicina'))
+
+    // Pending is the default; both boxes (or none) mean every alert.
+    expect(screen.getByRole('checkbox', { name: 'Pendientes' })).toHaveProperty('checked', true)
+    await user.click(screen.getByRole('checkbox', { name: 'Reconocidas' }))
     await waitFor(() => expect(lastCall(api, '/api/alerts').searchParams.has('acknowledged')).toBe(false))
-    await user.selectOptions(screen.getByLabelText('Reconocimiento'), 'reconocidas')
+    await user.click(screen.getByRole('checkbox', { name: 'Pendientes' }))
     await waitFor(() => expect(lastCall(api, '/api/alerts').searchParams.get('acknowledged')).toBe('true'))
+    expect(lastCall(api, '/api/alerts').searchParams.get('page')).toBe('1')
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar todo' }))
+    await waitFor(() => expect(paramsOf(lastCall(api, '/api/alerts'))).toEqual({ page: '1', pageSize: '20' }))
   })
 
   it('acknowledges an alert and reloads the list and the counts (ALR-06)', async () => {

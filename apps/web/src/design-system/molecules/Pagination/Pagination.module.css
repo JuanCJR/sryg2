@@ -1,7 +1,17 @@
 .pagination {
   display: flex;
   align-items: center;
-  gap: var(--s-4);
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-4) var(--s-6);
+  width: 100%;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-4) var(--s-6);
 }
 
 .status {
@@ -13,4 +23,108 @@
 .figure {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums slashed-zero;
+  color: var(--fg);
+}
+
+.size {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.sizeLabel {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.sizeSelect {
+  height: calc(var(--control-h) - var(--s-3));
+  padding: 0 var(--s-3);
+  border: var(--hair) solid var(--control-border);
+  border-radius: var(--r-1);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.sizeSelect:hover {
+  border-color: var(--control-border-strong);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: auto;
+}
+
+.pages {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin: 0 var(--s-2);
+  list-style: none;
+}
+
+.pageButton {
+  min-width: var(--control-h);
+  height: var(--control-h);
+  padding: 0 var(--s-3);
+  border: var(--hair) solid transparent;
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums slashed-zero;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out-expo),
+    border-color var(--dur-fast) var(--ease-out-expo);
+}
+
+.pageButton:hover:not([aria-current='page']) {
+  background: var(--surface-raised);
+  border-color: var(--control-border);
+}
+
+.pageButton[aria-current='page'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 700;
+  cursor: default;
+}
+
+.gap {
+  min-width: var(--s-6);
+  text-align: center;
+  color: var(--fg-muted);
+}
+
+/* Only the narrow layout reads "Página 2 de 9"; wide layouts show the page buttons. */
+.compact {
+  display: none;
+  padding: 0 var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+@media (max-width: 640px) {
+  .pages,
+  .edge {
+    display: none;
+  }
+
+  .compact {
+    display: inline;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
 }

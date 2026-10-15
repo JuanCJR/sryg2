@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Button, Lamp } from '../../../design-system'
+import { Button, Lamp, Pagination } from '../../../design-system'
+import { useClientPagination } from '../../../shared/hooks/useClientPagination'
 import styles from './BloqueosPanel.module.css'
 
 export interface BloqueoRowView {
@@ -35,6 +36,12 @@ export function BloqueosPanel({ rows, onResolve }: BloqueosPanelProps) {
     if (filter === 'abiertos') return row.estado === 'abierto'
     return row.estado === 'resuelto'
   })
+  const pages = useClientPagination(visible)
+
+  const changeFilter = (next: Filter) => {
+    setFilter(next)
+    pages.setPage(1)
+  }
 
   return (
     <div className={styles.wrap}>
@@ -45,7 +52,7 @@ export function BloqueosPanel({ rows, onResolve }: BloqueosPanelProps) {
             type="button"
             className={styles.filterKey}
             aria-pressed={filter === option.id}
-            onClick={() => setFilter(option.id)}
+            onClick={() => changeFilter(option.id)}
           >
             {option.label}
           </button>
@@ -55,7 +62,7 @@ export function BloqueosPanel({ rows, onResolve }: BloqueosPanelProps) {
         {visible.length === 0 ? (
           <p className={styles.empty}>Sin bloqueos para este filtro.</p>
         ) : (
-          visible.map((row) => (
+          pages.pageItems.map((row) => (
             <div key={row.id} className={styles.row}>
               <Lamp status={row.estado === 'abierto' ? 'bloqueada' : 'activa'} size="md" />
               <span className={styles.id}>{row.referencia}</span>
@@ -76,6 +83,16 @@ export function BloqueosPanel({ rows, onResolve }: BloqueosPanelProps) {
           ))
         )}
       </div>
+      {pages.total > 0 ? (
+        <Pagination
+          page={pages.page}
+          pageCount={pages.pageCount}
+          onPageChange={pages.setPage}
+          total={pages.total}
+          pageSize={pages.pageSize}
+          onPageSizeChange={pages.setPageSize}
+        />
+      ) : null}
     </div>
   )
 }

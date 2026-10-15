@@ -45,7 +45,11 @@ function NombreCell({ row }: { row: ConditionRow }) {
   )
 }
 
-/** A responsive "table" (div-based, role=table) shared by Licencias, Habilitaciones, and Médico. */
+/**
+ * A responsive "table" (div-based, role=table) shared by Licencias, Habilitaciones, and Médico.
+ * Columns follow the UI convention: Número (ID), Nombre (the credential's type), Restricciones
+ * (detail), Emitida, Vence, Restante, then Estado last.
+ */
 export function ConditionTable({
   caption,
   groupLabel,
@@ -67,17 +71,14 @@ export function ConditionTable({
     <div className={styles.table} role="table" aria-label={caption}>
       {groupLabel ? <div className={styles.groupHeader}>{groupLabel}</div> : null}
       <div className={clsx(styles.headerRow, gridClass)} role="row">
-        <span className={styles.headerCell} role="columnheader">
-          Estado
-        </span>
-        <span className={styles.headerCell} role="columnheader">
-          Nombre
-        </span>
         {hideNumero ? null : (
           <span className={clsx(styles.headerCell, styles.colNumero)} role="columnheader">
             Número
           </span>
         )}
+        <span className={styles.headerCell} role="columnheader">
+          Nombre
+        </span>
         {showRestricciones ? (
           <span className={styles.headerCell} role="columnheader">
             {restriccionesHeader}
@@ -91,6 +92,9 @@ export function ConditionTable({
         </span>
         <span className={clsx(styles.headerCell, styles.headerRestante)} role="columnheader">
           Restante
+        </span>
+        <span className={styles.headerCell} role="columnheader">
+          Estado
         </span>
       </div>
       {rows.length === 0 ? (
@@ -117,17 +121,14 @@ export function ConditionTable({
                 <span key={`sweep-${row.id}-${highlightNonce}`} className={styles.sweepOverlay} aria-hidden="true" />
               ) : null}
               <div className={styles.gridRow}>
-                <span role="cell">
-                  <StatusBadge status={row.status} />
-                </span>
-                <span role="cell">
-                  <NombreCell row={row} />
-                </span>
                 {hideNumero ? null : (
                   <span role="cell" className={styles.numero}>
                     {row.numero}
                   </span>
                 )}
+                <span role="cell">
+                  <NombreCell row={row} />
+                </span>
                 {showRestricciones ? (
                   <span role="cell" className={styles.restriccion}>
                     {row.restriccionLabel}
@@ -141,6 +142,9 @@ export function ConditionTable({
                 </span>
                 <span role="cell" className={styles.restante}>
                   {row.restanteLabel}
+                </span>
+                <span role="cell">
+                  <StatusBadge status={row.status} />
                 </span>
               </div>
               <div className={styles.phoneRow}>

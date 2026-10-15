@@ -17,8 +17,10 @@ function parsePage(payload: unknown): Paginated<BlockDto> {
 }
 
 export interface BlocksQuery {
-  status?: BlockStatus
-  type?: BlockType
+  /** Empty or absent = every status. */
+  status?: readonly BlockStatus[]
+  /** Empty or absent = every type. */
+  type?: readonly BlockType[]
   personalId?: string
   /** Person name or cédula. */
   q?: string
@@ -26,10 +28,14 @@ export interface BlocksQuery {
   pageSize: number
 }
 
-/** GET /api/blocks — filtered by status, type and person, newest first. */
+/** GET /api/blocks — filtered by status, type and person, newest first. Multi-value filters travel comma-joined. */
 export async function listBlocks(query: BlocksQuery, fetchJson: FetchJson = defaultFetchJson) {
   const params = new URLSearchParams({ page: String(query.page), pageSize: String(query.pageSize) })
-  for (const key of ['status', 'type', 'personalId', 'q'] as const) {
+  for (const key of ['status', 'type'] as const) {
+    const values = query[key]
+    if (values?.length) params.set(key, values.join(','))
+  }
+  for (const key of ['personalId', 'q'] as const) {
     const value = query[key]
     if (value) params.set(key, value)
   }

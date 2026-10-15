@@ -80,7 +80,7 @@ describe('/auditoria (REP-04)', () => {
     expect(await screen.findByRole('heading', { name: 'Acceso restringido' })).toBeTruthy()
   })
 
-  it('lists the trail newest first with date, actor, action, entity and changed fields', async () => {
+  it('lists the trail newest first: number, actor, action, entity, changed fields, then date', async () => {
     const api = signIn(userWith('supervisor', 'medicina'), (url) =>
       url.pathname === '/api/audit' ? page(ENTRIES) : undefined,
     )
@@ -88,6 +88,11 @@ describe('/auditoria (REP-04)', () => {
 
     expect(await screen.findByRole('heading', { name: 'Auditoría', level: 1 })).toBeTruthy()
     const table = await screen.findByRole('table', { name: 'Registro de auditoría' })
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent),
+    ).toEqual(['N.º', 'Actor', 'Acción', 'Entidad', 'Campos', 'Fecha y hora (UTC)'])
     const rows = within(table).getAllByRole('row').slice(1)
     expect(
       rows.map((row) =>
@@ -96,8 +101,8 @@ describe('/auditoria (REP-04)', () => {
           .map((cell) => cell.textContent),
       ),
     ).toEqual([
-      ['02 oct 2026 · 14:05', 'Supervisora De Prueba', 'Actualizar', 'Personal', 'cargo, address'],
-      ['01 oct 2026 · 08:00', 'Sistema', 'Autenticar', 'Usuario', '—'],
+      ['2', 'Supervisora De Prueba', 'Actualizar', 'Personal', 'cargo, address', '02 oct 2026 · 14:05'],
+      ['1', 'Sistema', 'Autenticar', 'Usuario', '—', '01 oct 2026 · 08:00'],
     ])
     expect(screen.getByText('2 registros')).toBeTruthy()
     const call = lastAuditCall(api)
@@ -125,10 +130,11 @@ describe('/auditoria (REP-04)', () => {
     renderApp('/auditoria')
     await screen.findByRole('table', { name: 'Registro de auditoría' })
 
-    await user.selectOptions(screen.getByLabelText('Acción'), 'actualizar')
-    await user.selectOptions(screen.getByLabelText('Entidad'), 'licencia')
-    await user.type(screen.getByLabelText('Actor'), 'supervisora')
-    await user.type(screen.getByLabelText('ID de entidad'), ENTITY_ID)
+    const filters = screen.getByRole('complementary', { name: 'Filtros de auditoría' })
+    await user.click(within(filters).getByRole('checkbox', { name: 'Actualizar' }))
+    await user.click(within(filters).getByRole('checkbox', { name: 'Licencia' }))
+    await user.type(screen.getByLabelText('Nombre o correo'), 'supervisora')
+    await user.type(screen.getByLabelText('Identificador (UUID)'), ENTITY_ID)
     await user.type(screen.getByLabelText('Desde'), '01102026')
     await user.type(screen.getByLabelText('Hasta'), '14102026')
 
@@ -146,6 +152,37 @@ describe('/auditoria (REP-04)', () => {
     )
   })
 
+  it('sends several checked actions and entities as one comma-joined param each, and clears them all', async () => {
+    const api = signIn(userWith('administrador', 'ambas'), (url) =>
+      url.pathname === '/api/audit' ? page(ENTRIES) : undefined,
+    )
+    const user = userEvent.setup()
+    renderApp('/auditoria')
+    await screen.findByRole('table', { name: 'Registro de auditoría' })
+
+    const filters = screen.getByRole('complementary', { name: 'Filtros de auditoría' })
+    // Checked in reverse; the param keeps the options' own order.
+    await user.click(within(filters).getByRole('checkbox', { name: 'Emitir' }))
+    await user.click(within(filters).getByRole('checkbox', { name: 'Crear' }))
+    await user.click(within(filters).getByRole('checkbox', { name: 'Licencia' }))
+    await user.click(within(filters).getByRole('checkbox', { name: 'Personal' }))
+
+    await waitFor(() => {
+      const params = lastAuditCall(api).searchParams
+      expect(params.get('action')).toBe('crear,emitir')
+      expect(params.get('entity')).toBe('personal_aeronautico,licencia')
+      expect(params.get('page')).toBe('1')
+    })
+
+    await user.click(within(filters).getByRole('button', { name: /Limpiar todo/ }))
+    await waitFor(() => {
+      const params = lastAuditCall(api).searchParams
+      expect(params.has('action')).toBe(false)
+      expect(params.has('entity')).toBe(false)
+    })
+    expect((within(filters).getByRole('checkbox', { name: 'Crear' }) as HTMLInputElement).checked).toBe(false)
+  })
+
   it('does not query with an incomplete entity id or an inverted range, and says why', async () => {
     const api = signIn(userWith('administrador', 'ambas'), (url) =>
       url.pathname === '/api/audit' ? page(ENTRIES) : undefined,
@@ -155,9 +192,9 @@ describe('/auditoria (REP-04)', () => {
     await screen.findByRole('table', { name: 'Registro de auditoría' })
     const before = auditCalls(api).length
 
-    await user.type(screen.getByLabelText('ID de entidad'), '7c9e')
+    await user.type(screen.getByLabelText('Identificador (UUID)'), '7c9e')
     expect(await screen.findByText('Escriba el identificador completo (UUID).')).toBeTruthy()
-    await user.clear(screen.getByLabelText('ID de entidad'))
+    await user.clear(screen.getByLabelText('Identificador (UUID)'))
     await user.type(screen.getByLabelText('Desde'), '14102026')
     await user.type(screen.getByLabelText('Hasta'), '01102026')
     expect(await screen.findByText('La fecha inicial no puede ser posterior a la final.')).toBeTruthy()
@@ -175,11 +212,21 @@ describe('/auditoria (REP-04)', () => {
     await screen.findByRole('table', { name: 'Registro de auditoría' })
 
     expect(screen.getByText('120 registros')).toBeTruthy()
+    const nav = () => screen.getByRole('navigation', { name: 'Paginación' })
+    expect(nav().textContent).toContain('Mostrando 1–50 de 120')
     await user.click(screen.getByRole('button', { name: 'Página siguiente' }))
     await waitFor(() => expect(lastAuditCall(api).searchParams.get('page')).toBe('2'))
-    await waitFor(() =>
-      expect(screen.getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Página 2 de 3'),
-    )
+    await waitFor(() => expect(nav().textContent).toContain('Página 2 de 3'))
+    expect(nav().textContent).toContain('Mostrando 51–100 de 120')
+
+    // A new page size goes back to page 1.
+    await user.selectOptions(screen.getByLabelText('Filas por página'), '100')
+    await waitFor(() => {
+      const params = lastAuditCall(api).searchParams
+      expect(params.get('pageSize')).toBe('100')
+      expect(params.get('page')).toBe('1')
+    })
+    await waitFor(() => expect(nav().textContent).toContain('Página 1 de 2'))
   })
 
   it('exports the current filters as CSV with the session token (REP-05)', async () => {
@@ -196,12 +243,13 @@ describe('/auditoria (REP-04)', () => {
     renderApp('/auditoria')
     await screen.findByRole('table', { name: 'Registro de auditoría' })
 
-    await user.selectOptions(screen.getByLabelText('Acción'), 'crear')
+    await user.click(screen.getByRole('checkbox', { name: 'Crear' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Eliminar' }))
     await user.click(screen.getByRole('button', { name: 'Exportar CSV' }))
 
     await waitFor(() => expect(click).toHaveBeenCalledOnce())
     const exportCall = api.mock.calls.find(([url]) => new URL(String(url)).pathname === '/api/audit/export.csv')!
-    expect(Object.fromEntries(new URL(String(exportCall[0])).searchParams)).toEqual({ action: 'crear' })
+    expect(Object.fromEntries(new URL(String(exportCall[0])).searchParams)).toEqual({ action: 'crear,eliminar' })
     expect(authorizationOf(exportCall[1])).toBe(`Bearer ${TOKEN}`)
     expect(createObjectURL).toHaveBeenCalledOnce()
     await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith('blob:auditoria'))
@@ -238,9 +286,12 @@ describe('Expediente > Historial', () => {
     expect(within(table).getByText('Supervisora De Prueba')).toBeTruthy()
     expect(lastAuditCall(api).searchParams.get('personId')).toBe(PERSON_ID)
 
-    await user.selectOptions(within(panel).getByLabelText('Acción'), 'emitir')
+    const filters = within(panel).getByRole('complementary', { name: 'Filtros del historial' })
+    expect(within(filters).queryByLabelText('Identificador (UUID)')).toBeNull()
+    await user.click(within(filters).getByRole('checkbox', { name: 'Emitir' }))
     await waitFor(() => expect(lastAuditCall(api).searchParams.get('action')).toBe('emitir'))
     expect(lastAuditCall(api).searchParams.get('personId')).toBe(PERSON_ID)
+    expect(within(panel).getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Mostrando 1–1 de 1')
   })
 
   it('shows its own empty and error states', async () => {

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { listQuerySchema } from './common'
+import { csvEnum, listQuerySchema } from './common'
 import { BLOCK_STATUSES, BLOCK_TYPES } from './enums'
 
 // Contracts of the validation-blocking module (W1-3).
@@ -40,8 +40,9 @@ export type ResolveBlockInput = z.infer<typeof resolveBlockSchema>
 
 /** `q` searches the person by name or cédula; `personalId` narrows to one person (the Expediente). */
 export const listBlocksQuerySchema = listQuerySchema.extend({
-  status: blockStatusSchema.optional(),
-  type: blockTypeSchema.optional(),
+  /** Multi-value: `?status=activo,resuelto` or repeated params. */
+  status: csvEnum(BLOCK_STATUSES),
+  type: csvEnum(BLOCK_TYPES),
   personalId: z.uuid().optional(),
 })
 export type ListBlocksQuery = z.infer<typeof listBlocksQuerySchema>

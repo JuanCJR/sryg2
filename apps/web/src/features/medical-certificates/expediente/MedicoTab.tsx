@@ -1,18 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { MedicalCertificateDto } from '@sryg/types'
-import { Button } from '../../../design-system'
+import { Button, Pagination } from '../../../design-system'
 import type { ConditionRow } from '../../../app/expediente/ConditionTable'
 import type { ExpedienteSlotProps } from '../../../app/expediente/types'
 import { useRole } from '../../../app/role/useRole'
 import { medicalForm } from '../../../app/routes'
 import { useApiResource } from '../../../shared/api/useApiResource'
+import { useClientPagination } from '../../../shared/hooks/useClientPagination'
 import { CertificateHistory } from '../components/CertificateHistory'
 import { MedicoPanel, type MedicoPanelState } from '../components/MedicoPanel'
 import { getCertificateHistory, listPersonCertificates } from '../data/medical-certificates-client'
 import { daysUntil, formatDay, formatRemaining, localToday } from '../domain/dates'
 import { certificateName, STATUS_TO_BADGE } from '../domain/labels'
 import styles from '../components/MedicoPanel.module.css'
+
+const NO_CERTIFICATES: MedicalCertificateDto[] = []
 
 function toRow(certificate: MedicalCertificateDto, today: string): ConditionRow {
   const notes = [...certificate.observations.map((o) => o.nameEs), certificate.restrictions].filter(Boolean)
@@ -65,6 +68,8 @@ export function MedicoTab({ person }: ExpedienteSlotProps) {
   const { can } = useRole()
   const navigate = useNavigate()
   const resource = useApiResource(`medical-certificates:${person.id}`, () => listPersonCertificates(person.id))
+  // One certificate per renewal: the list grows over a career, so it pages on the client.
+  const pagination = useClientPagination(resource.status === 'ready' ? resource.data.items : NO_CERTIFICATES)
 
   let state: MedicoPanelState
   if (resource.status === 'loading') state = { status: 'loading' }
@@ -73,11 +78,21 @@ export function MedicoTab({ person }: ExpedienteSlotProps) {
     const today = localToday()
     state = {
       status: 'ready',
-      rows: resource.data.items.map((c) => toRow(c, today)),
+      rows: pagination.pageItems.map((c) => toRow(c, today)),
+      pagination:
+        pagination.total > 0 ? (
+          <Pagination
+            page={pagination.page}
+            pageCount={pagination.pageCount}
+            onPageChange={pagination.setPage}
+            total={pagination.total}
+            pageSize={pagination.pageSize}
+          />
+        ) : undefined,
       thresholdDays: resource.data.alertThresholdDays.value,
       thresholdIsPlaceholder: resource.data.alertThresholdDays.isPlaceholder,
       hasActiveBlock: resource.data.hasActiveBlock,
-      history: can('audit', 'read') ? <HistorySection certificates={resource.data.items} /> : undefined,
+      history: can('audit', 'read') ? <HistorySection certificates={pagination.pageItems} /> : undefined,
     }
   }
 
