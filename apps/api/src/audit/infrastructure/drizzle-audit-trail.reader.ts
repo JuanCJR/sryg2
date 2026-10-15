@@ -11,7 +11,7 @@ import {
   usuario,
 } from '@sryg/db'
 import type { AuditFilter, Paginated } from '@sryg/types'
-import { and, count, desc, eq, gte, ilike, lt, or, type SQL, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, ilike, inArray, lt, or, type SQL, sql } from 'drizzle-orm'
 import type { AuditPage, AuditTrailEntry, AuditTrailReader } from '../domain/audit-trail'
 
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (c) => `\\${c}`)
@@ -38,8 +38,8 @@ function where({ actor, action, entity, entityId, personId, from, to }: AuditFil
   const actorLike = actor ? `%${escapeLike(actor)}%` : ''
   return and(
     actor ? or(ilike(usuario.fullName, actorLike), ilike(usuario.email, actorLike)) : undefined,
-    action ? eq(auditoria.action, action) : undefined,
-    entity ? eq(auditoria.entity, entity) : undefined,
+    action ? inArray(auditoria.action, action) : undefined,
+    entity ? inArray(auditoria.entity, entity) : undefined,
     entityId ? eq(auditoria.entityId, entityId) : undefined,
     personId
       ? or(eq(auditoria.entityId, personId), sql`${auditoria.entityId} in ${personEntityIds(personId)}`)

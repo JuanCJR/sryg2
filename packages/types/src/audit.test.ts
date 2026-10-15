@@ -22,8 +22,8 @@ describe('auditListQuerySchema', () => {
     })
     expect(parsed).toEqual({
       actor: 'ana',
-      action: 'crear',
-      entity: 'personal_aeronautico',
+      action: ['crear'],
+      entity: ['personal_aeronautico'],
       entityId: ID,
       personId: ID,
       from: '2026-10-01',
@@ -35,6 +35,22 @@ describe('auditListQuerySchema', () => {
 
   it('drops blank text filters', () => {
     expect(auditListQuerySchema.parse({ actor: '  ', entity: '' })).toEqual({ page: 1, pageSize: 50 })
+    expect(auditListQuerySchema.parse({ action: ' ', entity: [' ', ','] })).toEqual({ page: 1, pageSize: 50 })
+  })
+
+  it('accepts several actions and entities, comma-separated or repeated', () => {
+    expect(
+      auditListQuerySchema.parse({
+        action: 'crear,actualizar',
+        entity: [' licencia ', 'personal_aeronautico,licencia'],
+      }),
+    ).toEqual({
+      action: ['crear', 'actualizar'],
+      entity: ['licencia', 'personal_aeronautico'],
+      page: 1,
+      pageSize: 50,
+    })
+    expect(auditListQuerySchema.safeParse({ action: 'crear,borrar_todo' }).success).toBe(false)
   })
 
   it('rejects an unknown action, malformed ids or dates, and a page size over 100', () => {
@@ -53,7 +69,7 @@ describe('auditListQuerySchema', () => {
 
 describe('auditExportQuerySchema', () => {
   it('takes the same filters without pagination (REP-05)', () => {
-    expect(auditExportQuerySchema.parse({ action: 'actualizar', page: '3' })).toEqual({ action: 'actualizar' })
+    expect(auditExportQuerySchema.parse({ action: 'actualizar', page: '3' })).toEqual({ action: ['actualizar'] })
     expect(auditExportQuerySchema.safeParse({ from: '2026-10-15', to: '2026-10-14' }).success).toBe(false)
   })
 })

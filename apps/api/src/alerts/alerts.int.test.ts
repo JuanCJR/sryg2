@@ -294,6 +294,33 @@ describe('alerts http', () => {
     expect(await keysFor(people.ana, { acknowledged: 'false' })).toHaveLength(3)
   })
 
+  it('accepts several kinds, areas and credential kinds, comma-separated or as repeated params', async () => {
+    const keysOf = async (query: string) => {
+      const { body } = await http()
+        .get(`/api/alerts?personalId=${people.ana}&${query}`)
+        .set(as(users.admin))
+        .expect(200)
+      return (body.items as Alert[]).map(keyOf).sort()
+    }
+    const license = `licencia:${ids.license}:vencida`
+    const typeRating = `habilitacion_tipo:${ids.typeRating}:proxima`
+    const cert = `certificado_medico:${ids.anaCert}:proxima`
+    expect(await keysOf('credentialKind=licencia,certificado_medico')).toEqual([license, cert].sort())
+    expect(await keysOf('credentialKind=licencia&credentialKind=habilitacion_tipo')).toEqual(
+      [license, typeRating].sort(),
+    )
+    expect(await keysOf('kind=vencida,proxima')).toEqual([license, typeRating, cert].sort())
+    expect(await keysOf('area=licencias&area=medicina&kind=proxima')).toEqual([typeRating, cert].sort())
+    expect(await keysOf('area=&credentialKind=')).toEqual([license, typeRating, cert].sort())
+
+    const { body: summary } = await http()
+      .get(`/api/alerts/summary?personalId=${people.ana}&credentialKind=licencia,certificado_medico`)
+      .set(as(users.admin))
+      .expect(200)
+    expect(summary).toMatchObject({ total: 2, byCredentialKind: { licencia: 1, certificado_medico: 1 } })
+    await http().get('/api/alerts?kind=vencida,bloqueada').set(as(users.admin)).expect(400)
+  })
+
   it('paginates, oldest due date first', async () => {
     const page1 = await http()
       .get('/api/alerts')

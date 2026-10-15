@@ -140,8 +140,8 @@ const inRange = (date: string | null, { from, to }: ReportFilters) =>
 const matchesLicense = (license: LicenseRecord | null, { licenseTypeId, rav60Category }: ReportFilters) =>
   (!licenseTypeId && !rav60Category) ||
   (license !== null &&
-    (!licenseTypeId || license.licenseTypeId === licenseTypeId) &&
-    (!rav60Category || license.rav60Category === rav60Category))
+    (!licenseTypeId || licenseTypeId.includes(license.licenseTypeId)) &&
+    (!rav60Category || rav60Category.includes(license.rav60Category)))
 
 const statusOf = (ctx: StatusContext, expiryDate: string | null, personalId: string) =>
   deriveCredentialStatus(expiryDate, ctx.today, ctx.thresholdDays, ctx.blockedPersonIds.has(personalId))
@@ -158,7 +158,7 @@ export function buildExpiryReport(data: ReportDataset, ctx: StatusContext, filte
     const byDate = dateStatusOf(ctx, c.expiryDate)
     if (c.expiryDate === null || (byDate !== 'vencida' && byDate !== 'proxima_a_vencer')) continue
     const status = statusOf(ctx, c.expiryDate, c.person.id)
-    if (!matchesLicense(c.license, filters) || (filters.status && status !== filters.status)) continue
+    if (!matchesLicense(c.license, filters) || (filters.status && !filters.status.includes(status))) continue
     if (!inRange(c.expiryDate, filters)) continue
     rows.push({
       person: c.person,
@@ -234,7 +234,7 @@ export function buildConsolidatedReport(
     .filter(
       ({ row, licenses }) =>
         ((!filters.licenseTypeId && !filters.rav60Category) || licenses.some((l) => matchesLicense(l, filters))) &&
-        (!filters.status || row.status === filters.status) &&
+        (!filters.status || filters.status.includes(row.status)) &&
         inRange(row.nextExpiryDate, filters),
     )
     .map(({ row }) => row)

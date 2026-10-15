@@ -1,19 +1,26 @@
-/* SRYG design tokens ("Crew Alerting"): one neutral ramp supplies every tone; hue lives only in status lamps. */
+/* SRYG design tokens ("Crew Alerting"): one navy-tinted ramp supplies every tone; the INAC blue is the only
+   brand accent (primary actions, selection, focus); red/amber hue lives only in status lamps. */
 
 :root,
 [data-theme='night'] {
   /* Neutral ramp */
-  --n-0: #07090b;
-  --n-1: #0e1114;
-  --n-2: #161a1e;
-  --n-3: #22272c;
-  --n-4: #343a40;
-  --n-5: #4d545b;
-  --n-6: #6b737a;
-  --n-7: #8e959b;
-  --n-8: #b6bbc0;
-  --n-9: #dde0e3;
-  --n-10: #f5f6f7;
+  --n-0: #04172b;
+  --n-1: #071d33;
+  --n-2: #0b2540;
+  --n-3: #12304f;
+  --n-4: #1f3f61;
+  --n-5: #3b5672;
+  --n-6: #657a8f;
+  --n-7: #8b9cae;
+  --n-8: #b4c1ce;
+  --n-9: #dbe3eb;
+  --n-10: #f4f7fa;
+
+  /* INAC institutional blue — replaces the old near-black as the brand/accent ink */
+  --inac-blue: #04528a;
+  --inac-blue-deep: #033e68;
+  --inac-blue-light: #2a72ad;
+  --inac-blue-glow: #7fb6e6;
 
   /* Semantic — night */
   --bg: var(--n-1);
@@ -24,9 +31,15 @@
   --rule: var(--n-4);
   --control-border: var(--n-6);
   --control-border-strong: var(--n-8);
-  --inverse-bg: var(--n-10);
-  --inverse-fg: var(--n-0);
-  --focus: var(--n-10);
+  --inverse-bg: var(--inac-blue-light);
+  --inverse-fg: #ffffff;
+  --accent: var(--inac-blue-light);
+  --accent-hover: #3a84c2;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(127, 182, 230, 0.14);
+  --accent-ink: var(--inac-blue-glow);
+  --scrim: rgba(2, 12, 24, 0.7);
+  --focus: var(--inac-blue-glow);
 
   /* Status lamps — night */
   --lamp-red: #ff5a4e;
@@ -42,17 +55,23 @@
 
 [data-theme='day'] {
   /* Neutral ramp stays identical; only the semantic mapping flips */
-  --n-0: #07090b;
-  --n-1: #0e1114;
-  --n-2: #161a1e;
-  --n-3: #22272c;
-  --n-4: #343a40;
-  --n-5: #4d545b;
-  --n-6: #6b737a;
-  --n-7: #8e959b;
-  --n-8: #b6bbc0;
-  --n-9: #dde0e3;
-  --n-10: #f5f6f7;
+  --n-0: #04172b;
+  --n-1: #071d33;
+  --n-2: #0b2540;
+  --n-3: #12304f;
+  --n-4: #1f3f61;
+  --n-5: #3b5672;
+  --n-6: #657a8f;
+  --n-7: #8b9cae;
+  --n-8: #b4c1ce;
+  --n-9: #dbe3eb;
+  --n-10: #f4f7fa;
+
+  /* INAC institutional blue — replaces the old near-black as the brand/accent ink */
+  --inac-blue: #04528a;
+  --inac-blue-deep: #033e68;
+  --inac-blue-light: #2a72ad;
+  --inac-blue-glow: #7fb6e6;
 
   /* Semantic — day */
   --bg: var(--n-10);
@@ -63,9 +82,15 @@
   --rule: var(--n-9);
   --control-border: var(--n-6);
   --control-border-strong: var(--n-4);
-  --inverse-bg: var(--n-0);
-  --inverse-fg: var(--n-10);
-  --focus: var(--n-0);
+  --inverse-bg: var(--inac-blue);
+  --inverse-fg: #ffffff;
+  --accent: var(--inac-blue);
+  --accent-hover: var(--inac-blue-deep);
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(4, 82, 138, 0.09);
+  --accent-ink: var(--inac-blue);
+  --scrim: rgba(4, 23, 43, 0.55);
+  --focus: var(--inac-blue);
 
   /* Status lamps — day */
   --lamp-red: #d12f24;
@@ -73,7 +98,7 @@
   --lamp-red-icon: #ffffff;
   --lamp-amber: #f2a900;
   --lamp-amber-icon: var(--n-0);
-  --lamp-amber-outline: rgba(7, 9, 11, 0.45);
+  --lamp-amber-outline: rgba(4, 23, 43, 0.45);
   --lamp-unlit: var(--n-5);
 
   color-scheme: light;
@@ -89,14 +114,20 @@
     --rule: var(--n-9);
     --control-border: var(--n-6);
     --control-border-strong: var(--n-4);
-    --inverse-bg: var(--n-0);
-    --inverse-fg: var(--n-10);
-    --focus: var(--n-0);
+    --inverse-bg: var(--inac-blue);
+    --inverse-fg: #ffffff;
+    --accent: var(--inac-blue);
+    --accent-hover: var(--inac-blue-deep);
+    --accent-fg: #ffffff;
+    --accent-soft: rgba(4, 82, 138, 0.09);
+    --accent-ink: var(--inac-blue);
+    --scrim: rgba(4, 23, 43, 0.55);
+    --focus: var(--inac-blue);
 
     --lamp-red: #d12f24;
     --lamp-red-hatch: #a8241b;
     --lamp-red-icon: #ffffff;
-    --lamp-amber-outline: rgba(7, 9, 11, 0.45);
+    --lamp-amber-outline: rgba(4, 23, 43, 0.45);
     --lamp-unlit: var(--n-5);
 
     color-scheme: light;
