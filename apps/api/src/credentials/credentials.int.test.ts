@@ -259,10 +259,10 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
     expect(text).toContain(`Cred${RUN} Ficticia holder`)
     expect(text).toContain(`${RUN} Piloto Comercial - Avión`)
     expect(text).toContain('Commercial Pilot - Airplane')
-    expect(text).toContain(`${RUN} Venezolana / Venezuelan`)
+    expect(text).toContain(`VI Nacionalidad: (Nationality) ${RUN} Venezolana`)
     expect(text).toContain('31/Ene/1990')
-    expect(text).toContain(`${RUN} B737 · ${RUN} Capitán / PIC`)
-    expect(text).toContain(`${RUN} Monomotores Terrestres / Single Engine Land: ${RUN} C172`)
+    expect(text).toContain(`${RUN} B737 ${RUN} Capitán/PIC`)
+    expect(text).toContain(`${RUN} Monomotores Terrestres/Single Engine Land (${RUN} C172)`)
     expect(text).toContain(`${RUN} Debe usar lentes correctores`)
 
     const rows = await issueRows(ids.license)
@@ -278,10 +278,11 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
       /^attachment; filename="credencial-certificado-medico-C-.+\.pdf"$/,
     )
     const text = await pdfText(res.body as Buffer)
-    expect(text).toContain('PRIMERA CLASE')
-    expect(text).toContain('O Rh+')
+    // The class prints as stacked letters, one per line: PRIMERA CLASE / FIRST CLASS.
+    expect(text).toMatch(/P\s+R\s+I\s+M\s+E\s+R\s+A\s+C\s+L\s+A\s+S\s+E/)
+    expect(text).toContain('Grupo sanguíneo y Rh: O Rh (+)')
     expect(text).toContain(`${RUN} No apto para vuelo nocturno; Solo vuelo diurno`)
-    expect(text).toContain(`${RUN} Piloto Comercial - Avión / Commercial Pilot - Airplane`)
+    expect(text).toContain(`${RUN} Piloto Comercial - Avión`)
     expect(text).not.toContain(`${RUN} Técnico de Mantenimiento`)
 
     const rows = await issueRows(ids.certificate)

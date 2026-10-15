@@ -114,9 +114,10 @@ describe('PdfKitCredentialRenderer (D7, §4)', () => {
     expect(back).toMatchSnapshot('medical back')
   })
 
-  it('shows placeholders while the INAC logo, the President signature, the photo or the signature are missing (D18)', async () => {
+  it('shows placeholders while the President signature, the photo or the signature are missing (D18)', async () => {
     const [front] = await textOf(await renderer.render(LICENSE, NO_RESOURCES))
-    expect(front).toContain('LOGO INAC')
+    // The bundled official INAC logo stands in until the Admin uploads one.
+    expect(front).not.toContain('LOGO INAC')
     expect(front).toContain('SIN FIRMA')
     expect(front).toContain('SIN FOTO')
   })
@@ -143,7 +144,7 @@ describe('PdfKitCredentialRenderer (D7, §4)', () => {
   it('says so when the license has no ratings or observations', async () => {
     const card: LicenseCard = { ...LICENSE, typeRatings: [], classRatings: [], observations: [] }
     const [, back] = await textOf(await renderer.render(card, NO_RESOURCES))
-    expect(back).toMatch(/Habilitaciones de tipo[^]*Ninguna \/ None/)
+    expect(back).toMatch(/XII Habilitaciones[^]*Ninguna \/ None/)
     expect(back).toMatch(/Observaciones[^]*Ninguna \/ None/)
   })
 })
