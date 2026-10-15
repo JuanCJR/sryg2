@@ -410,7 +410,7 @@ describe('alerts http', () => {
   it('also recalculates from the daily job (D6)', async () => {
     // Imported after createTestApp, which resets the module registry, so the classes match the app's.
     const { SchedulerRegistry } = await import('@nestjs/schedule')
-    const { AlertsDailyJob, ALERTS_DAILY_JOB } = await import('./infrastructure/alerts-daily-job.js')
+    const { AlertsDailyJob, ALERTS_DAILY_JOB } = await import('./services/alerts-daily-job.js')
     expect(app.get(SchedulerRegistry).getCronJob(ALERTS_DAILY_JOB)).toBeDefined()
     await app.get(AlertsDailyJob).run()
     const rows = await db.select().from(alerta).where(eq(alerta.personalId, people.beto))

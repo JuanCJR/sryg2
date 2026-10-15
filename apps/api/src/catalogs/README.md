@@ -24,3 +24,12 @@ nothing writes nothing.
 ## Access
 
 `@RequirePermission('catalogs', ...)`: every role reads; only the Admin writes (D19, D1).
+
+## Files
+
+- `controllers/`: HTTP routes and request validation.
+- `services/`: business logic: one service per action (`*.service.ts`) plus the rules and helpers they share.
+- `repositories/`: Drizzle queries, built on the pool or on a transaction handle.
+- `dtos/`: data shapes passed between controllers, services and repositories.
+- `catalogs.types.ts`: the repositories a transaction hands to the services (`TransactionRunner`, BR-11).
+- `catalogs.module.ts`: wires the controllers, services and repositories together.

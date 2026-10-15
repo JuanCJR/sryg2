@@ -2,7 +2,7 @@
 
 Create, list, get, update and delete `personal_aeronautico` records, plus the photo, the signature and the
 attached documents of the person's file. Every successful write records its `auditoria` row in the same
-transaction (BR-11, NFR-09) through the `UnitOfWork`; a duplicate cedula returns 409 and leaves no entity and no
+transaction (BR-11, NFR-09) through `TransactionRunner`; a duplicate cedula returns 409 and leaves no entity and no
 audit row.
 
 Fields follow D21: first and last names, document type and nationality (catalog ids), birth date, address,
@@ -29,3 +29,12 @@ Upload errors: 400 when the file or a field is missing, 413 over 5 MB, 415 for o
 
 Enforced by the global `PermissionGuard` through `@RequirePermission('personnel', ...)` (AUTH-04, D1, D24):
 every role reads; the Admin and Supervisors of any area write; Consulta gets 403 on writes.
+
+## Files
+
+- `controllers/`: HTTP routes and request validation, plus the exception filters or middleware only this module uses.
+- `services/`: business logic: one service per action (`*.service.ts`) plus the rules and helpers they share.
+- `repositories/`: Drizzle queries, built on the pool or on a transaction handle.
+- `dtos/`: data shapes passed between controllers, services and repositories.
+- `personnel.types.ts`: the repositories a transaction hands to the services (`TransactionRunner`, BR-11).
+- `personnel.module.ts`: wires the controllers, services and repositories together.

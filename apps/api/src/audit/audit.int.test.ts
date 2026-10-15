@@ -15,7 +15,7 @@ import {
 import { count, eq, inArray } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { Argon2PasswordHasher } from '../auth/infrastructure/argon2-password-hasher'
+import { Argon2PasswordHasher } from '../auth/services/argon2-password-hasher'
 import { createTestApp } from '../test/create-test-app'
 import { createTestUsers, deleteTestUsers, type TestUser } from '../test/test-users'
 

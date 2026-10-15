@@ -44,3 +44,12 @@ Medicina get 403.
 
 A renewal updates the license row in place: its previous dates live in the `renovar` audit snapshot, which
 is what the history shows.
+
+## Files
+
+- `controllers/`: HTTP routes and request validation.
+- `services/`: business logic: one service per action (`*.service.ts`) plus the rules and helpers they share.
+- `repositories/`: Drizzle queries, built on the pool or on a transaction handle.
+- `dtos/`: data shapes passed between controllers, services and repositories.
+- `licenses.types.ts`: the repositories a transaction hands to the services (`TransactionRunner`, BR-11).
+- `licenses.module.ts`: wires the controllers, services and repositories together.

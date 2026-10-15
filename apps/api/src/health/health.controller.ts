@@ -1,8 +1,8 @@
 import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common'
 import { sql } from 'drizzle-orm'
 import type { Db } from '@sryg/db'
-import { Public } from '../shared/http/public.decorator'
-import { DB } from '../infrastructure/database/database.module'
+import { DB } from '../common/database/database.module'
+import { Public } from '../common/decorators/public.decorator'
 
 @Public()
 @Controller('health')

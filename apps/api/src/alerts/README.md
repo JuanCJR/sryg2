@@ -4,7 +4,7 @@ Idempotent expiry alerts, recalculated daily and on request, with acknowledgemen
 
 ## Recalculation
 
-`RecalculateAlertsUseCase` rebuilds the `alerta` table from licenses, type ratings, class ratings and medical certificates:
+`RecalculateAlertsService` rebuilds the `alerta` table from licenses, type ratings, class ratings and medical certificates:
 
 - `vencida` from the day after the expiry date, `proxima` while the remaining days are within the threshold `alerts.threshold_days` (D3, BR-12). Both come from `deriveCredentialStatus`, ignoring blocks: an alert is about the date.
 - Licenses with `expiry_date` null (D20) never raise alerts.
@@ -25,3 +25,12 @@ Every role with `alerts:read` (all of them, D1) may call them.
 | POST | `/api/alerts/:id/acknowledge` | Audited as `reconocer` in the same transaction (BR-11). 404 if unknown, 409 if already acknowledged. |
 
 The area of an alert is the area of its credential (`alertAreaOf` in `@sryg/types`): licenses and ratings belong to `licencias`, medical certificates to `medicina`.
+
+## Files
+
+- `controllers/`: HTTP routes and request validation.
+- `services/`: business logic: one service per action (`*.service.ts`) plus the rules and helpers they share.
+- `repositories/`: Drizzle queries, built on the pool or on a transaction handle.
+- `dtos/`: data shapes passed between controllers, services and repositories.
+- `alerts.types.ts`: the repositories a transaction hands to the services (`TransactionRunner`, BR-11).
+- `alerts.module.ts`: wires the controllers, services and repositories together.

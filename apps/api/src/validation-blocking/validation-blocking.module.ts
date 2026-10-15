@@ -1,55 +1,53 @@
 import { Module } from '@nestjs/common'
 import type { Db } from '@sryg/db'
 import { AuditModule } from '../audit/audit.module'
-import { DrizzleAuditLog } from '../audit/infrastructure/drizzle-audit-log'
-import { DB } from '../infrastructure/database/database.module'
-import { DrizzleUnitOfWork } from '../infrastructure/database/drizzle-unit-of-work'
-import { GetBlockUseCase } from './application/get-block.use-case'
-import { ListBlocksUseCase } from './application/list-blocks.use-case'
-import { RegisterBlockUseCase } from './application/register-block.use-case'
-import { ResolveBlockUseCase } from './application/resolve-block.use-case'
-import type { BlockRepository } from './domain/block-repository'
-import type { BlockingUnitOfWork } from './domain/blocking-unit-of-work'
-import { BlocksController } from './http/blocks.controller'
-import { DrizzleBlockRepository } from './infrastructure/drizzle-block.repository'
+import { AuditLogRepository } from '../audit/repositories/audit-log.repository'
+import { DB } from '../common/database/database.module'
+import { TransactionRunner } from '../common/database/transaction-runner'
+import { BlocksController } from './controllers/blocks.controller'
+import { BlockRepository } from './repositories/block.repository'
+import { GetBlockService } from './services/get-block.service'
+import { ListBlocksService } from './services/list-blocks.service'
+import { RegisterBlockService } from './services/register-block.service'
+import { ResolveBlockService } from './services/resolve-block.service'
+import type { BlockingTransaction } from './validation-blocking.types'
 
-const BLOCK_READER = Symbol('BLOCK_READER')
-const BLOCKING_UOW = Symbol('BLOCKING_UOW')
+const BLOCKING_TRANSACTION = Symbol('BLOCKING_TRANSACTION')
 
 /** Registers and resolves blocks (W1-3); see README.md. */
 @Module({
   imports: [AuditModule],
   controllers: [BlocksController],
   providers: [
-    { provide: BLOCK_READER, inject: [DB], useFactory: (db: Db) => new DrizzleBlockRepository(db) },
+    { provide: BlockRepository, inject: [DB], useFactory: (db: Db) => new BlockRepository(db) },
     {
-      provide: BLOCKING_UOW,
+      provide: BLOCKING_TRANSACTION,
       inject: [DB],
       useFactory: (db: Db) =>
-        new DrizzleUnitOfWork(db, (tx) => ({
-          blocks: new DrizzleBlockRepository(tx),
-          audit: new DrizzleAuditLog(tx),
+        new TransactionRunner(db, (tx) => ({
+          blocks: new BlockRepository(tx),
+          audit: new AuditLogRepository(tx),
         })),
     },
     {
-      provide: RegisterBlockUseCase,
-      inject: [BLOCKING_UOW],
-      useFactory: (uow: BlockingUnitOfWork) => new RegisterBlockUseCase(uow),
+      provide: RegisterBlockService,
+      inject: [BLOCKING_TRANSACTION],
+      useFactory: (transaction: BlockingTransaction) => new RegisterBlockService(transaction),
     },
     {
-      provide: ResolveBlockUseCase,
-      inject: [BLOCKING_UOW],
-      useFactory: (uow: BlockingUnitOfWork) => new ResolveBlockUseCase(uow),
+      provide: ResolveBlockService,
+      inject: [BLOCKING_TRANSACTION],
+      useFactory: (transaction: BlockingTransaction) => new ResolveBlockService(transaction),
     },
     {
-      provide: GetBlockUseCase,
-      inject: [BLOCK_READER],
-      useFactory: (repo: BlockRepository) => new GetBlockUseCase(repo),
+      provide: GetBlockService,
+      inject: [BlockRepository],
+      useFactory: (repo: BlockRepository) => new GetBlockService(repo),
     },
     {
-      provide: ListBlocksUseCase,
-      inject: [BLOCK_READER],
-      useFactory: (repo: BlockRepository) => new ListBlocksUseCase(repo),
+      provide: ListBlocksService,
+      inject: [BlockRepository],
+      useFactory: (repo: BlockRepository) => new ListBlocksService(repo),
     },
   ],
 })

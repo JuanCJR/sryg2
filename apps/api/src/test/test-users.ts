@@ -4,7 +4,7 @@ import { type Db, usuario } from '@sryg/db'
 import type { Role, UserArea } from '@sryg/types'
 import { inArray } from 'drizzle-orm'
 import request from 'supertest'
-import { Argon2PasswordHasher } from '../auth/infrastructure/argon2-password-hasher'
+import { Argon2PasswordHasher } from '../auth/services/argon2-password-hasher'
 
 export const TEST_PASSWORD = 'correct horse battery staple'
 
