@@ -24,7 +24,12 @@
 
 .logo {
   display: block;
+  box-sizing: border-box;
+  padding: 4px;
   object-fit: contain;
+  /* The official mark is navy on transparent: a white tile keeps it legible on the night panel. */
+  background: var(--n-10);
+  border-radius: var(--r-1);
 }
 
 .caps {

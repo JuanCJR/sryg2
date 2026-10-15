@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import inacLogo from '../../assets/inac-logo.svg'
+import inacMark from '../../assets/inac-mark.png'
 import { useTheme } from '../../design-system'
 import styles from './AuthTemplate.module.css'
 
@@ -25,7 +25,7 @@ export function AuthTemplate({ visual, pitch, children }: AuthTemplateProps) {
     <div className={styles.page}>
       <aside className={styles.panel}>
         <div className={styles.brand}>
-          <img className={styles.logo} src={inacLogo} width={40} height={40} alt="" />
+          <img className={styles.logo} src={inacMark} width={40} height={40} alt="" />
           <span className={styles.caps}>INAC</span>
         </div>
         {visual ? (
