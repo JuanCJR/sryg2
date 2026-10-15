@@ -1,11 +1,6 @@
-import { PendingScreen } from '../../../app/templates/PendingScreen'
-import styles from './VerificarPage.module.css'
+import { VerificarContainer } from '../containers/VerificarContainer'
 
-/** Public credential verification (D9), outside the shell. Placeholder; W2-2 feat/credentials-pdf replaces it. */
+/** Public credential verification (D9), outside the shell: the QR of every card points here. */
 export function VerificarPage() {
-  return (
-    <main className={styles.page}>
-      <PendingScreen title="Verificación de credencial" plannedChange="W2-2 feat/credentials-pdf" />
-    </main>
-  )
+  return <VerificarContainer />
 }
