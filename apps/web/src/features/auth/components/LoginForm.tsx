@@ -1,5 +1,5 @@
 import type { FormEventHandler, RefObject } from 'react'
-import { Button, FormField, Input, Notice } from '../../../design-system'
+import { BrandMark, Button, FormField, Input, Notice } from '../../../design-system'
 import { LOGIN_FIELD_MESSAGES, type LoginFieldIssues } from '../domain/validation'
 import type { LoginNotice } from '../domain/login-notice'
 import styles from './LoginForm.module.css'
@@ -9,7 +9,8 @@ export interface LoginFormProps {
   password: string
   showPassword: boolean
   issues: LoginFieldIssues
-  notice: LoginNotice
+  /** Null while there is nothing to report (idle, or field errors already shown inline). */
+  notice: LoginNotice | null
   submitting: boolean
   passwordRef: RefObject<HTMLInputElement | null>
   onEmailChange: (value: string) => void
@@ -19,7 +20,7 @@ export interface LoginFormProps {
   onRetry: () => void
 }
 
-/** Presentational sign-in form: a fixed-height notice slot, two fields, the submitting plane row and the actions. */
+/** Presentational sign-in form: the SRYG brand, an inline notice when there is something to report, two fields, the submitting plane row and the actions. */
 export function LoginForm({
   email,
   password,
@@ -36,13 +37,17 @@ export function LoginForm({
 }: LoginFormProps) {
   return (
     <>
+      <div className={styles.brand}>
+        <BrandMark size={64} />
+        <span className={styles.brandName}>SRYG</span>
+      </div>
       <h1 className={styles.title}>Ingresar</h1>
-      <div className={styles.slot}>
+      {notice ? (
         <Notice tone={notice.tone} title={notice.title}>
           {notice.message}
           {notice.countdown ? <span className={styles.countdown}> {notice.countdown}</span> : null}
         </Notice>
-      </div>
+      ) : null}
       <form className={styles.form} onSubmit={onSubmit} noValidate>
         <FormField label="Correo" error={issues.email ? LOGIN_FIELD_MESSAGES.email[issues.email] : undefined}>
           {(control) => (
@@ -99,7 +104,7 @@ export function LoginForm({
         <Button type="submit" className={styles.block} disabled={submitting}>
           {submitting ? 'Ingresando…' : 'Ingresar'}
         </Button>
-        {notice.retry && !submitting ? (
+        {notice?.retry && !submitting ? (
           <Button type="button" variant="secondary" className={styles.block} onClick={onRetry}>
             Reintentar
           </Button>

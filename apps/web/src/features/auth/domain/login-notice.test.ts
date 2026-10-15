@@ -11,9 +11,9 @@ describe('formatCountdown', () => {
 })
 
 describe('noticeFor', () => {
-  it('is a quiet info notice while idle, and for client validation', () => {
-    expect(noticeFor({ kind: 'idle' }, null)).toMatchObject({ tone: 'info', title: 'Listo' })
-    expect(noticeFor({ kind: 'validation' }, null)).toMatchObject({ tone: 'info', title: 'Listo' })
+  it('shows nothing while idle, nor for client validation', () => {
+    expect(noticeFor({ kind: 'idle' }, null)).toBeNull()
+    expect(noticeFor({ kind: 'validation' }, null)).toBeNull()
   })
 
   it('reports verification while submitting', () => {
@@ -23,7 +23,7 @@ describe('noticeFor', () => {
   it('uses one red notice for invalid credentials, never saying which field was wrong', () => {
     const notice = noticeFor({ kind: 'invalid' }, null)
     expect(notice).toMatchObject({ tone: 'warning', title: 'Credenciales no válidas' })
-    expect(notice.message).not.toMatch(/contraseña incorrecta|correo no existe|no registrado/i)
+    expect(notice?.message).not.toMatch(/contraseña incorrecta|correo no existe|no registrado/i)
   })
 
   it('shows a countdown only when the server gave Retry-After', () => {
@@ -32,12 +32,12 @@ describe('noticeFor', () => {
       title: 'Demasiados intentos',
       message: 'Espere unos minutos.',
     })
-    expect(noticeFor({ kind: 'throttled' }, null).countdown).toBeUndefined()
+    expect(noticeFor({ kind: 'throttled' }, null)?.countdown).toBeUndefined()
     expect(noticeFor({ kind: 'throttled', retryAfterSeconds: 42 }, 42)).toMatchObject({ countdown: '0:42' })
   })
 
-  it('falls back to idle once the countdown reaches zero', () => {
-    expect(noticeFor({ kind: 'throttled', retryAfterSeconds: 42 }, 0)).toMatchObject({ tone: 'info', title: 'Listo' })
+  it('clears the notice once the countdown reaches zero', () => {
+    expect(noticeFor({ kind: 'throttled', retryAfterSeconds: 42 }, 0)).toBeNull()
   })
 
   it('offers a retry when the server is unreachable', () => {

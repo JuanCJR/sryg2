@@ -23,14 +23,15 @@ export function formatCountdown(totalSeconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
 
-const IDLE: LoginNotice = { tone: 'info', title: 'Listo', message: 'Ingrese con su correo y contraseña.' }
-
-/** Copy and tone of the inline notice slot for each phase of the sign-in form. */
-export function noticeFor(phase: LoginPhase, remainingSeconds: number | null): LoginNotice {
+/**
+ * Copy and tone of the inline notice for each phase of the sign-in form. Null when there is nothing to report:
+ * before any attempt, after client validation (the field errors speak for themselves) and once a throttle wait ends.
+ */
+export function noticeFor(phase: LoginPhase, remainingSeconds: number | null): LoginNotice | null {
   switch (phase.kind) {
     case 'idle':
     case 'validation':
-      return IDLE
+      return null
     case 'submitting':
       return { tone: 'info', title: 'Verificando credenciales', message: 'Comprobando sus credenciales…' }
     case 'invalid':
@@ -44,7 +45,7 @@ export function noticeFor(phase: LoginPhase, remainingSeconds: number | null): L
       if (phase.retryAfterSeconds === undefined || remainingSeconds === null) {
         return { tone: 'caution', title: 'Demasiados intentos', message: 'Espere unos minutos.' }
       }
-      if (remainingSeconds <= 0) return IDLE
+      if (remainingSeconds <= 0) return null
       return {
         tone: 'caution',
         title: 'Demasiados intentos',

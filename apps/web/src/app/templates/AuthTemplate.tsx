@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import mark from '../../assets/sryg-mark.jpg'
+import inacLogo from '../../assets/inac-logo.svg'
 import { useTheme } from '../../design-system'
 import styles from './AuthTemplate.module.css'
 
@@ -14,8 +14,8 @@ export interface AuthTemplateProps {
 
 /**
  * Split "access door" layout for signed-out screens. The brand panel is always night-toned (it carries the
- * product mark and the entrance animation); only the form column follows the day/night theme. Below 1025px
- * the panel collapses to the mark header.
+ * INAC logo and the entrance animation); only the form column follows the day/night theme. Below 1025px
+ * the panel collapses to the INAC header.
  */
 export function AuthTemplate({ visual, pitch, children }: AuthTemplateProps) {
   const { resolved, setMode } = useTheme()
@@ -25,11 +25,8 @@ export function AuthTemplate({ visual, pitch, children }: AuthTemplateProps) {
     <div className={styles.page}>
       <aside className={styles.panel}>
         <div className={styles.brand}>
-          <img className={styles.mark} src={mark} width={48} height={48} alt="SRYG" />
-          <div className={styles.brandText}>
-            <span className={styles.caps}>SRYG</span>
-            <span className={styles.sub}>INAC Maracay</span>
-          </div>
+          <img className={styles.logo} src={inacLogo} width={40} height={40} alt="" />
+          <span className={styles.caps}>INAC</span>
         </div>
         {visual ? (
           <div className={styles.stage} aria-hidden="true">
