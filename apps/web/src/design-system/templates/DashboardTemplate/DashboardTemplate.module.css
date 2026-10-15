@@ -94,3 +94,34 @@
     font-size: var(--fs-xl);
   }
 }
+
+.withFilters {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-6);
+}
+
+.filters {
+  position: sticky;
+  top: var(--s-5);
+  max-height: calc(100svh - var(--s-7));
+  overflow-y: auto;
+}
+
+.withFilters .main {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .withFilters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-5);
+  }
+
+  .filters {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}

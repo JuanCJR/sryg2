@@ -175,7 +175,10 @@ export function CatalogPage() {
       </header>
 
       <Section title="Tokens">
-        <Entry title="Neutral ramp" rule="One 11-step navy-tinted ramp supplies every tone in both modes; the INAC blue is the only brand accent.">
+        <Entry
+          title="Neutral ramp"
+          rule="One 11-step navy-tinted ramp supplies every tone in both modes; the INAC blue is the only brand accent."
+        >
           <div className={styles.swatchRow}>
             {NEUTRAL_RAMP.map((n) => (
               <RampSwatch key={`${n.token}-${theme}`} token={n.token} role={n.role} />
@@ -352,10 +355,16 @@ export function CatalogPage() {
         <Entry title="Pagination" rule="Only the page figures use mono — the surrounding words stay in B612.">
           <Pagination page={page} pageCount={13} total={312} pageSize={25} onPageChange={setPage} />
         </Entry>
-        <Entry title="Combobox" rule="Searchable choice: accent-insensitive filter, check on the selected option, × to clear.">
+        <Entry
+          title="Combobox"
+          rule="Searchable choice: accent-insensitive filter, check on the selected option, × to clear."
+        >
           <ComboboxDemo />
         </Entry>
-        <Entry title="FilterPanel" rule="The left filter column of every list; checkbox groups are multi-select, none = all.">
+        <Entry
+          title="FilterPanel"
+          rule="The left filter column of every list; checkbox groups are multi-select, none = all."
+        >
           <FilterPanelDemo />
         </Entry>
         <Entry title="ConfirmDialog" rule="Typed confirmation always resets on open, however the dialog last closed.">
