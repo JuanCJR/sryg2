@@ -39,7 +39,11 @@ export async function medicalCoherenceProblem(
 }
 
 /** New references must point to active catalog items (D19): inactive ones stay only where already used. */
-export async function assertActiveCatalogItems(store: LicenseRepository, catalog: LicenseCatalog, ids: readonly string[]) {
+export async function assertActiveCatalogItems(
+  store: LicenseRepository,
+  catalog: LicenseCatalog,
+  ids: readonly string[],
+) {
   const unique = [...new Set(ids)]
   if (unique.length === 0) return
   const active = await store.activeCatalogIds(catalog, unique)

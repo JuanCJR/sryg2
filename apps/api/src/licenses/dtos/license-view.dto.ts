@@ -1,9 +1,4 @@
-import type {
-  ClassRatingDto,
-  LicenseDto,
-  LicenseListItemDto,
-  TypeRatingDto,
-} from '@sryg/types'
+import type { ClassRatingDto, LicenseDto, LicenseListItemDto, TypeRatingDto } from '@sryg/types'
 
 /** A rating as stored: its status is derived by the services (D17, BR-12). */
 export type TypeRatingView = Omit<TypeRatingDto, 'status'>

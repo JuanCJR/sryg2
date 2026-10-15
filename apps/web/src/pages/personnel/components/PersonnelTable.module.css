@@ -5,7 +5,8 @@
 .headerRow,
 .row {
   display: grid;
-  grid-template-columns: 150px 1fr 200px 240px 140px 180px;
+  /* Fluid text columns (they ellipsize): fixed widths overflowed below ~1300px. */
+  grid-template-columns: 120px minmax(140px, 1.3fr) minmax(0, 1fr) minmax(0, 1.2fr) 120px 168px;
   column-gap: var(--s-4);
   align-items: center;
   padding: var(--s-3) var(--s-4);
@@ -102,7 +103,7 @@
 @media (min-width: 481px) and (max-width: 1024px) {
   .headerRow,
   .row {
-    grid-template-columns: 150px 1fr 120px 180px;
+    grid-template-columns: 120px minmax(0, 1fr) 120px 168px;
   }
 }
 

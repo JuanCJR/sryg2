@@ -10,7 +10,12 @@ import { useDebouncedValue } from '../../../common/hooks/useDebouncedValue'
 import { CatalogDialog } from './CatalogDialog'
 import { CatalogItemForm } from './CatalogItemForm'
 import { CatalogItemsTable } from './CatalogItemsTable'
-import { createCatalogItem, deleteCatalogItem, listCatalogItems, updateCatalogItem } from '../services/catalog-items-client'
+import {
+  createCatalogItem,
+  deleteCatalogItem,
+  listCatalogItems,
+  updateCatalogItem,
+} from '../services/catalog-items-client'
 import { CATALOG_META } from '../utils/catalog-meta'
 import { EMPTY_FORM, toCreateBody, toFormValues, toUpdateBody, type CatalogItemFormValues } from '../utils/item-form'
 import styles from './CatalogContainer.module.css'

@@ -1,5 +1,9 @@
 import { Pagination } from '../../../common/components'
-import { TemplateEmptyFrame, TemplateErrorFrame, TemplateLoadingFrame } from '../../../common/components/TemplateFrames/TemplateFrames'
+import {
+  TemplateEmptyFrame,
+  TemplateErrorFrame,
+  TemplateLoadingFrame,
+} from '../../../common/components/TemplateFrames/TemplateFrames'
 import { AuditFilterPanel } from './AuditFilterPanel'
 import { AuditTable } from './AuditTable'
 import { toAuditRow } from '../utils/audit-view'

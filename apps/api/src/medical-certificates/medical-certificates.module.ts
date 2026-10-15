@@ -74,7 +74,8 @@ const MEDICAL_CERTIFICATES_TRANSACTION = Symbol('MEDICAL_CERTIFICATES_TRANSACTIO
     {
       provide: RenewMedicalCertificateService,
       inject: [MEDICAL_CERTIFICATES_TRANSACTION, Clock],
-      useFactory: (transaction: MedicalCertificatesTransaction, clock: Clock) => new RenewMedicalCertificateService(transaction, clock),
+      useFactory: (transaction: MedicalCertificatesTransaction, clock: Clock) =>
+        new RenewMedicalCertificateService(transaction, clock),
     },
     {
       provide: ListPersonMedicalCertificatesService,
