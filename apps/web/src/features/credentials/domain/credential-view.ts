@@ -52,3 +52,7 @@ export const STATUS_LABEL: Record<DerivedCredentialStatus, string> = {
 
 /** The API refuses expired and blocked cards (409); near expiry still prints. */
 export const canPrint = (status: DerivedCredentialStatus) => status === 'vigente' || status === 'proxima_a_vencer'
+
+/** Identifies a card among the person's licenses and certificates. */
+export const credentialKey = (credential: Pick<PrintableCredential, 'kind' | 'id'>) =>
+  `${credential.kind}:${credential.id}`

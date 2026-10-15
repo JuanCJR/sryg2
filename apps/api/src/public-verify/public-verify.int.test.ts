@@ -1,6 +1,14 @@
 import { randomInt, randomUUID } from 'node:crypto'
 import type { INestApplication } from '@nestjs/common'
-import { bloqueo, catalogLicenseType, certificadoMedico, createDb, licencia, personalAeronautico, usuario } from '@sryg/db'
+import {
+  bloqueo,
+  catalogLicenseType,
+  certificadoMedico,
+  createDb,
+  licencia,
+  personalAeronautico,
+  usuario,
+} from '@sryg/db'
 import { publicVerificationSchema } from '@sryg/types'
 import { eq, inArray } from 'drizzle-orm'
 import request from 'supertest'
@@ -31,7 +39,13 @@ describe('public verification (W2-2, OUT-04, D9)', () => {
     app = await createTestApp()
     const [actor] = await db
       .insert(usuario)
-      .values({ email: `verify-${RUN}@sryg.test`, fullName: 'Test verify', passwordHash: 'x', role: 'administrador', area: 'ambas' })
+      .values({
+        email: `verify-${RUN}@sryg.test`,
+        fullName: 'Test verify',
+        passwordHash: 'x',
+        role: 'administrador',
+        area: 'ambas',
+      })
       .returning()
     actorId = actor!.id
     const person = async () => {
@@ -95,7 +109,12 @@ describe('public verification (W2-2, OUT-04, D9)', () => {
 
   it('answers without authentication and with only the kind, number, status and expiry', async () => {
     const res = await verify(tokens.license).expect(200)
-    expect(res.body).toEqual({ kind: 'licencia', number: `L-${RUN}-1`, status: 'vigente', expiryDate: daysFromToday(400) })
+    expect(res.body).toEqual({
+      kind: 'licencia',
+      number: `L-${RUN}-1`,
+      status: 'vigente',
+      expiryDate: daysFromToday(400),
+    })
     expect(Object.keys(res.body).sort()).toEqual(['expiryDate', 'kind', 'number', 'status'])
     expect(publicVerificationSchema.parse(res.body)).toEqual(res.body)
   })

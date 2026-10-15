@@ -1,11 +1,6 @@
 import PDFDocument from 'pdfkit'
 import QRCode from 'qrcode'
-import {
-  bilingual,
-  BLOOD_TYPE_CARD_LABEL,
-  formatCardDate,
-  MEDICAL_CLASS_CARD_LABEL,
-} from '../domain/card-text'
+import { bilingual, BLOOD_TYPE_CARD_LABEL, formatCardDate, MEDICAL_CLASS_CARD_LABEL } from '../domain/card-text'
 import type {
   CardHolder,
   CardImage,
@@ -122,10 +117,16 @@ function watermark(doc: Doc) {
   doc.circle(cx, cy, 32).stroke()
   doc.ellipse(cx, cy, 14, 32).stroke()
   doc.ellipse(cx, cy, 26, 32).stroke()
-  doc.moveTo(cx, cy - 32).lineTo(cx, cy + 32).stroke()
+  doc
+    .moveTo(cx, cy - 32)
+    .lineTo(cx, cy + 32)
+    .stroke()
   for (const dy of [-20, 0, 20]) {
     const half = Math.sqrt(32 * 32 - dy * dy)
-    doc.moveTo(cx - half, cy + dy).lineTo(cx + half, cy + dy).stroke()
+    doc
+      .moveTo(cx - half, cy + dy)
+      .lineTo(cx + half, cy + dy)
+      .stroke()
   }
   doc.restore()
 }
@@ -174,7 +175,14 @@ function header(doc: Doc, logo: CardImage | null) {
   put(doc, 'REPÚBLICA BOLIVARIANA DE VENEZUELA', x, 6, width, { font: BOLD, size: 5.2, align: 'center' })
   put(doc, 'BOLIVARIAN REPUBLIC OF VENEZUELA', x, 12, width, { font: ITALIC, size: 4.4, align: 'center' })
   put(doc, 'VIII INSTITUTO NACIONAL DE AERONÁUTICA CIVIL', x, 18.5, width, { font: BOLD, size: 5, align: 'center' })
-  doc.save().lineWidth(0.6).strokeColor(CELESTE).moveTo(M, 30).lineTo(W - M, 30).stroke().restore()
+  doc
+    .save()
+    .lineWidth(0.6)
+    .strokeColor(CELESTE)
+    .moveTo(M, 30)
+    .lineTo(W - M, 30)
+    .stroke()
+    .restore()
 }
 
 const fullName = (holder: CardHolder) => `${holder.firstNames} ${holder.lastNames}`
@@ -231,21 +239,29 @@ function medicalFront(doc: Doc, card: MedicalCard) {
   y += put(doc, 'Nombre (Name):', x, y, width, { color: MUTED })
   y += put(doc, fullName(holder), x, y, width, { font: BOLD, size: 5.8, lines: 2 }) + 2
   y += field(doc, 'Número del certificado (Certificate number)', card.number, x, y, width) + 1.5
-  y += field(
-    doc,
-    'Grupo sanguíneo y Rh (Blood type)',
-    holder.bloodType ? BLOOD_TYPE_CARD_LABEL[holder.bloodType] : '—',
-    x,
-    y,
-    width,
-  ) + 1.5
+  y +=
+    field(
+      doc,
+      'Grupo sanguíneo y Rh (Blood type)',
+      holder.bloodType ? BLOOD_TYPE_CARD_LABEL[holder.bloodType] : '—',
+      x,
+      y,
+      width,
+    ) + 1.5
   field(doc, 'Fecha de vencimiento (Expiry date)', formatCardDate(card.expiryDate), x, y, width)
 }
 
 function signatureBlock(doc: Doc, img: CardImage | null, label: string, x: number, width: number) {
   const top = 119
   image(doc, img, 'SIN FIRMA', x + width / 2 - 30, top, 60, 21)
-  doc.save().lineWidth(0.4).strokeColor(INK).moveTo(x, top + 23).lineTo(x + width, top + 23).stroke().restore()
+  doc
+    .save()
+    .lineWidth(0.4)
+    .strokeColor(INK)
+    .moveTo(x, top + 23)
+    .lineTo(x + width, top + 23)
+    .stroke()
+    .restore()
   put(doc, label, x, top + 24.5, width, { size: 3.9, color: MUTED, align: 'center', lines: 2 })
 }
 
@@ -301,7 +317,16 @@ function licenseBack(doc: Doc, card: LicenseCard) {
 function medicalBack(doc: Doc, card: MedicalCard) {
   const restrictions = [...card.observations.map(bilingual), ...(card.restrictions ? [card.restrictions] : [])]
   let y = M
-  y += field(doc, 'Restricciones / Observaciones', restrictions.length ? restrictions.join('; ') : NONE, M, y, BACK_WIDTH, 4) + 2.5
+  y +=
+    field(
+      doc,
+      'Restricciones / Observaciones',
+      restrictions.length ? restrictions.join('; ') : NONE,
+      M,
+      y,
+      BACK_WIDTH,
+      4,
+    ) + 2.5
 
   // The legal texts always print whole; the list of license types takes the room left between them.
   doc.font(REGULAR).fontSize(3.9)
@@ -309,14 +334,15 @@ function medicalBack(doc: Doc, card: MedicalCard) {
     doc.heightOfString(VALIDITY_TEXT, { width: BACK_WIDTH, lineGap: 0 }) +
     doc.heightOfString(DRIVING_TEXT, { width: BACK_WIDTH, lineGap: 0 }) +
     2
-  y += put(
-    doc,
-    'Este certificado médico es válido para el personal técnico aeronáutico que posean las licencias aeronáuticas siguientes:',
-    M,
-    y,
-    BACK_WIDTH,
-    { lines: 3 },
-  ) + 0.8
+  y +=
+    put(
+      doc,
+      'Este certificado médico es válido para el personal técnico aeronáutico que posean las licencias aeronáuticas siguientes:',
+      M,
+      y,
+      BACK_WIDTH,
+      { lines: 3 },
+    ) + 0.8
   const types = card.validForLicenseTypes.length ? card.validForLicenseTypes.map(bilingual).join(' · ') : NONE
   doc.font(BOLD).fontSize(4.3)
   const lineHeight = doc.currentLineHeight(true)

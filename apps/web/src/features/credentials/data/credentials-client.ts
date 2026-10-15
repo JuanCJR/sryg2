@@ -47,26 +47,22 @@ export async function listPrintableCredentials(
       : [],
   ])
   return [
-    ...licenses.map(
-      (l): PrintableCredential => ({
-        kind: 'license',
-        id: l.id,
-        number: l.number,
-        description: l.licenseType.nameEs,
-        expiryDate: l.expiryDate,
-        status: l.status,
-      }),
-    ),
-    ...certificates.map(
-      (c): PrintableCredential => ({
-        kind: 'medical',
-        id: c.id,
-        number: c.number,
-        description: MEDICAL_CLASS_LABEL[c.rav67Class],
-        expiryDate: c.expiryDate,
-        status: c.status,
-      }),
-    ),
+    ...licenses.map((l): PrintableCredential => ({
+      kind: 'license',
+      id: l.id,
+      number: l.number,
+      description: l.licenseType.nameEs,
+      expiryDate: l.expiryDate,
+      status: l.status,
+    })),
+    ...certificates.map((c): PrintableCredential => ({
+      kind: 'medical',
+      id: c.id,
+      number: c.number,
+      description: MEDICAL_CLASS_LABEL[c.rav67Class],
+      expiryDate: c.expiryDate,
+      status: c.status,
+    })),
   ]
 }
 

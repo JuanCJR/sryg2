@@ -5,8 +5,9 @@ import type { ExpedienteSlotProps } from '../../../app/expediente/types'
 import { useRole } from '../../../app/role/useRole'
 import { ApiError } from '../../../shared/api/fetch-json'
 import { useApiResource } from '../../../shared/api/useApiResource'
-import { credentialKey, PrintCredentialDialog, type CredentialOptions } from '../components/PrintCredentialDialog'
+import { PrintCredentialDialog, type CredentialOptions } from '../components/PrintCredentialDialog'
 import { downloadCredentialPdf, listPrintableCredentials } from '../data/credentials-client'
+import { credentialKey } from '../domain/credential-view'
 
 /** Saves a downloaded file through a temporary link. */
 function saveFile(blob: Blob, filename: string) {

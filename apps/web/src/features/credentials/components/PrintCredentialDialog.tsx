@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react'
 import { Button, Radio, Skeleton } from '../../../design-system'
 import {
   canPrint,
+  credentialKey,
   formatDate,
   KIND_LABEL,
   STATUS_LABEL,
@@ -10,9 +11,7 @@ import {
 import styles from './PrintCredentialDialog.module.css'
 
 export type CredentialOptions =
-  | { status: 'loading' }
-  | { status: 'error'; retry: () => void }
-  | { status: 'ready'; items: PrintableCredential[] }
+  { status: 'loading' } | { status: 'error'; retry: () => void } | { status: 'ready'; items: PrintableCredential[] }
 
 export interface PrintCredentialDialogProps {
   /** "cédula · nombre": whose card is printed. */
@@ -27,9 +26,6 @@ export interface PrintCredentialDialogProps {
   onSubmit: () => void
   onCancel: () => void
 }
-
-export const credentialKey = (credential: Pick<PrintableCredential, 'kind' | 'id'>) =>
-  `${credential.kind}:${credential.id}`
 
 function OptionList({
   items,

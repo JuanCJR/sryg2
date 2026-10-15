@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { bilingual, BLOOD_TYPE_CARD_LABEL, formatCardDate, MEDICAL_CLASS_CARD_LABEL, verificationUrl } from './card-text'
+import {
+  bilingual,
+  BLOOD_TYPE_CARD_LABEL,
+  formatCardDate,
+  MEDICAL_CLASS_CARD_LABEL,
+  verificationUrl,
+} from './card-text'
 
 describe('card text (§4 of the parallel plan)', () => {
   it('formats dates as dd/Mmm/aaaa with Spanish month abbreviations', () => {

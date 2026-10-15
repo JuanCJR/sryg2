@@ -40,12 +40,13 @@ function daysFromToday(days: number): string {
   return date.toISOString().slice(0, 10)
 }
 
-/** Collects a binary body (supertest parses only text and JSON by default). */
-function binary(res: NodeJS.ReadableStream, done: (error: Error | null, body: Buffer) => void) {
-  const chunks: Buffer[] = []
-  res.on('data', (chunk: Buffer) => chunks.push(chunk))
-  res.on('end', () => done(null, Buffer.concat(chunks)))
-}
+/** A binary response body as a Buffer (supertest leaves unknown types unparsed). */
+const binary = (req: request.Test) =>
+  req.buffer(true).parse((res, done) => {
+    const chunks: Buffer[] = []
+    res.on('data', (chunk: Buffer) => chunks.push(chunk))
+    res.on('end', () => done(null, Buffer.concat(chunks)))
+  })
 
 async function pdfText(pdf: Buffer): Promise<string> {
   const parser = new PDFParse({ data: new Uint8Array(pdf) })
@@ -80,7 +81,7 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
   const as = (user: TestUser) => ({ Authorization: `Bearer ${user.token}` })
   const licensePdf = (personalId: string, id: string) => `/api/personnel/${personalId}/credentials/license/${id}.pdf`
   const medicalPdf = (personalId: string, id: string) => `/api/personnel/${personalId}/credentials/medical/${id}.pdf`
-  const download = (path: string, user: TestUser) => http().get(path).set(as(user)).buffer(true).parse(binary)
+  const download = (path: string, user: TestUser) => binary(http().get(path).set(as(user)))
   const issueRows = (entityId: string) =>
     db
       .select()
@@ -133,7 +134,10 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
       .returning()
     ids.licenseType = licenseType!.id
     ids.permanentType = permanentType!.id
-    const [typeRating] = await db.insert(catalogTypeRating).values({ nameEs: `${RUN} B737` }).returning()
+    const [typeRating] = await db
+      .insert(catalogTypeRating)
+      .values({ nameEs: `${RUN} B737` })
+      .returning()
     const [fn] = await db
       .insert(catalogFunction)
       .values({ nameEs: `${RUN} Capitán`, nameEn: 'PIC' })
@@ -142,7 +146,10 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
       .insert(catalogClassRating)
       .values({ nameEs: `${RUN} Monomotores Terrestres`, nameEn: 'Single Engine Land' })
       .returning()
-    const [aircraft] = await db.insert(catalogAircraft).values({ nameEs: `${RUN} C172` }).returning()
+    const [aircraft] = await db
+      .insert(catalogAircraft)
+      .values({ nameEs: `${RUN} C172` })
+      .returning()
     const [licenseObs] = await db
       .insert(catalogLicenseObservation)
       .values({ nameEs: `${RUN} Debe usar lentes correctores` })
@@ -166,7 +173,10 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
         .returning()
       return row!.id
     }
-    const insertCertificate = async (personalId: string, values: Partial<typeof certificadoMedico.$inferInsert> = {}) => {
+    const insertCertificate = async (
+      personalId: string,
+      values: Partial<typeof certificadoMedico.$inferInsert> = {},
+    ) => {
       const [row] = await db
         .insert(certificadoMedico)
         .values({
@@ -210,7 +220,9 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
       .values({ licenciaId: ids.license, classRatingId: classRating!.id, expiryDate: daysFromToday(250) })
       .returning()
     await db.insert(habilitacionClaseAeronave).values({ habilitacionClaseId: classRow!.id, aircraftId: aircraft!.id })
-    await db.insert(certificadoObservacion).values({ certificadoMedicoId: ids.certificate, observationId: medicalObs!.id })
+    await db
+      .insert(certificadoObservacion)
+      .values({ certificadoMedicoId: ids.certificate, observationId: medicalObs!.id })
     await db.insert(bloqueo).values({
       personalId: people.blocked.id,
       type: 'administrativo',
@@ -222,7 +234,9 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
   afterAll(async () => {
     await app.close()
     const personIds = Object.values(people).map((p) => p.id)
-    const licenseIds = (await db.select().from(licencia).where(inArray(licencia.personalId, personIds))).map((l) => l.id)
+    const licenseIds = (await db.select().from(licencia).where(inArray(licencia.personalId, personIds))).map(
+      (l) => l.id,
+    )
     if (licenseIds.length > 0) {
       await db.delete(habilitacionTipo).where(inArray(habilitacionTipo.licenciaId, licenseIds))
       await db.delete(habilitacionClase).where(inArray(habilitacionClase.licenciaId, licenseIds))
@@ -260,7 +274,9 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
   it('prints the medical certificate with its class, blood type, restrictions and the license types it covers (D8, D13)', async () => {
     const res = await download(medicalPdf(people.holder.id, ids.certificate), users.admin).expect(200)
     expect(res.headers['content-type']).toBe('application/pdf')
-    expect(res.headers['content-disposition']).toMatch(/^attachment; filename="credencial-certificado-medico-C-.+\.pdf"$/)
+    expect(res.headers['content-disposition']).toMatch(
+      /^attachment; filename="credencial-certificado-medico-C-.+\.pdf"$/,
+    )
     const text = await pdfText(res.body as Buffer)
     expect(text).toContain('PRIMERA CLASE')
     expect(text).toContain('O Rh+')
@@ -293,7 +309,7 @@ describe('credential PDFs http (W2-2, OUT-01..05)', () => {
     expect(await issueRows(ids.expiredLicense)).toHaveLength(0)
   })
 
-  it("answers 404 for a credential of another person or an unknown one, and 400 for a malformed id", async () => {
+  it('answers 404 for a credential of another person or an unknown one, and 400 for a malformed id', async () => {
     await http().get(licensePdf(people.holder.id, ids.otherLicense)).set(as(users.admin)).expect(404)
     await http().get(medicalPdf(people.other.id, ids.certificate)).set(as(users.admin)).expect(404)
     await http().get(licensePdf(people.holder.id, randomUUID())).set(as(users.admin)).expect(404)
