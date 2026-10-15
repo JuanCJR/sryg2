@@ -22,7 +22,7 @@ import {
   validateUserForm,
 } from '../domain/user-form'
 
-const PAGE_SIZE = 25
+const DEFAULT_PAGE_SIZE = 25
 const SEARCH_DEBOUNCE_MS = 300
 const SERVER_DOWN = 'El servidor no respondió. Revise la conexión a la red local e intente de nuevo.'
 
@@ -48,12 +48,13 @@ export function UsuariosContainer() {
   const toast = useToast()
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [form, setForm] = useState<FormState | null>(null)
   const [pending, setPending] = useState<Pending | null>(null)
   const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null)
   const term = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS)
-  const users = useApiResource(`users:${term}:${page}`, () =>
-    listUsers({ q: term || undefined, page, pageSize: PAGE_SIZE }),
+  const users = useApiResource(`users:${term}:${page}:${pageSize}`, () =>
+    listUsers({ q: term || undefined, page, pageSize }),
   )
 
   const refresh = (changed?: ManagedUser) => {
@@ -198,13 +199,25 @@ export function UsuariosContainer() {
       />
     )
 
-  const pageCount = Math.max(1, Math.ceil(users.data.total / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(users.data.total / pageSize))
   return (
     <ListPageTemplate
       {...common}
       status="ready"
       summary={<span>{users.data.total === 1 ? '1 usuario' : `${users.data.total} usuarios`}</span>}
-      pagination={pageCount > 1 ? <Pagination page={page} pageCount={pageCount} onPageChange={setPage} /> : undefined}
+      pagination={
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={users.data.total}
+          pageSize={pageSize}
+          onPageSizeChange={(next) => {
+            setPageSize(next)
+            setPage(1)
+          }}
+        />
+      }
     >
       <UsersTable
         users={users.data.items}

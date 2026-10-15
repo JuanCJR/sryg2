@@ -13,7 +13,7 @@ import { PersonnelIdleHint } from '../components/PersonnelIdleHint'
 import { PersonnelSearchField } from '../components/PersonnelSearchField'
 import { PersonnelTable } from '../components/PersonnelTable'
 
-const PAGE_SIZE = 25
+const DEFAULT_PAGE_SIZE = 25
 const SEARCH_DEBOUNCE_MS = 300
 const EMPTY_COUNTS: PersonnelAnnunciatorCounts = { activa: 0, proxima: 0, vencida: 0, bloqueada: 0 }
 
@@ -33,16 +33,22 @@ export function ListadoContainer() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const term = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS)
 
   // pageSize=1: only the total matters here (empty registry vs. idle console).
   const registry = useApiResource('personnel:total', () => listPersonnel({ page: 1, pageSize: 1 }))
-  const results = useApiResource(term ? `personnel:${term}:${page}` : null, () =>
-    listPersonnel({ q: term, page, pageSize: PAGE_SIZE }),
+  const results = useApiResource(term ? `personnel:${term}:${page}:${pageSize}` : null, () =>
+    listPersonnel({ q: term, page, pageSize }),
   )
 
   const handleQueryChange = (value: string) => {
     setQuery(value)
+    setPage(1)
+  }
+
+  const handlePageSizeChange = (next: number) => {
+    setPageSize(next)
     setPage(1)
   }
 
@@ -151,14 +157,23 @@ export function ListadoContainer() {
     )
   }
 
-  const pageCount = Math.max(1, Math.ceil(results.data.total / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(results.data.total / pageSize))
   return (
     <ListPageTemplate
       {...common}
       status="ready"
       toolbar={toolbar}
       summary={summary}
-      pagination={pageCount > 1 ? <Pagination page={page} pageCount={pageCount} onPageChange={setPage} /> : undefined}
+      pagination={
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          total={results.data.total}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      }
     >
       <PersonnelTable rows={results.data.items.map(toListRow)} />
     </ListPageTemplate>

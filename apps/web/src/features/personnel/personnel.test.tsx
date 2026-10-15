@@ -81,6 +81,47 @@ describe('Listado de personal on the API', () => {
     expect(search?.searchParams.get('pageSize')).toBe('25')
   })
 
+  it('orders the columns by role and pages the results on the server', async () => {
+    const api = signIn(userWith('supervisor', 'licencias'), (url) => {
+      if (!url.searchParams.get('q')) return page([PERSON], 40)
+      return {
+        status: 200,
+        body: {
+          items: [PERSON],
+          page: Number(url.searchParams.get('page')),
+          pageSize: Number(url.searchParams.get('pageSize')),
+          total: 40,
+        },
+      }
+    })
+    const user = userEvent.setup()
+    renderApp('/personal')
+
+    await user.type(await screen.findByLabelText('Buscar por nombre o cédula'), 'prueba')
+    await screen.findByRole('link', { name: /Persona De Prueba Uno/ })
+    const header = screen.getByText('Credencial más crítica').parentElement as HTMLElement
+    expect(Array.from(header.children).map((cell) => cell.textContent)).toEqual([
+      'Cédula',
+      'Nombre',
+      'Categoría',
+      'Credencial más crítica',
+      'Días restantes',
+      'Estado',
+    ])
+    const pagination = screen.getByRole('navigation', { name: 'Paginación' })
+    expect(pagination.textContent).toContain('Mostrando 1–25 de 40')
+    await user.click(within(pagination).getByRole('button', { name: 'Página 2' }))
+    await waitFor(() =>
+      expect(screen.getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Mostrando 26–40 de 40'),
+    )
+    await user.selectOptions(screen.getByLabelText('Filas por página'), '10')
+    await waitFor(() =>
+      expect(screen.getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Mostrando 1–10 de 40'),
+    )
+    const last = new URL(String(api.mock.calls.at(-1)?.[0]))
+    expect([last.searchParams.get('page'), last.searchParams.get('pageSize')]).toEqual(['1', '10'])
+  })
+
   it('says when a search matches nobody', async () => {
     signIn(userWith('consulta', 'medicina'), (url) => (url.searchParams.get('q') ? page([]) : page([PERSON])))
     const user = userEvent.setup()

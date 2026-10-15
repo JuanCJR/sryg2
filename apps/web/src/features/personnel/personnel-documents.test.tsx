@@ -116,6 +116,26 @@ describe('Documentos page key of the Expediente (D21)', () => {
     expect(form.get('file')).toBe(file)
   })
 
+  it('pages a long list of documents on the client, 10 at a time', async () => {
+    const many = Array.from({ length: 12 }, (_, index) => ({
+      ...ATTACHMENT,
+      id: `7a1d6c0e-2b8a-4a41-9c3e-0d4a3a8f6b${String(index).padStart(2, '0')}`,
+      filename: `documento-${index + 1}.pdf`,
+    }))
+    signIn(userWith('consulta', 'licencias'), () => many)
+    const user = userEvent.setup()
+    renderApp(`/personal/${ID}?pagina=documentos`)
+
+    expect(await screen.findByRole('row', { name: /documento-1\.pdf/ })).toBeTruthy()
+    expect(screen.getAllByRole('row')).toHaveLength(11) // header + 10
+    const pagination = screen.getByRole('navigation', { name: 'Paginación' })
+    expect(pagination.textContent).toContain('Mostrando 1–10 de 12')
+    await user.click(within(pagination).getByRole('button', { name: 'Página 2' }))
+    expect(screen.getByRole('row', { name: /documento-12\.pdf/ })).toBeTruthy()
+    expect(screen.queryByRole('row', { name: /documento-1\.pdf/ })).toBeNull()
+    expect(screen.getByRole('navigation', { name: 'Paginación' }).textContent).toContain('Mostrando 11–12 de 12')
+  })
+
   it('checks the type and the 5 MB limit before uploading', async () => {
     const api = signIn(userWith('administrador', 'ambas'), () => [])
     const user = userEvent.setup({ applyAccept: false })
