@@ -15,7 +15,7 @@ Este documento define el trabajo pendiente para terminar SRYG, dividido en promp
 | D7 (OD-09) | Hay dos credenciales: la **licencia** y el **certificado médico**. Cada una es un PDF CR80 (85,6 × 54 mm) de frente y reverso, generado por la API. Ver la §4. |
 | D8 (BR-05) | El certificado médico imprime el grupo sanguíneo (`personal_aeronautico.blood_type`) y las restricciones u observaciones médicas. No se guardan diagnósticos ni exámenes. |
 | D9 | QR de verificación: `GET /api/public/verify/:token` y la página pública `/verificar/:token` muestran **solo** el tipo de credencial, el número, el estado (vigente, vencida o bloqueada) y el vencimiento. Si hay un bloqueo activo, la credencial no se emite (409). |
-| D10 (OD-10) | Reportes v1: (1) vencidas y próximas a vencer, (2) estado consolidado por persona, (3) bloqueos activos. Todos tienen filtros (incluido el tipo de licencia) y exportación a CSV y PDF. El rol Consulta solo ve el 1. |
+| D10 (OD-10) | Reportes v1: (1) vencidas y próximas a vencer, (2) estado consolidado por persona, (3) bloqueos activos. Todos tienen filtros (incluido el tipo de licencia) y exportación a Excel (.xlsx) y PDF (antes CSV; cambiado a Excel por observación del usuario). El rol Consulta solo ve el 1. |
 | D11 (Q1) | Respaldos: una GitHub Action diaria hace `pg_dump`, lo cifra con `age` y lo sube como artifact. Hay un script de restauración y un runbook en `docs/`. No hay página de respaldos. |
 | D12 | Se elimina el modo demo (el selector `?rol=`, `useDemoResource` y `demoData.ts`). El rol sale de `/api/auth/me`. |
 | D13 (BR-09) | Coherencia: cada **tipo de licencia** del catálogo indica qué clase médica RAV 67 exige (o ninguna). Para emitir o renovar una licencia hace falta un certificado médico vigente de esa clase. Una habilitación requiere una licencia vigente. Si alguna condición falla, la API responde 409 con un motivo legible. |
@@ -406,7 +406,7 @@ features/medical-certificates/**.
 <PREÁMBULO con RAMA=feat/audit-viewer>
 Alcance: REP-04/REP-05 (página 10). Acceso: Admin y Supervisor.
 API: GET /api/audit con filtros (actor, acción, entidad, entityId, rango de fechas),
-paginación y exportación a CSV. Solo lectura.
+paginación y exportación a Excel (.xlsx). Solo lectura.
 Web: /auditoria (ListPageTemplate) y, en el Expediente, la pestaña Historial filtrada
 por persona (features/audit/expediente/**). Solo editar features/audit/**.
 ```
@@ -420,7 +420,7 @@ API:
 - Los 3 reportes de D10, con el estado calculado por deriveCredentialStatus y
   ValidityParametersReader.
 - Filtros por tipo de licencia, categoría RAV 60, estado y rango de fechas.
-- Exportación a CSV y PDF (dependencia autorizada: pdfkit). El export se audita.
+- Exportación a Excel (.xlsx, generado sin dependencias) y PDF (dependencia autorizada: pdfkit). El export se audita.
 - Consulta solo accede al reporte 1.
 Web: /reportes (ListPageTemplate). Solo editar features/reports/**.
 Usá fixtures propios en las tablas; no dependas de que otras ramas de la ola 1 estén

@@ -4,12 +4,12 @@ import { DB } from '../common/database/database.module'
 import { AuditController } from './controllers/audit.controller'
 import { AuditLogRepository } from './repositories/audit-log.repository'
 import { AuditTrailRepository } from './repositories/audit-trail.repository'
-import { ExportAuditCsvService } from './services/export-audit-csv.service'
+import { ExportAuditSheetService } from './services/export-audit-sheet.service'
 import { ListAuditEntriesService } from './services/list-audit-entries.service'
 
 /**
  * The audit writer for events that are not part of an entity mutation (e.g. authentication), plus
- * the read-only viewer and CSV export of the trail (W1-7).
+ * the read-only viewer and Excel export of the trail (W1-7).
  */
 @Module({
   controllers: [AuditController],
@@ -22,9 +22,9 @@ import { ListAuditEntriesService } from './services/list-audit-entries.service'
       useFactory: (trail: AuditTrailRepository) => new ListAuditEntriesService(trail),
     },
     {
-      provide: ExportAuditCsvService,
+      provide: ExportAuditSheetService,
       inject: [AuditTrailRepository],
-      useFactory: (trail: AuditTrailRepository) => new ExportAuditCsvService(trail),
+      useFactory: (trail: AuditTrailRepository) => new ExportAuditSheetService(trail),
     },
   ],
   exports: [AuditLogRepository],

@@ -4,6 +4,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ATTACHMENT_MAX_BYTES, type AuthUser, type PersonnelAttachmentDto, type PersonnelDto } from '@sryg/types'
 import { sessionStore } from '../../common/services/session'
+import { chooseRowAction, rowActionLabels } from '../../test/row-actions'
 import { mockApi, type MockHandler } from '../../test/api-mock'
 import { TOKEN, renderApp, userWith } from '../../test/render-app'
 
@@ -176,11 +177,11 @@ describe('Documentos page key of the Expediente (D21)', () => {
     renderApp(`/personal/${ID}?pagina=documentos`)
 
     const row = await screen.findByRole('row', { name: /constancia\.pdf/ })
-    await user.click(within(row).getByRole('button', { name: 'Descargar constancia.pdf' }))
+    await chooseRowAction(user, within(row).getByRole('button', { name: 'Acciones de constancia.pdf' }), 'Descargar')
     await waitFor(() => expect(click).toHaveBeenCalled())
     expect(calls(api, 'GET', `${BASE}/${ATTACHMENT.id}`)).toHaveLength(1)
 
-    await user.click(within(row).getByRole('button', { name: 'Eliminar constancia.pdf' }))
+    await chooseRowAction(user, within(row).getByRole('button', { name: 'Acciones de constancia.pdf' }), 'Eliminar')
     const dialog = await screen.findByRole('dialog', { name: 'Eliminar documento' })
     await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
     expect(await screen.findByText('Aún no hay documentos adjuntos')).toBeTruthy()
@@ -192,8 +193,9 @@ describe('Documentos page key of the Expediente (D21)', () => {
     renderApp(`/personal/${ID}?pagina=documentos`)
 
     const row = await screen.findByRole('row', { name: /constancia\.pdf/ })
-    expect(within(row).getByRole('button', { name: 'Descargar constancia.pdf' })).toBeTruthy()
-    expect(within(row).queryByRole('button', { name: /Eliminar/ })).toBeNull()
+    expect(
+      await rowActionLabels(userEvent.setup(), within(row).getByRole('button', { name: 'Acciones de constancia.pdf' })),
+    ).toEqual(['Descargar'])
     expect(screen.queryByRole('button', { name: 'Adjuntar' })).toBeNull()
   })
 

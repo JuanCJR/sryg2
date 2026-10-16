@@ -4,6 +4,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AuthUser, ManagedUser } from '@sryg/types'
 import { sessionStore } from '../../common/services/session'
+import { chooseRowAction, rowActionLabels } from '../../test/row-actions'
 import { mockApi, type MockHandler } from '../../test/api-mock'
 import { TOKEN, renderApp, userWith } from '../../test/render-app'
 
@@ -83,7 +84,11 @@ describe('Usuarios (AUTH-06, D1, D14, D24)', () => {
     const ines = await rowOf('Inés Prueba')
     expect(ines.textContent).toContain('Inactivo')
     expect(ines.textContent).toContain('Debe cambiar la contraseña')
-    expect(within(ines).getByRole('button', { name: 'Activar' })).toBeTruthy()
+    expect(await rowActionLabels(user, within(ines).getByRole('button', { name: 'Acciones de Inés Prueba' }))).toEqual([
+      'Editar',
+      'Restablecer contraseña',
+      'Activar',
+    ])
 
     await user.type(screen.getByLabelText('Buscar por nombre o correo'), 'ana')
     await waitFor(() => expect(screen.queryByText('Luis Prueba')).toBeNull())
@@ -206,7 +211,11 @@ describe('Usuarios (AUTH-06, D1, D14, D24)', () => {
     const user = userEvent.setup()
     renderApp('/usuarios')
 
-    await user.click(within(await rowOf('Ana Prueba')).getByRole('button', { name: 'Editar' }))
+    await chooseRowAction(
+      user,
+      within(await rowOf('Ana Prueba')).getByRole('button', { name: /^Acciones de/ }),
+      'Editar',
+    )
     const dialog = await screen.findByRole('dialog', { name: 'Editar usuario' })
     expect((within(dialog).getByLabelText('Correo') as HTMLInputElement).disabled).toBe(true)
     const name = within(dialog).getByLabelText('Nombre')
@@ -233,7 +242,11 @@ describe('Usuarios (AUTH-06, D1, D14, D24)', () => {
     const user = userEvent.setup()
     renderApp('/usuarios')
 
-    await user.click(within(await rowOf('Luis Prueba')).getByRole('button', { name: 'Editar' }))
+    await chooseRowAction(
+      user,
+      within(await rowOf('Luis Prueba')).getByRole('button', { name: /^Acciones de/ }),
+      'Editar',
+    )
     const dialog = await screen.findByRole('dialog', { name: 'Editar usuario' })
     await user.selectOptions(within(dialog).getByLabelText('Rol'), 'supervisor')
     await user.click(within(dialog).getByRole('button', { name: 'Guardar cambios' }))
@@ -249,7 +262,11 @@ describe('Usuarios (AUTH-06, D1, D14, D24)', () => {
     const user = userEvent.setup()
     renderApp('/usuarios')
 
-    await user.click(within(await rowOf('Ana Prueba')).getByRole('button', { name: 'Restablecer contraseña' }))
+    await chooseRowAction(
+      user,
+      within(await rowOf('Ana Prueba')).getByRole('button', { name: /^Acciones de/ }),
+      'Restablecer contraseña',
+    )
     const confirm = await screen.findByRole('dialog', { name: 'Restablecer contraseña' })
     expect(confirm.textContent).toContain('Ana Prueba')
     await user.click(within(confirm).getByRole('button', { name: 'Restablecer' }))
@@ -270,7 +287,11 @@ describe('Usuarios (AUTH-06, D1, D14, D24)', () => {
     const user = userEvent.setup()
     renderApp('/usuarios')
 
-    await user.click(within(await rowOf('Ana Prueba')).getByRole('button', { name: 'Desactivar' }))
+    await chooseRowAction(
+      user,
+      within(await rowOf('Ana Prueba')).getByRole('button', { name: /^Acciones de/ }),
+      'Desactivar',
+    )
     await user.click(
       within(await screen.findByRole('dialog', { name: 'Desactivar usuario' })).getByRole('button', {
         name: 'Desactivar',
@@ -278,10 +299,18 @@ describe('Usuarios (AUTH-06, D1, D14, D24)', () => {
     )
     await waitFor(() => expect(calls(api, 'POST', `/api/users/${ANA.id}/deactivate`)).toHaveLength(1))
 
-    await user.click(within(await rowOf('Inés Prueba')).getByRole('button', { name: 'Activar' }))
+    await chooseRowAction(
+      user,
+      within(await rowOf('Inés Prueba')).getByRole('button', { name: /^Acciones de/ }),
+      'Activar',
+    )
     await waitFor(() => expect(calls(api, 'POST', `/api/users/${INES.id}/activate`)).toHaveLength(1))
 
-    await user.click(within(await rowOf('Luis Prueba')).getByRole('button', { name: 'Desactivar' }))
+    await chooseRowAction(
+      user,
+      within(await rowOf('Luis Prueba')).getByRole('button', { name: /^Acciones de/ }),
+      'Desactivar',
+    )
     await user.click(
       within(await screen.findByRole('dialog', { name: 'Desactivar usuario' })).getByRole('button', {
         name: 'Desactivar',

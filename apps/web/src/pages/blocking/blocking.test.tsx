@@ -4,6 +4,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AuthUser, BlockDto, PersonnelDto } from '@sryg/types'
 import { sessionStore } from '../../common/services/session'
+import { chooseRowAction } from '../../test/row-actions'
 import { mockApi, type MockHandler } from '../../test/api-mock'
 import { TOKEN, renderApp, userWith } from '../../test/render-app'
 
@@ -223,7 +224,11 @@ describe('/bloqueos', () => {
     const user = userEvent.setup()
     renderApp('/bloqueos')
 
-    await user.click(await screen.findByRole('button', { name: 'Resolver bloqueo' }))
+    await chooseRowAction(
+      user,
+      await screen.findByRole('button', { name: /^Acciones del bloqueo/ }),
+      'Resolver bloqueo',
+    )
     const dialog = screen.getByRole('dialog', { name: 'Resolver bloqueo' })
     await user.click(within(dialog).getByRole('button', { name: 'Resolver' }))
     expect(within(dialog).getByText('Escriba cómo se solventó el impedimento.')).toBeTruthy()

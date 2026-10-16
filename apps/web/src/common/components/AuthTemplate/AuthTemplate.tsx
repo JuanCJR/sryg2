@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import inacLogo from '../../../assets/inac-logo.png'
 import { useTheme } from '..'
+import { AppFooter } from '../AppFooter/AppFooter'
 import styles from './AuthTemplate.module.css'
 
 export interface AuthTemplateProps {
@@ -54,6 +55,7 @@ export function AuthTemplate({ visual, pitch, children }: AuthTemplateProps) {
         <main className={styles.content}>
           <div className={styles.column}>{children}</div>
         </main>
+        <AppFooter compact />
       </section>
     </div>
   )

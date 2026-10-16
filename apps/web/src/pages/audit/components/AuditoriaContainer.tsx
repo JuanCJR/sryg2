@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Download } from 'lucide-react'
+import { FileSpreadsheet } from 'lucide-react'
 import { Breadcrumb, Button, Pagination, useToast } from '../../../common/components'
 import { ListPageTemplate } from '../../../common/components/ListPageTemplate/ListPageTemplate'
 import { AuditFilterPanel } from './AuditFilterPanel'
 import { AuditTable } from './AuditTable'
-import { downloadAuditCsv } from '../services/audit-client'
+import { downloadAuditSheet } from '../services/audit-client'
 import { formatCount, toAuditRow } from '../utils/audit-view'
 import { AUDIT_PAGE_SIZES, useAuditTrail } from '../hooks/useAuditTrail'
 import styles from './AuditoriaContainer.module.css'
@@ -16,7 +16,7 @@ const LOAD_ERROR = {
 
 /**
  * Auditoría (REP-04/REP-05) on `GET /api/audit`: the whole trail, newest first, filtered and paged
- * on the server, with a CSV export of the current filters. Read-only; the route guard already
+ * on the server, with an Excel export of the current filters. Read-only; the route guard already
  * limits it to `audit:read` (Admin and Supervisor, D1).
  */
 export function AuditoriaContainer() {
@@ -28,7 +28,7 @@ export function AuditoriaContainer() {
   const handleExport = async () => {
     setExporting(true)
     try {
-      await downloadAuditCsv(applied)
+      await downloadAuditSheet(applied)
     } catch {
       toast.show({ tone: 'error', message: 'No se pudo exportar la auditoría. Intente de nuevo.' })
     } finally {
@@ -40,8 +40,8 @@ export function AuditoriaContainer() {
   const filters = <AuditFilterPanel values={values} errors={errors} onChange={setFilter} onClearAll={clearFilters} />
   const toolbar = (
     <div className={styles.toolbar}>
-      <Button variant="secondary" icon={Download} loading={exporting} disabled={!valid} onClick={handleExport}>
-        Exportar CSV
+      <Button variant="secondary" icon={FileSpreadsheet} loading={exporting} disabled={!valid} onClick={handleExport}>
+        Exportar Excel
       </Button>
     </div>
   )

@@ -1,10 +1,10 @@
 /* Same table rhythm as PersonnelTable (Listado direction); the Dashboard has no approved direction yet. */
 .table {
-  border: var(--hair) solid var(--rule);
   /* The columns follow the list's own width: beside the filter column it is much narrower than the viewport. */
   container-type: inline-size;
 }
 
+/* Proportional columns: they share the width on any screen; below the minimum the frame scrolls. */
 .headerRow,
 .row {
   display: grid;

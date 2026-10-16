@@ -73,10 +73,11 @@ describe('reportQuerySchema', () => {
     expect(reportQuerySchema.safeParse({ from: '2026-05-02', to: '2026-05-01' }).success).toBe(false)
   })
 
-  it('requires csv or pdf to export', () => {
+  it('requires xlsx or pdf to export', () => {
     expect(reportExportQuerySchema.parse({ format: 'pdf' })).toMatchObject({ format: 'pdf' })
+    expect(reportExportQuerySchema.parse({ format: 'xlsx' })).toMatchObject({ format: 'xlsx' })
     expect(reportExportQuerySchema.safeParse({}).success).toBe(false)
-    expect(reportExportQuerySchema.safeParse({ format: 'xlsx' }).success).toBe(false)
+    expect(reportExportQuerySchema.safeParse({ format: 'csv' }).success).toBe(false)
   })
 })
 

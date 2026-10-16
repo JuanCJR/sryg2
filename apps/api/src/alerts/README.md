@@ -18,11 +18,11 @@ It runs every day at midnight (server time) with `@nestjs/schedule` (`AlertsDail
 
 Every role with `alerts:read` (all of them, D1) may call them.
 
-| Method | Path | Notes |
-|---|---|---|
-| GET | `/api/alerts` | Filters `kind`, `acknowledged`, `area` (`licencias` / `medicina`), `credentialKind`, `personalId`; `page`, `pageSize`. `kind`, `area` and `credentialKind` take several values (`?area=a,b` or repeated params). Ordered by due date. |
-| GET | `/api/alerts/summary` | Same filters. Counts by kind, acknowledgement, credential kind and area. |
-| POST | `/api/alerts/:id/acknowledge` | Audited as `reconocer` in the same transaction (BR-11). 404 if unknown, 409 if already acknowledged. |
+| Method | Path                          | Notes                                                                                                                                                                                                                                 |
+| ------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/alerts`                 | Filters `kind`, `acknowledged`, `area` (`licencias` / `medicina`), `credentialKind`, `personalId`; `page`, `pageSize`. `kind`, `area` and `credentialKind` take several values (`?area=a,b` or repeated params). Ordered by due date. |
+| GET    | `/api/alerts/summary`         | Same filters. Counts by kind, acknowledgement, credential kind and area.                                                                                                                                                              |
+| POST   | `/api/alerts/:id/acknowledge` | Audited as `reconocer` in the same transaction (BR-11). 404 if unknown, 409 if already acknowledged.                                                                                                                                  |
 
 The area of an alert is the area of its credential (`alertAreaOf` in `@sryg/types`): licenses and ratings belong to `licencias`, medical certificates to `medicina`.
 

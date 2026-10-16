@@ -5,18 +5,18 @@ LIC-01..08, D13, D20, D22).
 
 ## Endpoints
 
-| Method and path | Permission | What it does |
-|---|---|---|
-| `GET /api/licenses` | licenses read | Query as in SLYM: `q` (applicant: names or document number), `number`, `licenseTypeId`, `expiryFrom`/`expiryTo` (inclusive), `personalId`, paginated. Sorted by expiry (no expiry last). |
-| `GET /api/licenses/check` | licenses read | Pre-check of a trámite (LIC-05): active block, D13 coherence and the projected expiry with its `PENDIENTE INAC` flag. |
-| `GET /api/licenses/:id` | licenses read | One license with its observations and ratings. |
-| `GET /api/licenses/:id/history` | audit read | History (LIC-06): the audit rows of the license and of its ratings, newest first. |
-| `GET /api/personnel/:id/licenses` | licenses read | The person's licenses with their ratings (Expediente). |
-| `POST /api/licenses` | licenses write | Issue, with the ratings of the same trámite. |
-| `POST /api/licenses/:id/renew` | licenses write | Renew in place, with the rating changes (add, renew, remove) of the same trámite. |
-| `POST /api/licenses/:id/{type,class}-ratings` | licenses write | Add a rating. |
-| `POST /api/licenses/:id/{type,class}-ratings/:ratingId/renew` | licenses write | Renew a rating (new expiry). |
-| `DELETE /api/licenses/:id/{type,class}-ratings/:ratingId` | licenses write | Remove a rating. |
+| Method and path                                               | Permission     | What it does                                                                                                                                                                             |
+| ------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/licenses`                                           | licenses read  | Query as in SLYM: `q` (applicant: names or document number), `number`, `licenseTypeId`, `expiryFrom`/`expiryTo` (inclusive), `personalId`, paginated. Sorted by expiry (no expiry last). |
+| `GET /api/licenses/check`                                     | licenses read  | Pre-check of a trámite (LIC-05): active block, D13 coherence and the projected expiry with its `PENDIENTE INAC` flag.                                                                    |
+| `GET /api/licenses/:id`                                       | licenses read  | One license with its observations and ratings.                                                                                                                                           |
+| `GET /api/licenses/:id/history`                               | audit read     | History (LIC-06): the audit rows of the license and of its ratings, newest first.                                                                                                        |
+| `GET /api/personnel/:id/licenses`                             | licenses read  | The person's licenses with their ratings (Expediente).                                                                                                                                   |
+| `POST /api/licenses`                                          | licenses write | Issue, with the ratings of the same trámite.                                                                                                                                             |
+| `POST /api/licenses/:id/renew`                                | licenses write | Renew in place, with the rating changes (add, renew, remove) of the same trámite.                                                                                                        |
+| `POST /api/licenses/:id/{type,class}-ratings`                 | licenses write | Add a rating.                                                                                                                                                                            |
+| `POST /api/licenses/:id/{type,class}-ratings/:ratingId/renew` | licenses write | Renew a rating (new expiry).                                                                                                                                                             |
+| `DELETE /api/licenses/:id/{type,class}-ratings/:ratingId`     | licenses write | Remove a rating.                                                                                                                                                                         |
 
 Writes are allowed to the Admin and to the Supervisor de Licencias (D1, D24); Consulta and the Supervisor de
 Medicina get 403.

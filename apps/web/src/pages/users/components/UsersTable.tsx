@@ -1,5 +1,6 @@
+import { KeyRound, Pencil, UserCheck, UserX } from 'lucide-react'
 import type { ManagedUser } from '@sryg/types'
-import { Button, Lamp } from '../../../common/components'
+import { ActionMenu, Lamp, TableFrame } from '../../../common/components'
 import { AREA_LABEL, ROLE_LABEL } from '../../../common/utils/role-labels'
 import styles from './UsersTable.module.css'
 
@@ -16,47 +17,50 @@ export interface UsersTableProps {
  */
 export function UsersTable({ users, onEdit, onResetPassword, onToggleActive }: UsersTableProps) {
   return (
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th scope="col">Correo</th>
-          <th scope="col">Nombre</th>
-          <th scope="col">Rol</th>
-          <th scope="col">Área</th>
-          <th scope="col">Estado</th>
-          <th scope="col">
-            <span className="visually-hidden">Acciones</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {users.map((user) => (
-          <tr key={user.id} className={user.isActive ? undefined : styles.inactive}>
-            <td className={styles.email}>{user.email}</td>
-            <td className={styles.name}>{user.fullName}</td>
-            <td>{ROLE_LABEL[user.role]}</td>
-            <td>{AREA_LABEL[user.area]}</td>
-            <td>
-              <span className={styles.state}>
-                <Lamp status={user.isActive ? 'activa' : 'sin-datos'} size="sm" />
-                {user.isActive ? 'Activo' : 'Inactivo'}
-              </span>
-              {user.mustChangePassword ? <span className={styles.pending}>Debe cambiar la contraseña</span> : null}
-            </td>
-            <td className={styles.actions}>
-              <Button variant="ghost" size="sm" onClick={() => onEdit(user)}>
-                Editar
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => onResetPassword(user)}>
-                Restablecer contraseña
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => onToggleActive(user)}>
-                {user.isActive ? 'Desactivar' : 'Activar'}
-              </Button>
-            </td>
+    <TableFrame>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th scope="col">Correo</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Rol</th>
+            <th scope="col">Área</th>
+            <th scope="col">Estado</th>
+            <th scope="col">
+              <span className="visually-hidden">Acciones</span>
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user.id} className={user.isActive ? undefined : styles.inactive}>
+              <td className={styles.email}>{user.email}</td>
+              <td className={styles.name}>{user.fullName}</td>
+              <td>{ROLE_LABEL[user.role]}</td>
+              <td>{AREA_LABEL[user.area]}</td>
+              <td>
+                <span className={styles.state}>
+                  <Lamp status={user.isActive ? 'activa' : 'sin-datos'} size="sm" />
+                  {user.isActive ? 'Activo' : 'Inactivo'}
+                </span>
+                {user.mustChangePassword ? <span className={styles.pending}>Debe cambiar la contraseña</span> : null}
+              </td>
+              <td className={styles.actions}>
+                <ActionMenu
+                  label={`Acciones de ${user.fullName}`}
+                  items={[
+                    { label: 'Editar', icon: Pencil, onSelect: () => onEdit(user) },
+                    { label: 'Restablecer contraseña', icon: KeyRound, onSelect: () => onResetPassword(user) },
+                    user.isActive
+                      ? { label: 'Desactivar', icon: UserX, danger: true, onSelect: () => onToggleActive(user) }
+                      : { label: 'Activar', icon: UserCheck, onSelect: () => onToggleActive(user) },
+                  ]}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </TableFrame>
   )
 }

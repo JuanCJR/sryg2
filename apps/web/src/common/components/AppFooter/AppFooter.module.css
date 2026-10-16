@@ -1,0 +1,30 @@
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-5);
+  padding: var(--s-4) var(--shell-main-pad, var(--s-6));
+  border-top: var(--hair) solid var(--rule);
+  background: var(--surface);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.rights {
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .footer {
+    flex-direction: column;
+    padding: var(--s-4) var(--s-5);
+  }
+}
+
+.compact {
+  justify-content: center;
+  border-top: 0;
+  background: transparent;
+  text-align: center;
+}

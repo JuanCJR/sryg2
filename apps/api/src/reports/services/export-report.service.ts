@@ -16,7 +16,7 @@ export interface ReportFile {
 export const REPORT_AUDIT_ENTITY = 'reporte'
 
 /**
- * Exports every row matching the filters to CSV or PDF (REP-02) and records the export in the audit
+ * Exports every row matching the filters to Excel (.xlsx) or PDF (REP-02) and records the export in the audit
  * trail with the report, format, filters and row count. Consulta exports nothing (§4, D10).
  */
 export class ExportReportService {

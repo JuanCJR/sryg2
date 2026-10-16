@@ -1,7 +1,6 @@
 .table {
   display: flex;
   flex-direction: column;
-  border: var(--hair) solid var(--rule);
   /* The columns follow the table's own width: beside the filter column it is much narrower than the viewport. */
   container-type: inline-size;
 }

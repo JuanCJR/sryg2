@@ -16,7 +16,11 @@ import { count, eq, inArray } from 'drizzle-orm'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { Argon2PasswordHasher } from '../auth/services/argon2-password-hasher'
+import { XLSX_CONTENT_TYPE } from '../common/spreadsheet/xlsx'
+import { binary } from '../test/binary-response'
 import { createTestApp } from '../test/create-test-app'
+import { readXlsxRows } from '../test/read-xlsx'
+import { AUDIT_SHEET_HEADER } from './services/audit-sheet'
 import { createTestUsers, deleteTestUsers, type TestUser } from '../test/test-users'
 
 const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://sryg:sryg@localhost:5432/sryg'
@@ -44,8 +48,13 @@ describe('audit viewer http (REP-04, REP-05)', () => {
   const as = (user: TestUser) => ({ Authorization: `Bearer ${user.token}` })
   const list = (query: Record<string, string | number>, user: TestUser = users.admin) =>
     http().get('/api/audit').query(query).set(as(user))
-  const exportCsv = (query: Record<string, string>, user: TestUser = users.admin) =>
-    http().get('/api/audit/export.csv').query(query).set(as(user))
+  const exportSheet = (query: Record<string, string>, user: TestUser = users.admin) =>
+    binary(http().get('/api/audit/export.xlsx').query(query).set(as(user)))
+  /** The data rows of an exported workbook (below its header row). */
+  const sheetRows = (body: Buffer) => {
+    const rows = readXlsxRows(body)
+    return rows.slice(rows.findIndex((row) => row[0] === AUDIT_SHEET_HEADER[0]) + 1)
+  }
   const trailSize = async () => (await db.select({ total: count() }).from(auditoria))[0]!.total
 
   beforeAll(async () => {
@@ -187,18 +196,18 @@ describe('audit viewer http (REP-04, REP-05)', () => {
   describe('access (D1: Admin and Supervisor read, Consulta has no access)', () => {
     it('requires a token', async () => {
       await http().get('/api/audit').expect(401)
-      await http().get('/api/audit/export.csv').expect(401)
+      await http().get('/api/audit/export.xlsx').expect(401)
     })
 
     it('answers 403 to Consulta', async () => {
       await list({ entity: ENTITY }, users.consulta).expect(403)
-      await exportCsv({ entity: ENTITY }, users.consulta).expect(403)
+      await exportSheet({ entity: ENTITY }, users.consulta).expect(403)
     })
 
     it('lets the Admin and a Supervisor of either area read and export', async () => {
       await list({ entity: ENTITY }, users.admin).expect(200)
       await list({ entity: ENTITY }, users.supMedicina).expect(200)
-      await exportCsv({ entity: ENTITY }, users.supMedicina).expect(200)
+      await exportSheet({ entity: ENTITY }, users.supMedicina).expect(200)
     })
   })
 
@@ -263,11 +272,10 @@ describe('audit viewer http (REP-04, REP-05)', () => {
         'personal_aeronautico',
       ])
 
-      const csv = await http()
-        .get(`/api/audit/export.csv?entity=${ENTITY}&action=crear,actualizar`)
-        .set(as(users.admin))
-        .expect(200)
-      expect(csv.text.slice(1).split('\r\n')).toHaveLength(4)
+      const file = await binary(
+        http().get(`/api/audit/export.xlsx?entity=${ENTITY}&action=crear,actualizar`).set(as(users.admin)),
+      ).expect(200)
+      expect(sheetRows(file.body as Buffer)).toHaveLength(2)
       await http().get('/api/audit?action=crear,borrar_todo').set(as(users.admin)).expect(400)
     })
 
@@ -301,38 +309,41 @@ describe('audit viewer http (REP-04, REP-05)', () => {
     })
   })
 
-  describe('GET /api/audit/export.csv', () => {
-    it('downloads every matching entry as CSV, with the same filters and no pagination', async () => {
-      const res = await exportCsv({ entity: ENTITY, from: '2026-10-01' }).expect(200)
-      expect(res.headers['content-type']).toMatch(/^text\/csv; charset=utf-8/)
-      expect(res.headers['content-disposition']).toMatch(/^attachment; filename="auditoria-\d{8}-\d{6}\.csv"$/)
-      const text: string = res.text
-      expect(text.startsWith('\uFEFF')).toBe(true)
-      const lines = text.slice(1).split('\r\n')
-      expect(lines[0]).toBe('fecha,actor,correo,accion,entidad,id_entidad,cambios')
-      expect(lines.at(-1)).toBe('')
-      expect(text).toContain(
-        `2026-10-02T23:59:59.000Z,Test supMedicina,${users.supMedicina.email},actualizar,${ENTITY},${ids.loose},`,
-      )
-      expect(text).toContain(`2026-10-03T00:00:00.000Z,,,autenticar,${ENTITY},,`)
-      // RFC 4180 quoting for quotes, commas and line breaks.
-      expect(text).toContain('"{""after"":{""nota"":""texto con \\""comillas\\"", comas\\ny saltos""}}"')
-      // A value that a spreadsheet would run as a formula is neutralized.
-      expect(text).toContain(`'=SUM(1+1) ${RUN}`)
-      expect(text).not.toMatch(/,=SUM/)
-      // Header + 4 entries + trailing line break.
-      expect(lines).toHaveLength(6)
+  describe('GET /api/audit/export.xlsx', () => {
+    it('downloads every matching entry as an Excel workbook, with the same filters and no pagination', async () => {
+      const res = await exportSheet({ entity: ENTITY, from: '2026-10-01' }).expect(200)
+      expect(res.headers['content-type']).toBe(XLSX_CONTENT_TYPE)
+      expect(res.headers['content-disposition']).toMatch(/^attachment; filename="auditoria-\d{8}-\d{6}\.xlsx"$/)
+      const all = readXlsxRows(res.body as Buffer)
+      expect(all[0]).toEqual(['Registro de auditoría'])
+      expect(all.find((row) => row[0] === AUDIT_SHEET_HEADER[0])).toEqual([...AUDIT_SHEET_HEADER])
+      const rows = sheetRows(res.body as Buffer)
+      expect(rows).toHaveLength(4)
+      expect(rows).toContainEqual([
+        '2026-10-02T23:59:59.000Z',
+        'Test supMedicina',
+        users.supMedicina.email,
+        'actualizar',
+        ENTITY,
+        ids.loose,
+        '',
+      ])
+      expect(rows).toContainEqual(['2026-10-03T00:00:00.000Z', '', '', 'autenticar', ENTITY, '', ''])
+      // Quotes, commas and line breaks survive intact.
+      expect(rows.map((row) => row[6])).toContain('{"after":{"nota":"texto con \\"comillas\\", comas\\ny saltos"}}')
+      // A value that looks like a formula is stored as text, never evaluated.
+      expect(rows.some((row) => row.some((cell) => String(cell).startsWith('=SUM(1+1)')))).toBe(true)
     })
 
     it('rejects an invalid query with 400', async () => {
-      await exportCsv({ from: '2026-10-05', to: '2026-10-01' }).expect(400)
+      await exportSheet({ from: '2026-10-05', to: '2026-10-01' }).expect(400)
     })
   })
 
   it('is read-only: viewing and exporting write nothing to the trail', async () => {
     const before = await trailSize()
     await list({ entity: ENTITY }).expect(200)
-    await exportCsv({ entity: ENTITY }).expect(200)
+    await exportSheet({ entity: ENTITY }).expect(200)
     expect(await trailSize()).toBe(before)
   })
 })

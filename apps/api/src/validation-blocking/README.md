@@ -6,12 +6,12 @@ active (VAL-02).
 
 ## Endpoints
 
-| Method | Path                      | Permission         | Notes                                                                    |
-| ------ | ------------------------- | ------------------ | ------------------------------------------------------------------------ |
+| Method | Path                      | Permission         | Notes                                                                                                     |
+| ------ | ------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
 | GET    | `/api/blocks`             | `blocking` `read`  | Filters: `status`, `type` (multi-value: `a,b` or repeated), `personalId`, `q` (name or cédula), paginated |
-| GET    | `/api/blocks/:id`         | `blocking` `read`  |                                                                          |
-| POST   | `/api/blocks`             | `blocking` `write` | `{ personalId, type, reason }`; always registered `activo`               |
-| POST   | `/api/blocks/:id/resolve` | `blocking` `write` | `{ resolutionNote }` (mandatory); 409 when the block is already resolved |
+| GET    | `/api/blocks/:id`         | `blocking` `read`  |                                                                                                           |
+| POST   | `/api/blocks`             | `blocking` `write` | `{ personalId, type, reason }`; always registered `activo`                                                |
+| POST   | `/api/blocks/:id/resolve` | `blocking` `write` | `{ resolutionNote }` (mandatory); 409 when the block is already resolved                                  |
 
 Every role reads; the Admin and the Supervisors of any area write (D2, D24); Consulta gets 403 on writes. Each write
 records its `auditoria` row in the same transaction (BR-11): `bloquear` on registration and `resolver` on resolution,

@@ -38,7 +38,7 @@ export async function listAudit(
   return parsePage(await fetchJson<unknown>(`/api/audit?${params.toString()}`))
 }
 
-const FALLBACK_FILENAME = 'auditoria.csv'
+const FALLBACK_FILENAME = 'auditoria.xlsx'
 
 function filenameOf(response: Response): string {
   const match = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')
@@ -46,15 +46,18 @@ function filenameOf(response: Response): string {
 }
 
 /**
- * GET /api/audit/export.csv and hands the file to the browser. `fetchJson` parses JSON only, so
+ * GET /api/audit/export.xlsx and hands the file to the browser. `fetchJson` parses JSON only, so
  * this request is made here, with the same session token; a 401 clears the session the same way.
  */
-export async function downloadAuditCsv(filter: AuditFilter & { personId?: string }): Promise<void> {
+export async function downloadAuditSheet(filter: AuditFilter & { personId?: string }): Promise<void> {
   if (!API_URL) throw new Error('API URL is not configured: set VITE_API_URL at build time.')
   const token = sessionStore.get()
   const query = toParams(filter).toString()
-  const response = await fetch(`${API_URL}/api/audit/export.csv${query ? `?${query}` : ''}`, {
-    headers: { Accept: 'text/csv', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+  const response = await fetch(`${API_URL}/api/audit/export.xlsx${query ? `?${query}` : ''}`, {
+    headers: {
+      Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   })
   if (!response.ok) {
     if (response.status === 401 && token) sessionStore.clear()
