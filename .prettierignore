@@ -9,3 +9,6 @@ apps/web/.impeccable/
 .impeccable/
 *.md
 .claude/
+
+# Material de estudio generado (HTML autocontenido, no se formatea)
+docs/defensa/
