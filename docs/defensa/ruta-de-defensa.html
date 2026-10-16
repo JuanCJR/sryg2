@@ -67,6 +67,9 @@ pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.5;background:var
 .zone:focus{outline:none}
 .zone .pbar{fill:#d9d2bf}.zone .pfill{fill:#2f7d4e}
 .zone .done{fill:#e2a93b}
+.hero-char{animation:bob 1.4s ease-in-out infinite;transform-origin:0 0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.hud .avatar img{width:46px;height:46px;object-fit:cover;object-position:top;border-radius:50%;background:#fff}
 .npc{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow)}
 .npc .face{width:52px;height:52px;flex:none;border-radius:14px;background:var(--accent-2);display:grid;place-items:center}
 .npc .face svg{width:40px;height:40px}
@@ -152,6 +155,8 @@ th{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-2
     <div class="badges" id="badges" aria-label="Insignias por zona"></div>
     <div class="tools">
       <button class="btn small" id="btnHome" hidden>↩ Mapa</button>
+      <label class="btn small" for="avatarFile" title="Carga una imagen PNG o JPG; se guarda solo en este navegador">🧑‍✈️ Personaje</label>
+      <input type="file" id="avatarFile" accept="image/png,image/jpeg,image/webp" class="sr">
       <button class="btn small" id="btnReset" title="Borra el progreso guardado en este navegador">Reiniciar</button>
     </div>
   </header>
@@ -203,8 +208,11 @@ const MAP = (() => {
     s.push(`<rect x="${sx + 6}" y="${sy - 10}" width="7" height="11" rx="2" fill="#5b3a1e"/><rect x="${sx - 15}" y="${sy - 13}" width="6" height="6" rx="1" fill="#ffe9a8"/>`);
     return s.join('');
   }
-  function build(zones, progress) {
+  function build(zones, progress, avatarSrc) {
     const out = []; const deco = []; const labels = [];
+    // El personaje de Junco camina hasta la primera zona que aún no está completa
+    const cur = zones.find(z => progress(z.id) < 100) || zones[zones.length - 1];
+    if (avatarSrc) { const [ax, ay] = ZONES_POS[cur.id]; const [asx, asy] = iso(ax, ay); labels.push(`<g transform="translate(${asx + 34},${asy + 6})"><ellipse cx="0" cy="2" rx="14" ry="5" fill="rgba(0,0,0,.18)"/><g class="hero-char"><image href="${avatarSrc}" x="-26" y="-74" width="52" height="76" preserveAspectRatio="xMidYMax" onerror="this.closest('g').remove()"/></g></g>`); }
     let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
     const tiles = [];
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (inIsland(x, y)) tiles.push([x, y]);
@@ -686,6 +694,9 @@ function renderHud() {
   $('#nextlab').textContent = next ? `siguiente rango: ${next[0]} XP` : 'rango máximo';
   const lo = r[0], hi = next ? next[0] : Math.max(S.xp, lo + 1);
   $('#xpfill').style.width = Math.min(100, Math.round(100 * (S.xp - lo) / (hi - lo))) + '%';
+  const av = avatarSrc(); const avBox = $('#hud .avatar');
+  if (av && !avBox.querySelector('img')) { const img = document.createElement('img'); img.alt = 'Personaje de Junco'; img.src = av; img.onerror = () => img.remove(); avBox.replaceChildren(img); }
+  else if (av && avBox.querySelector('img') && avBox.querySelector('img').getAttribute('src') !== av) avBox.querySelector('img').src = av;
   $('#badges').innerHTML = ZONES.map(z => `<span class="badge ${zoneProgress(z.id) >= 100 ? 'on' : ''}" title="${esc(z.name)} ${zoneProgress(z.id)}%">${z.icon}</span>`).join('');
   $('#btnHome').hidden = S.view === 'map';
 }
@@ -705,7 +716,7 @@ function renderMap() {
       <div><span class="pill">Progreso total ${total}%</span></div>
     </div>
     ${npc(pick(JOKES.map, 1))}
-    <div class="mapbox" id="mapbox">${MAP.build(ZONES, zoneProgress)}</div>
+    <div class="mapbox" id="mapbox">${MAP.build(ZONES, zoneProgress, avatarSrc())}</div>
     <div class="zonelist">${ZONES.map((z, i) => `<button class="zcard ${z.boss && !bossReady ? 'locked' : ''}" data-zone="${z.id}"><span class="ico">${z.icon}</span><span><span class="t">${i + 1}. ${z.name}</span><br><span class="s">${esc(z.tag)}</span></span><span class="pct">${zoneProgress(z.id)}%</span></button>`).join('')}</div>
   </section>`;
   const open = id => { const z = ZONES.find(z => z.id === id); if (z.boss && !bossReady) { toast('La Sala del Jurado se abre con todas las zonas al 60% o más. ¡Échale pichón!'); return; } location.hash = id; renderZone(id); };
@@ -767,6 +778,22 @@ function renderBoss(z, p) {
   $('#bNo').addEventListener('click', () => { S.boss[qi] = 0; save(); bossI++; renderZone(z.id, 'boss'); });
   $('#bShuffle').addEventListener('click', () => { bossOrder = null; renderZone(z.id, 'boss'); });
 }
+// Personaje: por defecto assets/junco.png junto a la página; se puede sustituir con una imagen propia guardada en el navegador.
+const DEFAULT_AVATAR = 'assets/junco.png';
+function avatarSrc() { return S.avatar || DEFAULT_AVATAR; }
+$('#avatarFile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const max = 192, k = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    S.avatar = c.toDataURL('image/png'); save(); URL.revokeObjectURL(img.src);
+    toast('Personaje listo. ¡Ese sí es Junco, chamo!'); if (S.view === 'map') renderMap(); else renderHud();
+  };
+  img.onerror = () => toast('No pude leer esa imagen. Prueba con un PNG o JPG.');
+  img.src = URL.createObjectURL(f);
+});
 $('#btnHome').addEventListener('click', () => { location.hash = ''; renderMap(); });
 $('#btnReset').addEventListener('click', () => { if ($('#btnReset').dataset.arm) { S = { xp:0, cards:{}, jury:{}, quiz:{}, boss:{}, view:'map' }; save(); delete $('#btnReset').dataset.arm; $('#btnReset').textContent = 'Reiniciar'; renderMap(); toast('Progreso reiniciado. Empezamos de cero, chamo.'); } else { $('#btnReset').dataset.arm = '1'; $('#btnReset').textContent = '¿Seguro? Pulsa otra vez'; setTimeout(() => { delete $('#btnReset').dataset.arm; $('#btnReset').textContent = 'Reiniciar'; }, 3000); } });
 window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && ZONES.some(z => z.id === h)) renderZone(h); else renderMap(); });

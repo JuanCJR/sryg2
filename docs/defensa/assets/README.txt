@@ -1,0 +1,1 @@
+Coloca aquí la imagen del personaje de Junco como junco.png (PNG, fondo transparente, vista lateral caminando). La página la carga automáticamente; si falta, el mapa se muestra sin personaje y el botón "Personaje" permite cargar una desde el navegador.
