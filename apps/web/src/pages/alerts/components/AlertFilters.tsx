@@ -9,7 +9,9 @@ export interface AlertFiltersProps {
   onClearAll: () => void
 }
 
-const CREDENTIAL_OPTIONS = CREDENTIAL_KINDS.map((value) => ({ value, label: CREDENTIAL_KIND_LABELS[value] }))
+/** Ratings are not offered as a filter: the panel filters by license and medical certificate only. */
+const FILTERED_KINDS = CREDENTIAL_KINDS.filter((kind) => kind !== 'habilitacion_tipo' && kind !== 'habilitacion_clase')
+const CREDENTIAL_OPTIONS = FILTERED_KINDS.map((value) => ({ value, label: CREDENTIAL_KIND_LABELS[value] }))
 const AREA_OPTIONS = ALERT_AREAS.map((value) => ({ value, label: AREA_LABELS[value] }))
 const ACKNOWLEDGEMENT_OPTIONS = ACKNOWLEDGEMENTS.map((value) => ({ value, label: ACKNOWLEDGEMENT_LABELS[value] }))
 
